@@ -5,7 +5,7 @@ pip install requests mcstatus discord.py names matplotlib scipy
 import discord, json, random, time, traceback, names, re
 from discord.ext import commands, tasks
 import datetime as dt
-import time, os, sys, threading, dns, requests, asyncio
+import time, os, sys, threading, dns, requests, asyncio, math
 import dns.resolver
 from mcstatus import JavaServer
 from users import User
@@ -322,7 +322,7 @@ async def account(message, account: discord.Member = None):
 
 
     try:
-        robrates = userData['robrate']
+        robrates = userData['rob']['won/lost']
 
         if (robrates[0] + robrates[1]) == 0: raise KeyError
 
@@ -339,6 +339,10 @@ async def account(message, account: discord.Member = None):
     embed.add_field(
         name="KCMC Info", 
         value=f"**MC Username**: `{ign}`\n**KCash**: *`Obtaining data...`*"
+    )
+    embed.add_field(
+        name="Rob Stats", 
+        value=f"**Rob Attack**: `{calculateRobAttack(account)} Lvls`\n**Rob Defense**: `{calculateRobDefense(account)} Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
     )
     embed.add_field(
         name=f"Credit Perks (~{calcCredit(100, user)}%)", 
@@ -375,9 +379,10 @@ async def account(message, account: discord.Member = None):
     )
     embed.add_field(
         name="Other Info", 
-        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}`\n**Rob success rate**: `{robrate}`",
+        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}``",
         inline=False
     )
+
     msg = await message.send(embed=embed)
 
 
@@ -397,9 +402,9 @@ async def account(message, account: discord.Member = None):
         value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`"
     )    
     embed.set_field_at(
-        index = 4,
+        index = 5,
         name="Other Info", 
-        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}`\n**Rob success rate**: `{robrate}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Trade Value**: `{calcTradeValue(user)}`\n**Score**: `{round(calcScore(user))}`",
+        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Trade Value**: `{calcTradeValue(user)}`\n**Score**: `{round(calcScore(user))}`",
         inline=False
     )
 
@@ -813,17 +818,17 @@ async def exchange(message, fromCurrency = None, toCurrency = None, amount = 0):
 
 
 
-@bot.command(
-    name = "test", 
-    help = f"Yes",
-    hidden = True
-)
-async def test_cmd(message):
-    file: discord.File = await message.message.attachments[0].save("temp/tessocr.png")
-    import pytesseract
-    pytesseract.pytesseract.tesseract_cmd = r"E:\Programs\Tesseract\tesseract.exe"
-    text = pytesseract.image_to_string('temp/tessocr.png',config='--psm 6')
-    await message.send(text)
+# @bot.command(
+#     name = "test", 
+#     help = f"Yes",
+#     hidden = True
+# )
+# async def test_cmd(message):
+#     file: discord.File = await message.message.attachments[0].save("temp/tessocr.png")
+#     import pytesseract
+#     pytesseract.pytesseract.tesseract_cmd = r"E:\Programs\Tesseract\tesseract.exe"
+#     text = pytesseract.image_to_string('temp/tessocr.png',config='--psm 6')
+#     await message.send(text)
 
 
 @bot.command(
@@ -1123,7 +1128,6 @@ async def oldrob(message, target: discord.Member, percentage="5"):
 A new modern robbing system that rolls values instead of a fixed 33% to win.
     
 **Dice Roll System**
-
 This robbing system rolls a dice from 1 to a set amount. If your dice roll is higher than the opponent's roll, you win the rob. Otherwise, you lose the rob.
 If you rolled the same as your target, a reroll is done.
 By default with no upgrades or whatsoever, your Rob Attack has a level of 5, and your Rob Defense has a level of 5. This means that while robbing someone, you can roll up to a number of 5.
@@ -1137,9 +1141,7 @@ Insights can stack up to 3 times and reset when succeeding a rob or being succes
 Additional factors:
 * Target is offline or idle: Target Defense Rob -1
 * Already robbed that target within 5 minutes: Target Defense Rob +1
-* Target has `Rob Padlock`: Target Defense Rob +2
 * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
-* You have `Rob Stealth`: Rob Attack +2
 target
 Essentially, it is way easier for the target to gain Rob Defenses than it is for you to gain Rob Attacks, making it harder for you to successfully rob someone.
 
@@ -1182,18 +1184,39 @@ async def rob(message, target: discord.Member):
     targetBal = targetUser.getData()['credits']
 
     # Get amounts
-    winAmount = round(abs(targetBal / 10), 2)
-    loseAmount = round(abs(userBal / 10 + targetBal / 20), 2)
+    winAmount = round(targetBal / 10, 2)
+    loseAmount = round((userBal / 10) + (targetBal / 20), 2)
 
-    userRAL = calculateRobAttack(message.author.id)
-    targetRDL = calculateRobDefense(target.id)
+    userRAL = calculateRobAttack(message.author)
+    targetRDL = calculateRobDefense(target)
+
+    # Additional target RDL
+    diffRDL = int(math.log10(abs(userBal - targetBal) + 1))
+    targetRDL += diffRDL
 
     msg = await message.send(embed=discord.Embed(
             title = "Rob Results",
             description = f"""Robbing {target.mention}...""",
             color = 0xFF00FF))
 
+    def robGet(u: User, key: str):
+        data = u.getData('rob')
+        return data[key]
+    def robSet(u: User, key: str, value):
+        data = u.getData('rob')
+        data[key] = value
+        u.setValue("rob", data)
+    def robAdd(u: User, key: str, value: int):
+        data = u.getData('rob')
+        data[key] += value
+        u.setValue("rob", data)
 
+    # Attacked times
+    robSet(user, "attackTime", int(time.time()))
+    robSet(targetUser, "attackedTime", int(time.time()))
+
+    # Logic
+    # For loop is for rerolls
     for i in range(10): # Limit 10
         userRoll = random.randint(1, userRAL)
         targetRoll = random.randint(1, targetRDL)
@@ -1202,6 +1225,17 @@ async def rob(message, target: discord.Member):
             winTxt = f"Close! Rerolling... (Rerolled {i+1} time(s))"
         elif userRoll > targetRoll:
             winTxt = f"You successfully robbed {target.mention} and stole `{winAmount} Credits`!"
+            
+            # Win Money
+            user.addBalance(credits = winAmount)
+            targetUser.addBalance(credits = -winAmount)
+
+            # Rob stats
+            robSet(user, "insights", 0)
+
+            wl = robGet(user, "won/lost")
+            robSet(user, "won/lost", [wl[0]+1, wl[1]])
+
         elif targetRoll > userRoll:
             match random.randint(1,3):
                 case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
@@ -1209,20 +1243,34 @@ async def rob(message, target: discord.Member):
                 case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
 
             # Lose money
-        
+            user.addBalance(credits = -loseAmount)
+            targetUser.addBalance(credits = loseAmount)
+
+            # Rob stats
+            if robGet(user, 'insights') < 3:
+                robAdd(user, "insights", 1)
+
+            wl = robGet(user, "won/lost")
+            robSet(user, "won/lost", [wl[0], wl[1]+1])
+
+
         em = discord.Embed(
             title = "Rob Results",
             description = f"""Robbing {target.mention}...
-Your Dice Roll: `{userRoll}`
-{target.mention}'s Dice Roll: `{targetRoll}`
+
+**Your Roll**: `{userRoll}`
+**{target.mention}'s Roll**: `{targetRoll}`
 
 **{winTxt}**""",
-            color = 0xFF00FF
+            color = 0xFF00FF,
         )
+        if diffRDL > 0:
+            em.set_footer(text = f"Target obtained +{diffRDL} Rob Defense due to differences in Credit balance")
 
         await msg.edit(embed=em)
 
-        if userRoll != userRoll:
+        # End if not reroll; otherwise wait 3 sec
+        if userRoll != targetRoll:
             break
         else:
             await asyncio.sleep(3)

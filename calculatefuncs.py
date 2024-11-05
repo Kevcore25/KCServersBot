@@ -490,7 +490,7 @@ def calculateRobDefense(member: discord.Member) -> int:
         rdl -= 1
 
     # Already robbed
-    if time.time() - rob['attackedTime'] < 300:
+    if (time.time() - rob['attackedTime']) < 300:
         rdl += 1
     
     # Insights

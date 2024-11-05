@@ -5,8 +5,6 @@ botsettings.json
 startserver/*
 __pycache__/*
 .vscode/*
-
 start.sh
 balanceLog.txt
-balanceLogv2.txt
 previousCgs.json

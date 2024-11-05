@@ -14,7 +14,7 @@ userTemplate = {
     "incomeCmdsUsed": 0,
     "rob": {
         "atk": 5,
-        "rob": 5, 
+        "def": 5, 
         "eatk": 0, 
         "edef": 0, 
         "insights": 0,
@@ -58,8 +58,9 @@ class User:
 
     def update(self) -> bool:
         """
-        Updates the account to find missing keys from the template
-        Returns True if upgraded, else False
+        Updates the account to find missing keys from the template.
+        This is a "soft" update, where only missing keys will be found.
+        Returns True if updated, else False
         """
 
         data = self.getData()
@@ -120,6 +121,9 @@ class User:
         if key is None:
             return self.data
         else:
+            if key not in self.data:
+                # Attempt to "soft" update
+                self.update()
             return self.data[key]
         
 
