@@ -410,6 +410,15 @@ async def account(message, account: discord.Member = None):
 
 
     await msg.edit(embed=embed)
+@bot.command(
+    help = f"Force an account update",
+    description = """Sometimes your account may be missing some valves. This command will make sure to find missing values and fix them. Corruptted values may not be fixed.""",
+    aliases = ['fixaccount']
+)
+async def fix(message):
+    user = User(message.author.id)
+    result = user.update()
+    await message.send(f"Account updated: {result}")
 
 @bot.command(
     help = "Create and manage a minecraft server",
