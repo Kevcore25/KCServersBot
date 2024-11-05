@@ -227,7 +227,8 @@ async def botAI():
             if round(credits / 100) > 0: 
                 await run('crashgame', betamount = round(credits/100 if credits < 10000 else 100), autocash = random.randint(11, 20) / 10)
        # case 3: (await run('beg') for i in range(2))
-        case _: print("skipped AI")
+        case _:
+            pass
         
 
 
@@ -1343,11 +1344,86 @@ async def addserver(message, server=None):
 
 
 
+
+@bot.command(
+    help = f"Invest money!",
+    description = f"""
+Invest a portion of your money to the KCServers bot.
+The amount you invest cannot exceed 30% of the current bot's balance.
+
+There are 2 formats for this command:
+* {prefix}invest <amount> - invests an amount of money to the bot
+* {prefix}invest cash - cashes out the money you invested
+
+**How does it work?**
+You can invest a portion of your Credits to gain a *Bot Stock Percentage (Or BS%)*.
+For example, if the bot has 10000 and you invest 1000, you will get a % equal to (1000 / 11000), which is about 9.09 BS%
+In a few days, if the bot balance is now 15000 and you cash out, you will earn 1363.5 Credits, making about $363 gain.
+
+Notice: You must wait at least 5 minutes until you can cash out after investing.
+    """,
+    aliases = ['stock']
+)
+@commands.cooldown(1, 300, commands.BucketType.user) 
+async def invest(message, arg = "", arg2=''):
+    user = User(message.author.id)
+    bot = User('main')
+    
+    botbal = bot.getData('credits')
+
+    try:
+        amt = round(float(arg), 2)
+        userbal = user.getData('credits')
+        if amt > userbal:
+            await message.send("You don't have enough Credits to invest that!")
+        
+        elif amt > 0.3 * botbal:
+            await message.send(f"The amount is over 30% of the bot balance! Do something lower than {round(botbal * 0.3, 2)}!")
+
+        else:
+            # Check if already investing
+            ubs = user.getData('bs%')
+
+            if ubs != 0 and arg2.lower() != "overwrite":
+                await message.send(f"Already investing! Use {prefix}invest cash to cash out or overwrite it by doing {prefix}invest {amt} overwrite")
+            else:
+
+                bs = round(amt / (botbal + amt), 4)
+
+                user.setValue('bs%', bs)
+                user.addBalance(credits = -amt) # Bot should also get that balance
+
+                await message.send(f"Invested {amt} Credits for a BS% of {bs * 100}. You must wait at least 5 minutes before cashing out.")
+
+                return # make a CD
+    except ValueError:
+        if arg.lower() == "cash":
+            
+            bs = user.getData('bs%')
+
+            if bs == 0:
+                await message.send("You don't have an investment right now!")
+            else:
+                amt = round(botbal * bs, 2) 
+
+                user.addBalance(credits=amt) # bot should also lose that amount
+
+                user.setValue("bs%", 0)
+
+                await message.send(f"Cashed out! You gained {amt} Credits!")
+
+
+        else:
+            await message.send("Invaild argument. Must be either: float, 'cash'")
+
+    # Reset CD. CD is only for investments
+    invest.reset_cooldown(message)
+
 @bot.command(
     help = f"Own a portion of the bot balance (Scam)",
     description = f"You can own a portion of the bot's balance. When buying a stock, your account will own a % of the bot (Stock%). The maximum Stock% that can be obtained is 30%. When you exchange ({prefix}stock exchange), you will take a % of the bot's balance with a moderate fee. The fee equation is (fee = `(final bot bal - init bot bal) * 0.1`, fee > 0 else fee = 0). Additionally, the % in your account loses value over time (about 0.2% per day but cannot go below 50% of the init Stock%)",
 )
-async def stock(message, server=None):
+async def stockold(message, server=None):
 
     """
     stock {

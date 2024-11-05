@@ -12,6 +12,7 @@ userTemplate = {
     "dailyTime": 0,
     "hourlyTime": 0,
     "incomeCmdsUsed": 0,
+    "bs%": 0,
     "rob": {
         "atk": 5,
         "def": 5, 
@@ -117,7 +118,7 @@ class User:
         self.data = userTemplate
         self.saveAccount()
 
-    def getData(self, key = None) -> dict:
+    def getData(self, key = None):
         if key is None:
             return self.data
         else:
