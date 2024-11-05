@@ -1116,6 +1116,7 @@ async def oldrob(message, target: discord.Member, percentage="5"):
     await message.send(embed=embed)
 
 
+
 @bot.command(
     help = f"Rob someone the modern way.\nFormat: {prefix}rob <target>",
     description = """
@@ -1124,6 +1125,7 @@ A new modern robbing system that rolls values instead of a fixed 33% to win.
 **Dice Roll System**
 
 This robbing system rolls a dice from 1 to a set amount. If your dice roll is higher than the opponent's roll, you win the rob. Otherwise, you lose the rob.
+If you rolled the same as your target, a reroll is done.
 By default with no upgrades or whatsoever, your Rob Attack has a level of 5, and your Rob Defense has a level of 5. This means that while robbing someone, you can roll up to a number of 5.
 
 While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
@@ -1183,10 +1185,50 @@ async def rob(message, target: discord.Member):
     winAmount = round(abs(targetBal / 10), 2)
     loseAmount = round(abs(userBal / 10 + targetBal / 20), 2)
 
+    userRAL = calculateRobAttack(message.author.id)
+    targetRDL = calculateRobDefense(target.id)
+
+    msg = await message.send(embed=discord.Embed(
+            title = "Rob Results",
+            description = f"""Robbing {target.mention}...""",
+            color = 0xFF00FF))
 
 
+    for i in range(10): # Limit 10
+        userRoll = random.randint(1, userRAL)
+        targetRoll = random.randint(1, targetRDL)
+        
+        if userRoll == targetRoll: 
+            winTxt = f"Close! Rerolling... (Rerolled {i+1} time(s))"
+        elif userRoll > targetRoll:
+            winTxt = f"You successfully robbed {target.mention} and stole `{winAmount} Credits`!"
+        elif targetRoll > userRoll:
+            match random.randint(1,3):
+                case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
+                case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
+                case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
 
-    await message.send(embed=embed)
+            # Lose money
+        
+        em = discord.Embed(
+            title = "Rob Results",
+            description = f"""Robbing {target.mention}...
+Your Dice Roll: `{userRoll}`
+{target.mention}'s Dice Roll: `{targetRoll}`
+
+**{winTxt}**""",
+            color = 0xFF00FF
+        )
+
+        await msg.edit(embed=em)
+
+        if userRoll != userRoll:
+            break
+        else:
+            await asyncio.sleep(3)
+        
+
+
 
 
 @bot.command(

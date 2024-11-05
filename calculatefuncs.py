@@ -463,4 +463,63 @@ def calcCreditTxt(user: User) -> int:
 
     return "\n".join(f"{perk}: `{percentAmt}% Credit earnings`" for perk, percentAmt in amountTxt.items())
 
-def calculate
+def calculateRobDefense(member: discord.Member) -> int:
+    """Calculate the Rob Defense level of a user"""
+
+    """
+    Factors that affect RDL
+    * Target is offline or idle: Target Defense Rob -1
+    * Already robbed that target within 5 minutes: Target Defense Rob +1
+    * Target has `Rob Padlock`: Target Defense Rob +2
+    * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
+    """
+    # Create user obj
+    user = User(member.id)
+
+    # Get Initial
+    try:
+        rob = user.getData()['rob']
+        rdl = rob['def']
+    except KeyError:
+        user.update()
+        rob = user.getData()['rob']
+        rdl = rob['def']
+
+    # IF offline
+    if member.status in [discord.Status.offline, discord.Status.invisible, discord.Status.idle]:
+        rdl -= 1
+
+    # Already robbed
+    if time.time() - rob['attackedTime'] < 300:
+        rdl += 1
+    
+    # Insights
+    rdl -= rob['insights']
+
+    return rdl
+
+def calculateRobAttack(member: discord.Member) -> int:
+    """Calculate the Rob Defense level of a user"""
+
+    """
+    Factors that affect RDL
+    * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
+    * You have `Rob Stealth`: Rob Attack +2
+    """
+
+    # Create user obj
+    user = User(member.id)
+
+    # Get Initial
+    try:
+        rob = user.getData()['rob']
+        ral = rob['atk']
+    except KeyError:
+        user.update()
+        rob = user.getData()['rob']
+        ral = rob['atk']
+    
+    # Insights
+    ral += rob['insights']
+
+    return ral

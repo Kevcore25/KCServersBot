@@ -11,7 +11,17 @@ userTemplate = {
     "job": None,
     "dailyTime": 0,
     "hourlyTime": 0,
-    "incomeCmdsUsed": 0
+    "incomeCmdsUsed": 0,
+    "rob": {
+        "atk": 5,
+        "rob": 5, 
+        "eatk": 0, 
+        "edef": 0, 
+        "insights": 0,
+        "won/lost": [0, 0],
+        "attackedTime": 0,
+        "attackTime": 0,
+    }
 }
 
 botID = 0
@@ -45,6 +55,21 @@ class User:
 
         except FileNotFoundError:
             self.createAccount()
+
+    def update(self) -> bool:
+        """
+        Updates the account to find missing keys from the template
+        Returns True if upgraded, else False
+        """
+
+        data = self.getData()
+        updated = False
+        for key in userTemplate:
+            if key not in data:
+                updated = True
+                data[key] = userTemplate[key]
+        
+        return updated
 
     def delete_item(self, item: str, all: bool = False) -> bool:
         """

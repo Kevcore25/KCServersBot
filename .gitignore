@@ -9,3 +9,4 @@ __pycache__/*
 start.sh
 balanceLog.txt
 balanceLogv2.txt
+previousCgs.json
