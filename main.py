@@ -31,7 +31,7 @@ with open("botsettings.json", 'r') as f:
     TOKEN = data['token']
     inflationAmt = data['inflation amount']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.2.3)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.3.0)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -1478,6 +1478,27 @@ async def stockold(message, server=None):
 
 
         await msg.edit(embed=embed)
+
+@bot.command(
+    help = f"Own a portion of the bot balance (Scam)",
+    description = f"You can own a portion of the bot's balance. When buying a stock, your account will own a % of the bot (Stock%). The maximum Stock% that can be obtained is 30%. When you exchange ({prefix}stock exchange), you will take a % of the bot's balance with a moderate fee. The fee equation is (fee = `(final bot bal - init bot bal) * 0.1`, fee > 0 else fee = 0). Additionally, the % in your account loses value over time (about 0.2% per day but cannot go below 50% of the init Stock%)",
+)
+async def userstatus(message, member: discord.Member):
+
+    
+    match member.status:
+        case discord.Status.online:
+            onlineStatus = "Online"
+        case discord.Status.idle:
+            onlineStatus = "Idle"
+        case discord.Status.invisible:
+            onlineStatus = "Invisible"
+        case discord.Status.offline:
+            onlineStatus = "Offline"
+        case discord.Status.dnd:
+            onlineStatus = "Do not disturb"
+
+    await message.send(f"{member.name} is currently {onlineStatus}")
 async def msginput(ctx: discord.Message, text: str | None, timeout: int = 60) -> str:
     if text is not None: await ctx.send(text)
     ui = await bot.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=timeout)
