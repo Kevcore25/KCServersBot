@@ -1365,7 +1365,7 @@ Notice: You must wait at least 5 minutes until you can cash out after investing.
     """,
     aliases = ['stock']
 )
-@commands.cooldown(1, 300, commands.BucketType.user) 
+@commands.cooldown(1, 600, commands.BucketType.user) 
 async def invest(message, arg = "", arg2=''):
     user = User(message.author.id)
     bot = User('main')
@@ -1394,7 +1394,7 @@ async def invest(message, arg = "", arg2=''):
                 user.setValue('bs%', bs)
                 user.addBalance(credits = -amt) # Bot should also get that balance
 
-                await message.send(f"Invested {amt} Credits for a BS% of {bs * 100}. You must wait at least 5 minutes before cashing out.")
+                await message.send(f"Invested {amt} Credits for a BS% of {bs * 100}. You must wait at least 10 minutes before cashing out.")
 
                 return # make a CD
     except ValueError:
@@ -1849,7 +1849,7 @@ async def crashgame(message: discord.Message, betamount: int = None, autocash: f
    # x = int(input("Enter a number: ")); print("Yay!" if x == 25 else ("NO!" if (str(x) in "".join("-" + str(i) for i in range(100))) else (print("Yes" if (x > 100 and (x > 1000 or x > 10000)) else "Yes...") if x > 10 else (print("No" if x > 5 else "... too small")))))
 
    
-    betamount = int(betamount)
+    betamount = round(float(betamount), 2)
     autocash = float(autocash)
 
     
