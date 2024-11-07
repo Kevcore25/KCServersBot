@@ -1242,7 +1242,7 @@ async def rob(message, target: discord.Member):
 
             # Rob stats
             robSet(user, "insights", 0)
-            robSet(target, "insights", 0)
+            robSet(targetUser, "insights", 0)
 
             wl = robGet(user, "won/lost")
             robSet(user, "won/lost", [wl[0]+1, wl[1]])
