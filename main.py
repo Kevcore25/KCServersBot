@@ -119,14 +119,11 @@ def robCalc(user: User, percentage = 5):
 
         targetUser = User(target.id)
 
-        differenceIncrease = round(abs(user.getData()['credits'] - targetUser.getData()['credits']) / 10, 2)
-        percentLost = round(user.getData()['credits'] * winAmount, 2)
+        # Amounts
+        lostAmount = round(targetUser.getData('credits') / 20 + user.getData('credits') / 10, 2)
+        winAmounts[lostAmount] = round(targetUser.getData('credits')/10, 2)
 
-        lostAmount = round(percentLost + differenceIncrease, 2)
-    
         amounts[lostAmount] = target.id
-
-        winAmounts[lostAmount] = round(targetUser.getData()['credits'] * winAmount, 2)
 
     reversedWinAmounts = {v: k for k, v in winAmounts.items()}
 
@@ -946,10 +943,8 @@ async def robcalc(message, percentage="5"):
 
         targetUser = User(target.id)
 
-        differenceIncrease = round(abs(user.getData()['credits'] - targetUser.getData()['credits']) / 10, 2)
-        percentLost = round(user.getData()['credits'] * winAmount, 2)
-
-        lostAmount = round(percentLost + differenceIncrease, 2)
+        lostAmount = round(targetUser.getData('credits') / 20 + user.getData('credits') / 10, 2)
+        winAmounts[lostAmount] = round(targetUser.getData('credits')/10, 2)
     
         amounts[lostAmount] = target.id
 
