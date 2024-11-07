@@ -140,11 +140,11 @@ def calcWealthPower(u: User, decimal = False) -> int:
     except ZeroDivisionError:
         creditpower = 100
 
-    # Credit power should be at a minimum of -80%
+    # Credit power should be at a minimum of -50%
     # Otherwise, a bug would occur where users get negative credits due to commands having a (1 + Wealth Power%) multiplication. 
-    # This is now limited to / 0.2, which is 5x of a 0% wealth power
-    if creditpower < -80:
-        creditpower = -80
+    # This is now limited to / 0.5, which is 2x of a 0% wealth power
+    if creditpower < -50:
+        creditpower = -50
 
     return round(1 + creditpower/100, 2) if decimal else round(creditpower) 
 
