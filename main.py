@@ -1804,7 +1804,7 @@ async def work(message, cmd = None, value = None):
     aliases = ['cg', 'crash']
 )
 @commands.cooldown(1, 300, commands.BucketType.user) 
-async def crashgame(message: discord.Message, betamount: int = None, autocash: float = "0"):
+async def crashgame(message: discord.Message, betamount: float = None, autocash: float = "0"):
     user = User(message.author.id)
 
     with open("previousCgs.json",'r') as f:
