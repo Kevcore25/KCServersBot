@@ -2322,8 +2322,16 @@ Guessed: `{', '.join(guessed)}`
     aliases = ['gb', 'graphbal', 'balgraph', 'bg', 'balancegraph']
 )
 @commands.cooldown(1, 5, commands.BucketType.user) 
-async def graphbalance(message: discord.Message, user: discord.Member = None):
+async def graphbalance(message: discord.Message, user: discord.Member = None, extra: str = "None"):
     
+
+    if extra.lower() == "recent":
+        amt = 100
+    elif extra.lower() == "more":
+        amt = 10000
+    else:
+        amt = 1000
+
     if user is None:
         userid = message.author.id
     else:
@@ -2333,7 +2341,7 @@ async def graphbalance(message: discord.Message, user: discord.Member = None):
 
     balances = []
 
-    for line in tail("balanceLog.txt", 1000):
+    for line in tail("balanceLog.txt", amt):
         if str(userid) in line:
             # change = int(line.split(":", 1)[1].split("CRED")[0].replace(" ", ""))
             balances.append(
