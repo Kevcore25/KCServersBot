@@ -2793,9 +2793,16 @@ async def on_command_error(ctx, error):
 async def restart(ctx, arg1=None):
  
     if ctx.author.id == 623339767756750849:
+
         await bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
-        embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
-        await ctx.send(embed=embed, delete_after=3.0)
+        if arg1 == "update":
+            embed=discord.Embed(title=f"Restarting the program...", description=f"and git pulling as well...", color=0x00CCFF)
+            await ctx.send(embed=embed, delete_after=3.0)
+            os.system('git pull')
+            time.sleep(3)
+        else:
+            embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
+            await ctx.send(embed=embed, delete_after=3.0)
         os.execl(sys.executable, sys.executable, *sys.argv)
 
 
