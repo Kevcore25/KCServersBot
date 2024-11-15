@@ -1076,10 +1076,12 @@ async def oldrob(message, target: discord.Member, percentage="5"):
     r = random.randint(0,2)
                        
     if message.author.id in [989387917111721995,623339767756750849, 1228567790525616128,1220215410658513026]:
-        r = random.randint(0,1)
-        #if r < 3: r = 0
+        r = random.randint(0,4)
+        if r < 3: r = 0
         print(f"Wei robbed, {r}")
     
+    if message.author.id in [794389647006105602]:
+        r = random.randint(0,5)
 
     if "robrate" not in user.getData():
         user.setValue("robrate", [0,0])
