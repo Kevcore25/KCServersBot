@@ -302,7 +302,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     userData = user.getData()
     
-    if usejson.lower().startswith('t') or userjson.lower() == "json":
+    if usejson.lower().startswith('t') or usejson.lower() == "json":
         await message.send(json.dumps(userData))
         return
 
