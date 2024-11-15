@@ -2160,7 +2160,7 @@ async def questions(message: discord.Message, subject = "RANDOM"):
      
 @bot.command(
     help = f"Play a simliar version of Hangman",
-    description = """A random word will be chosen from a bank. You will have letter attempts and 3 guess attempts. Say a letter to guess a letter, and anything else to guess the word. Type exit to exit this game.\nFormula for letter attempts is 10 + (length of item ^ 0.5) then rounded""",
+    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `8 Credits` to play the game though negative balances are still allowed..""",
     aliases = ['mch', 'minecrafthangman']
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -2212,6 +2212,9 @@ async def mchangman(message: discord.Message):
         ),
      u))
     
+    # Subtract 8 credits from user
+    u.addBalance(credits=-8)
+
     # Send MSG
     msg = await message.send(embed=discord.Embed(
         title = "Minecraft Item Guessing Game",
