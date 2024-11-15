@@ -1138,7 +1138,7 @@ If you rolled the same as your target, a reroll is done.
 By default with no upgrades or whatsoever, your Rob Attack has a level of 5, and your Rob Defense has a level of 5. This means that while robbing someone, you can roll up to a number of 5.
 
 While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
-The equation of this additional Defense gain is modelled by the equation: *`log(|(Your Balance) - (Target Balance)| + 1)`*
+The equation of this additional Defense gain is modelled by the equation: *`log(|(Your Balance) - (Target Balance)| + 1) ^ 2`*
 
 Also when failing a rob, you gain an *Insight*, increasing your chances of suceeding at the cost of your rob defenses decreasing.
 Insights can stack up to 3 times and reset when succeeding a rob or being successfully robbed by another.
@@ -1159,7 +1159,7 @@ Amount you earn: ||*`(Target's Balance) / 10`*||
 Lose Amount:
 The amount you lose by failing to rob someone is based on a percentage of your balance and the target's balance.
 You may go into debt if there is a large balance difference between you and the target.
-Amount you lose: ||*`(Your Balance) / 10 + (Target's Balance) / 20`*||
+Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
 """,
     aliases = ["newrob"]
 )
@@ -1190,13 +1190,13 @@ async def rob(message, target: discord.Member):
 
     # Get amounts
     winAmount = round(targetBal / 10, 2)
-    loseAmount = round((userBal / 10) + (targetBal / 20), 2)
+    loseAmount = round((userBal / 20) + (targetBal / 15), 2)
 
     userRAL = calculateRobAttack(message.author)
     targetRDL = calculateRobDefense(target)
 
     # Additional target RDL
-    diffRDL = int(math.log10(abs(userBal - targetBal) + 1))
+    diffRDL = int(math.log10(abs(userBal - targetBal) + 1) ** 2)
     targetRDL += diffRDL
 
     msg = await message.send(embed=discord.Embed(
