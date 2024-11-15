@@ -302,8 +302,8 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     userData = user.getData()
     
-    if usejson.lower().startswith('t'):
-        await msg.send(json.dumps(userData))
+    if usejson.lower().startswith('t') or userjson.lower() == "json":
+        await message.send(json.dumps(userData))
         return
 
     ign = str(userData['IGN'])#.replace('_', '\\_')
