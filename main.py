@@ -290,7 +290,7 @@ async def baljson(message, account: discord.Member = None):
     help = "Displays account stats",
     aliases = ["pf", "profile", "acc", "balance", "bal"]
 )
-async def account(message, account: discord.Member = None):
+async def account(message, account: discord.Member = None, usejson: str = "false"):
     embed = discord.Embed(
         title = "Account information",
         color = 0xFF00FF
@@ -302,6 +302,10 @@ async def account(message, account: discord.Member = None):
 
     userData = user.getData()
     
+    if usejson.lower().startswith('t'):
+        await msg.send(json.dumps(userData))
+        return
+
     ign = str(userData['IGN'])#.replace('_', '\\_')
 
     try:
