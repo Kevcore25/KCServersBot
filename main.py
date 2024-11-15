@@ -1041,7 +1041,7 @@ async def beg(message):
 
 @bot.command(
     help = f"Rob someone using the traditional way.\nFormat: {prefix}rob <target> [percentage]",
-    description = """When you rob someone, you can specify an percentage amount of up to 15%. The default percentage is 5%. If you win the rob, you win that percentage, but if you fail the rob, you will lose that percentage.\nThe amount you will lose will also be increased with Credit difference between the target and you (`absolute value of (Your Credits - Target's Credits) / 10`)\nThe full loss equation can be repersented as: `Percent% * Your balance + | Your balance - Target balance | / 10` and win equation is `Percent% * Target balance * Credit Earning Perks`\nThere is a 1/3 chance to win a rob by default."""
+    description = """When you rob someone, you can specify an percentage amount of up to 15%. The default percentage is 5%. If you win the rob, you win that percentage, but if you fail the rob, you will lose that percentage.\nThe amount you will lose will also be increased with Credit difference between the target and you (`absolute value of (Your Credits - Target's Credits) / 10`)\nThe full loss equation can be repersented as: `Percent% * Your balance + | Your balance - Target balance | / 10` and win equation is `Percent% * Target balance * Credit Earning Perks`\nThere is a 1/3 chance to win a rob by default. btw this command is rigged."""
 )
 @commands.cooldown(1, 30, commands.BucketType.user) 
 async def oldrob(message, target: discord.Member, percentage="5"):
