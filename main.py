@@ -1385,12 +1385,14 @@ async def invest(message, arg = "", arg2=''):
         else:
             # Check if already investing
             ubs = user.getData('bs%')
+            bs = round(amt / (botbal + amt), 4)
 
             if ubs != 0 and arg2.lower() != "overwrite":
                 await message.send(f"Already investing! Use {prefix}invest cash to cash out or overwrite it by doing {prefix}invest {amt} overwrite")
+            # If 0, do not invest to prevent scamming
+            elif bs == 0.0:
+                await message.send("The amount you invested is too small to gain a BS%!")
             else:
-
-                bs = round(amt / (botbal + amt), 4)
 
                 user.setValue('bs%', bs)
                 user.addBalance(credits = -amt) # Bot should also get that balance
