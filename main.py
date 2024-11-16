@@ -4,7 +4,6 @@ pip install requests mcstatus discord.py names matplotlib scipy
 """
 import discord, json, random, time, traceback, names, re
 from discord.ext import commands, tasks
-import datetime as dt
 import time, os, sys, threading, dns, requests, asyncio, math
 import dns.resolver
 from mcstatus import JavaServer
@@ -14,7 +13,6 @@ from games import CrashGame, Players
 import games
 from traceback import print_exc as printError
 import matplotlib.pyplot as plt
-from discord import Button, ButtonStyle
 import numpy as np
 from scipy.interpolate import make_interp_spline
 
@@ -43,19 +41,10 @@ bot = commands.Bot(
 
 
 
-# # Add a value to all users:
-# addvalue = ("job", None)
-# for user in os.listdir('users'):
-#     with open(f"users/{user}", 'r') as f:
-#         data = json.load(f)
-
-#     if addvalue[0] not in data:
-#         print(f"Added value to {user}")
-#         data[addvalue[0]] = addvalue[1]
-#         with open(f"users/{user}", 'w') as f:
-#             data = json.dump(data,f)
 botactive = 0
 
+
+# Notice: Due to the KCash server going offline until a new server is opened, this command will not be running
 @tasks.loop(seconds = 60)
 async def kcashEarningLoop():
     # t = threading.Timer(60, kcashEarningLoop)
