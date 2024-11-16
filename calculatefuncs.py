@@ -350,7 +350,7 @@ def calcCredit(amount: int, user: User = None) -> float:
 
         # Bot
         if str(user.ID) == "main":
-            amount *= (1 + 100)
+            amount *= (1 + 2)
 
 
         # Both set IGN and LFN (+2%)
@@ -420,7 +420,7 @@ def calcCreditTxt(user: User) -> int:
     # BOT
     # hourly
     if str(user.ID) == "main":
-        amountTxt["Is the main bot"] = 10000
+        amountTxt["Is the main bot"] = 200
 
 
     # Both set IGN and LFN (+2%)
