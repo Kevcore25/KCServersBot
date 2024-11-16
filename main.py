@@ -388,16 +388,9 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     msg = await message.send(embed=embed)
 
 
-    # NETWORK FETCHES
-    try:
-        with open(KMCExtractLocation + "/users.json", 'r') as f:
-            kmceusers = json.load(f)
-        kcash = numStr(kmceusers[userData['IGN']]['KCash'])
-    except KeyError:
-        kcash = "Not registered"
-    except Exception as e:
-        kcash = "Error"
-        print(e)
+    # Get KCash - offline until a server/API is made
+    kcash = "Offline"
+
     embed.set_field_at(
         index = 1,
         name="KCMC Info", 
@@ -406,12 +399,15 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     embed.set_field_at(
         index = 5,
         name="Other Info", 
-        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Trade Value**: `{calcTradeValue(user)}`\n**Score**: `{round(calcScore(user))}`",
+        value=f"**Wealth Power**: `{calcWealthPower(user)}%\n**Estimated Score**: `{round(calcScore(user, tailLen=2000))}`",
         inline=False
     )
 
+    # Add KCash notice
+    embed.set_footer(text="A new KCash server will be up later using the same server as the one this bot is hosted on (KCVM)")
 
     await msg.edit(embed=embed)
+
 @bot.command(
     help = f"Force an account update",
     description = """Sometimes your account may be missing some valves. This command will make sure to find missing values and fix them. Corruptted values may not be fixed.""",
@@ -420,41 +416,11 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 async def fix(message):
     user = User(message.author.id)
     result = user.update()
-    await message.send(f"Account updated: {result}")
-
-@bot.command(
-    help = "Create and manage a minecraft server",
-    aliases = ["createserver"],
-    hidden = True
-)
-async def create(message):
-    embed = discord.Embed(
-        title = "Disabled!",
-        description = f"""
-This feature is planned and is not active as of now. However, this command will allow trusted people to:
-- create a PaperMC minecraft server, with customizable versions.
-- start the server with 1 GB of RAM on 1 shared thread unless 2 player-made servers are already active
-- install datapacks, including the RLWorld8 datapack (not recommended).
-- have a simliar console access (RCON)
-The server will cost 0.02 Unity per minute (1.2/hr), and will be automatically stopped if no players are online within 5 minutes (this can be changed in config).
-All servers stop at the server shutdown time (12 AM MST).
-""",
-        color = 0xFF00FF
+    await message.send(
+            f"Your account data has been updated to the newest version!" if result else (
+            f"The account updater did not make any changes to your account data. If you believe your account has an error, please contact the owner."
+        )
     )
-    """
-    
-    CONFIG: 
-    (Later) CUSTOM SUBDOMAIN (kcsmp.mc.kcservers.ca)
-    Inactivity limit: [2,5,10,30] min limit
-     
-
-
-    """
-
-
-    await message.send(embed=embed)
-
-
 
 @bot.command(
     help = "Display the people with the most Credits",
