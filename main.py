@@ -388,12 +388,12 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     embed.set_field_at(
         index = 5,
         name="Other Info", 
-        value=f"**Wealth Power**: `{calcWealthPower(user)}%\n**Estimated Score**: `{round(calcScore(user, tailLen=2000))}`",
+        value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**Estimated Score**: `{round(calcScore(user, tailLen=2000))}`",
         inline=False
     )
 
     # Add KCash notice
-    embed.set_footer(text="A new KCash server will be up later using the same server as the one this bot is hosted on (KCVM)")
+    embed.set_footer(text="A new global KCash server will be up later.")
 
     await msg.edit(embed=embed)
 
