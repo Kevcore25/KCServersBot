@@ -12,7 +12,7 @@ inflationAmt = botsettings['inflation amount']
 
 
 # Source : chatgpt lol stackoverflow is UESLSES
-def tail(filename, lines=100):
+def tail(filename, lines=100) -> list[str]:
     with open(filename, 'rb') as f:
         # Move the pointer to the end of the file
         f.seek(0, 2)

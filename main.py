@@ -2,7 +2,7 @@
 PIP REQUIREMENTS:
 pip install requests mcstatus discord.py names matplotlib scipy
 """
-import discord, json, random, time, traceback, names, re
+import discord, json, random, time, traceback, names, re, datetime
 from discord.ext import commands, tasks
 import time, os, sys, threading, dns, requests, asyncio, math
 import dns.resolver
@@ -2281,45 +2281,146 @@ Guessed: `{', '.join(guessed)}`
         # One of the if statements ran, so delete author msg
         await ui.delete()
 
-        
+
+TIME_DURATION_UNITS = (
+    ('month', 60*60*24*30),
+    ('week', 60*60*24*7),
+    ('day', 60*60*24),
+    ('hour', 60*60),
+    ('min', 60),
+    ('sec', 1)
+)
+
+
+def human_time_duration(seconds):
+    if seconds == 0:
+        return 'inf'
+    parts = []
+    for unit, div in TIME_DURATION_UNITS:
+        amount, seconds = divmod(int(seconds), div)
+        if amount > 0:
+            parts.append('{} {}{}'.format(amount, unit, "" if amount == 1 else "s"))
+    return ', '.join(parts)
+
 @bot.command(
     help = f"Graph your balance changes",
     description = """In order to perform a graphing operation, the bot reads the last 1000 lines of the balance log files. This means that an active balance change from other users may make the graph detect nothing""",
     aliases = ['gb', 'graphbal', 'balgraph', 'bg', 'balancegraph']
 )
-@commands.cooldown(1, 5, commands.BucketType.user) 
-async def graphbalance(message: discord.Message, user: discord.Member = None, extra: str = "None"):
+@commands.cooldown(3, 10, commands.BucketType.user) 
+async def graphbalance(message: discord.Message, user: discord.Member = None, *, timeframe: str = "1 day ago"):
+    # Timeframe. Use KCTimeFrame Format
+    timeframe = timeframe.lower().replace(",", " ")
+
+    # Total is in Seconds
+    total = 0
+
+    inttemp = []
+    skip = False
+    for i in range(len(timeframe)):
+        t = timeframe[i]
+
+        if t == " ": 
+            skip = False
+        elif skip:
+            continue
+
+        # Is a digit. Record it until a letter is seen
+        if t.isdigit():
+            inttemp.append(t)
+        elif t == " ": 
+            continue
+        # not a digit. Check for what, like day or month
+        else:
+            # If empty, just skip
+            if len(inttemp) == 0: continue
+
+            timeframetemp = int("".join(inttemp))
+
+            if t == "d": # Days
+                timeframetemp *= (60 * 60 * 24)
+            elif t == "h": # Hours
+                timeframetemp *= (60 * 60) 
+            elif t == "m": # Either: minute (more likely so fallback) or month
+                # Month. Add a space in case of index errors
+                if (timeframe + " ")[i+1] == "o":
+                    timeframetemp = int(timeframetemp * (60 * 60 * 24 * 30.5))
+                else:
+                    timeframetemp *= (60)
+            elif t == "w": # Weeks
+                timeframetemp *= (60 * 60 * 24 * 7)
+            elif t == "y":
+                timeframetemp *= (60 * 60 * 24 * 365)
+            elif t == "s": # Seconds. Nothing really should happen
+                pass
+            
+            total += timeframetemp
+            inttemp = []
+            skip = True # Skip until next space
     
-
-    if extra.lower() == "recent":
-        amt = 100
-    elif extra.lower() == "more":
-        amt = 10000
-    else:
-        amt = 1000
-
     if user is None:
+        user = message.author
         userid = message.author.id
     else:
         userid = user.id
         if userid == bot.user.id:
             userid = 'main'
 
-    balances = []
 
-    for line in tail("balanceLog.txt", amt):
-        if str(userid) in line:
-            # change = int(line.split(":", 1)[1].split("CRED")[0].replace(" ", ""))
-            balances.append(
-                line.split("Now", 1)[1].split("CRED")[0].replace(" ", "")
-            )
-        
+    # Initialize a list to store the balances
+    balances = []
+    xstrs = []
+
+    with open(os.path.join("balanceLogs", str(userid)), 'rb') as f:
+        # Move the pointer to the end of the file
+        f.seek(0, 2)
+        # Get the file size
+        size = f.tell()
+
+        # Start from the end of the file
+        for i in range(size - 1, -1, -1):
+            f.seek(i)
+            # Read a byte
+            char = f.read(1)
+            # If it's a newline character and we haven't reached the end of file
+            if char == b'\n' and i < size - 1:
+                # Add the line to the list
+                ln = f.readline().decode().rstrip()
+                try:
+                    t = int(ln.split(" ")[0])
+                except ValueError: continue
+
+                if (time.time() - t) > total:
+                    break
+
+                bal = ln.split(" ")[1]
+                balances.append(float(bal))
+
+                # For string as X value
+                mst = datetime.datetime.fromtimestamp(t, datetime.timezone.utc) - datetime.timedelta(hours=7)
+                try:
+                    xstrs.append(mst.strftime("%-H:%M"))
+                except ValueError:
+                    xstrs.append(mst.strftime("%#H:%M"))
+
+    # If there is only 1 item in the list, nothing will be graphed, so add the same value to the balance.
+    if len(balances) == 1:
+        balances = balances * 2
+
+    balances.reverse()
+
     xvalues = [i for i in range(len(balances))]
+
+    xstrs.reverse()
 
     # Create plot
 
     plt.xlabel("Index")
     plt.ylabel("Balance")
+
+    plt.xticks(xvalues, xstrs)
+
+    plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
     try:
         idx = range(len(xvalues))
@@ -2731,27 +2832,27 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
 
 
 
-@bot.event 
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
+# @bot.event 
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandOnCooldown):
           
-        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-        await ctx.send(embed=embed)
-    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-        (ctx.command).reset_cooldown(ctx)
-        await ctx.send(embed=embed)
+#         embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+#         await ctx.send(embed=embed)
+#     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+#         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+#         (ctx.command).reset_cooldown(ctx)
+#         await ctx.send(embed=embed)
 
-    else:
-        embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
-        embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-        if "KeyError" in str(error):
-            if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
-                embed.description = "*This is most likely due to account errors.*"
-        print(traceback.format_exc())
-        embed.set_footer(text=f"Debug notes: ln {traceback.extract_stack()[-1][1]}")
-        await ctx.send(embed=embed)
-        (ctx.command).reset_cooldown(ctx)
+#     else:
+#         embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
+#         embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
+#         if "KeyError" in str(error):
+#             if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
+#                 embed.description = "*This is most likely due to account errors.*"
+#         print(traceback.format_exc())
+#         embed.set_footer(text=f"Debug notes: ln {traceback.extract_stack()[-1][1]}")
+#         await ctx.send(embed=embed)
+#         (ctx.command).reset_cooldown(ctx)
 
 
 

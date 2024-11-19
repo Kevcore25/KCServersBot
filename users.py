@@ -1,4 +1,4 @@
-import json, time, threading
+import json, time, threading, os
 
 userTemplate = {
     "credits": 0,
@@ -22,7 +22,8 @@ userTemplate = {
         "won/lost": [0, 0],
         "attackedTime": 0,
         "attackTime": 0,
-    }
+    },
+    "log": 0
 }
 
 botID = 0
@@ -137,6 +138,61 @@ class User:
         """Changes the balance of main."""
         return User("main").addBalance(-credits)
 
+    def log(self, msg: str = "", user: str = None) -> str:
+        # Override user
+        if user is None:
+            user = str(self.ID)
+        
+        timeStr = int(time.time())
+
+        # The log list is shortened to: 
+        # {time} {credits} {unity} {gems} {msg}
+        data = self.getData()
+        log = f"{timeStr} {data['credits']} {data['unity']} {data['gems']} {msg}"
+
+        # Add to user logs
+
+        try:
+            if user not in os.listdir('balanceLogs'):
+                with open(os.path.join("balanceLogs", user), 'w') as f:
+                    f.write(log)
+            else:
+                # Append to the log file
+                with open(os.path.join("balanceLogs", user), "a") as f:
+                    f.write("\n" + log)
+        except (FileNotFoundError):
+            # Create a folder if it does not exist
+            if "balanceLogs" not in os.listdir():
+                os.mkdir("balanceLogs")
+
+            # Create a new file
+            with open(os.path.join("balanceLogs", user), 'w') as f:
+                f.write(log)
+
+        # Increase amount of log for user by 1
+        try:
+            self.setValue(
+                "log", 
+                self.getData("log") + 1
+            )
+        except KeyError:
+            self.setValue(
+                "log", 1
+            )
+
+        # Add to global log
+        try:
+            # Append to the log file
+            with open("balanceLogs.txt", "a") as f:
+                f.write(log + "\n")
+        
+        except (FileNotFoundError):
+            # Create a new file
+            with open("balanceLogs.txt", 'w') as f:
+                f.write(log + "\n")
+                        
+        return log
+    
     def addBalance(self, credits=0, unity=0, gems=0) -> bool:
         
         # negUnityFee = 1
@@ -158,16 +214,8 @@ class User:
 
         self.saveAccount()        
 
-
-        timeStr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-
-        try:
-            with open("balanceLog.txt", "a") as f:
-                f.write(f"[{timeStr}] {self.ID}: {'+'+str(credits) if credits > 0 else credits} CRED, {'+'+str(unity) if unity > 0 else unity} UNITY (Now {self.data['credits']} CRED, {self.data['unity']} UNITY)\n")
-        except FileNotFoundError:   
-            print("BalanceLog file not found, creating new one")
-            with open("balanceLog.txt", "w") as f:
-                f.write(f"[{timeStr}] {self.ID}: {'+'+str(credits) if credits > 0 else credits} CRED, {'+'+str(unity) if unity > 0 else unity} UNITY (Now {self.data['credits']} CRED, {self.data['unity']} UNITY)\n")
+        # Log balances
+        self.log()
 
         return True
        
