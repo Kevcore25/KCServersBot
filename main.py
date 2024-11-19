@@ -2832,27 +2832,27 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
 
 
 
-# @bot.event 
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.CommandOnCooldown):
+@bot.event 
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
           
-#         embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-#         await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-#         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-#         (ctx.command).reset_cooldown(ctx)
-#         await ctx.send(embed=embed)
+        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
 
-#     else:
-#         embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
-#         embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-#         if "KeyError" in str(error):
-#             if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
-#                 embed.description = "*This is most likely due to account errors.*"
-#         print(traceback.format_exc())
-#         embed.set_footer(text=f"Debug notes: ln {traceback.extract_stack()[-1][1]}")
-#         await ctx.send(embed=embed)
-#         (ctx.command).reset_cooldown(ctx)
+    else:
+        embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
+        embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
+        if "KeyError" in str(error):
+            if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
+                embed.description = "*This is most likely due to account errors.*"
+        print(traceback.format_exc())
+        embed.set_footer(text=f"Debug notes: ln {traceback.extract_stack()[-1][1]}")
+        await ctx.send(embed=embed)
+        (ctx.command).reset_cooldown(ctx)
 
 
 
