@@ -180,17 +180,6 @@ class User:
                 "log", 1
             )
 
-        # Add to global log
-        try:
-            # Append to the log file
-            with open("balanceLogs.txt", "a") as f:
-                f.write(log + "\n")
-        
-        except (FileNotFoundError):
-            # Create a new file
-            with open("balanceLogs.txt", 'w') as f:
-                f.write(log + "\n")
-                        
         return log
     
     def addBalance(self, credits=0, unity=0, gems=0) -> bool:
