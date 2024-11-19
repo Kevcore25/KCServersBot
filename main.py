@@ -2415,25 +2415,25 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
 
     # Create plot
 
-    plt.xlabel("Index")
+    plt.xlabel("Timeframe")
     plt.ylabel("Balance")
 
     plt.xticks(xvalues, xstrs)
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
-    try:
-        idx = range(len(xvalues))
-        xnew = np.linspace(min(idx), max(idx), 300)
+    # try:
+    #     idx = range(len(xvalues))
+    #     xnew = np.linspace(min(idx), max(idx), 300)
 
-        # interpolation
-        spl = make_interp_spline(idx, balances, k=2)
-        smooth = spl(xnew)
+    #     # interpolation
+    #     spl = make_interp_spline(idx, balances, k=2)
+    #     smooth = spl(xnew)
 
-        # plotting, and tick replacement
-        plt.plot(xnew, smooth, "b")
-    except ValueError:
-        plt.plot(xvalues, balances, "b")
+    #     # plotting, and tick replacement
+    #     plt.plot(xnew, smooth, "b")
+    # except ValueError:
+    plt.plot(xvalues, balances, "b")
 
 #    plt.plot(xvalues, balances)
 
