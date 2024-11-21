@@ -1243,8 +1243,127 @@ async def rob(message, target: discord.Member):
             await asyncio.sleep(3)
         
 
+@bot.command(
+    help = "Redeems a gift code",
+    aliases = ['redeemcode', 'redeemgift'],
+    description = "You can redeem a gift code to get rewards! A redeem code can only be used once per account"
+)
+@commands.cooldown(2, 10, commands.BucketType.user) 
+async def redeem(message, *, code: str):
+    u = User(message.author.id)
+
+    # Get gift codes
+    try:
+        with open("giftcodes.json", "r") as f:
+            codes = json.load(f)
+    except FileNotFoundError:
+        with open('giftcodes.json', 'w') as f:
+            f.write("{}")
+        codes = {}
+
+    try: # You can also use if code in list
+        # Reset CD. CD is for failure attempts
+        redeem.reset_cooldown(message)
+        
+        credits, unity, gems, uses = codes[code]
+
+        # Check if the code is already used
+        if code in u.getData("redeemedCodes"):
+            await message.send(embed=errorMsg(f"You already redeemed the code `{code}`!"))
+            return
 
 
+        # Delete if uses is 0
+        uses -= 1
+        if uses <= 0:
+            del codes[code]
+        else:
+            codes[code] = [credits, unity, gems, uses]
+            
+        with open("giftcodes.json", 'w') as f:
+            json.dump(codes)
+
+        # Append code to account so they cannot use again
+        redeemed = u.getData('redeemedCodes')
+        redeemed.append(code)
+        u.setValue('redeemedCodes', redeemed)
+
+        # Add balances
+        u.addBalance(credits=credits, unity=unity, gems=gems)
+
+        # Send MSG
+        await message.send(embed=successMsg("Code redeemed!", 
+            f"You obtained:" +
+            (f"\n  `{'+' if credits > 0 else ''}{credits} Credits`" if credits != 0 else "") + 
+            (f"\n  `{'+' if unity > 0 else ''}{unity} Unity`" if unity != 0 else "") + 
+            (f"\n  `{'+' if gems > 0 else ''}{gems} Credits`" if gems != 0 else "")
+        ))
+
+    except KeyError:
+        await message.send(embed=errorMsg(f"The code `{code}` does not exist, or has ran out of uses!"))
+
+@bot.command(
+    help = "[ADMIN] Creates a gift code",
+    hidden = True
+)
+async def creategift(message: discord.Message, amount: str, uses: int = 1, code: str | None = None):
+    # Only admins can use this
+
+    # Amount can be a string like 1C 2U or just 1 2U
+    # Ex: !creategift 300 (Creates a random gift code with an amount of 300 credits with 1 use)
+    # Or: !creategift "5C 2U" 5 ABCDEF (Creates a gift code with an amount of 5 Credits and 2 Unity with 5 uses)
+    # Or: !creategift 100,5U 1 ABCDEF (Creates a gift code with an amount of 100 Credits and 5 Unity with 1 use)
+
+    uses = int(uses)
+
+    if message.author.id in [623339767756750849]:
+        # Gen a code
+        if code is None:
+            code = ''.join(random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]).upper() for i in range(8))
+
+        # Get amounts
+
+        credits = 0
+        unity = 0
+        gems = 0
+
+        amount = amount.replace(" ", ",").lower()
+
+        tempint = []
+        for amt in amount.split(","):
+            for t in amt:
+                if t.isdigit() or t == ".":
+                    tempint.append(t)
+                else:
+                    adding = float("".join(tempint))
+                    match t:
+                        case "c": 
+                            credits += adding
+                        case "u":
+                            unity += adding
+                        case "g":
+                            gems += adding
+                    tempint = []
+                    break # Break out of this so the next values can be entered
+        
+        # Save gift code
+        try:
+            with open("giftcodes.json", "r") as f:
+                codes = json.load(f)
+        except FileNotFoundError:
+            with open('giftcodes.json', 'w') as f:
+                f.write("{}")
+            codes = {}
+
+        codes[code] = [credits, unity, gems, uses]
+
+        with open('giftcodes.json', 'w') as f:
+            json.dump(codes, f, indent=4)
+
+        # Send MSG
+        await message.send(f"Created a gift code of: `{code}` giving the following: `{credits} Credits`, `{unity} Unity`, and `{gems} Gems`")
+    else:
+        await message.send("You are not permitted to use this command!")
 
 @bot.command(
     help = f"Add a server to earn KCash.\nFormat: {prefix}addserver [server IP]",
