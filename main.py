@@ -1332,7 +1332,7 @@ async def creategift(message: discord.Message, amount: str, uses: int = 1, code:
         tempint = []
         for amt in amount.split(","):
             for t in amt:
-                if t.isdigit() or t == ".":
+                if t.isdigit() or t in ['.', '-']:
                     tempint.append(t)
                 else:
                     adding = float("".join(tempint))
@@ -2563,7 +2563,7 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     plt.clf()
 
     file = discord.File(f"temp/bal{userid}.png", filename=f"balanceGraph.png")
-    embed = discord.Embed(title="Balance Graph (Smooth)", color=0xFF00FF)
+    embed = discord.Embed(title="Balance Graph", color=0xFF00FF)
     embed.set_image(url=f"attachment://balanceGraph.png")
 
     await message.send(file=file, embed=embed)
