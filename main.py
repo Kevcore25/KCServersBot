@@ -291,7 +291,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     userData = user.getData()
     
-    if usejson.lower().startswith('t') or usejson.lower() == "json":
+    if usejson.lower().startswith('t') or usejson.lower().startswith('j'):
         await message.send(json.dumps(userData))
         return
 
@@ -370,7 +370,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     )
     embed.add_field(
         name="Other Info", 
-        value=f"**KCash Earning Server**: `{kcashEarningServ}`\n**LFN Wallet ID**: `{walletID}``",
+        value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`",
         inline=False
     )
 
@@ -385,12 +385,12 @@ async def account(message, account: discord.Member = None, usejson: str = "false
         name="KCMC Info", 
         value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`"
     )    
-    embed.set_field_at(
-        index = 5,
-        name="Other Info", 
-        value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**Estimated Score**: `{round(calcScore(user, tailLen=2000))}`",
-        inline=False
-    )
+    # embed.set_field_at(
+    #     index = 5,
+    #     name="Other Info", 
+    #     value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**bs%**: `{userData['BS%']}`",
+    #     inline=False
+    # )
 
     # Add KCash notice
     embed.set_footer(text="A new global KCash server will be up later.")
@@ -1344,7 +1344,7 @@ async def invest(message, arg = "", arg2=''):
         else:
             # Check if already investing
             ubs = user.getData('bs%')
-            bs = round(amt / (botbal + amt), 4)
+            bs = round(amt * 100 / (botbal + amt), 8)
 
             if ubs != 0 and arg2.lower() != "overwrite":
                 await message.send(f"Already investing! Use {prefix}invest cash to cash out or overwrite it by doing {prefix}invest {amt} overwrite")
@@ -1367,14 +1367,13 @@ async def invest(message, arg = "", arg2=''):
             if bs == 0:
                 await message.send("You don't have an investment right now!")
             else:
-                amt = round(botbal * bs, 2) 
+                amt = round(botbal * bs / 100, 2) 
 
                 user.addBalance(credits=amt) # bot should also lose that amount
 
                 user.setValue("bs%", 0)
 
-                await message.send(f"Cashed out! You gained {amt} Credits!")
-
+                await message.send(f"Cashed out! You gained {numStr(amt)} Credits!")
 
         else:
             await message.send("Invaild argument. Must be either: float, 'cash'")
