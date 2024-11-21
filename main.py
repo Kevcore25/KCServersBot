@@ -1334,6 +1334,10 @@ async def invest(message, arg = "", arg2=''):
         if amt > userbal:
             await message.send("You don't have enough Credits to invest that!")
         
+        # Fix negative investments
+        elif amt <= 0:
+            await message.send("You cannot invest negative money!")
+
         elif amt > 0.3 * botbal:
             await message.send(f"The amount is over 30% of the bot balance! Do something lower than {round(botbal * 0.3, 2)}!")
 
