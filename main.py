@@ -1281,7 +1281,7 @@ async def redeem(message, *, code: str):
             codes[code] = [credits, unity, gems, uses]
             
         with open("giftcodes.json", 'w') as f:
-            json.dump(codes)
+            json.dump(codes, f, indent=4)
 
         # Append code to account so they cannot use again
         redeemed = u.getData('redeemedCodes')
