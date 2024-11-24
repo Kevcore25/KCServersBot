@@ -276,57 +276,7 @@ def numStr(number) -> str:
         return f"{number:>,.2f}"
     except TypeError:
         return "N/A"
-def calcScore(u: User, returnValue = True, tailLen = 1000) -> float | tuple[float, dict]:
-    try:
-        score = {}
-        score["Value Power"] = (2 * calcValuePower(u)) ** 0.5
 
-        usersDir = os.listdir('users')
-
-        users = {}
-        for file in usersDir:
-            if file == "main.json": continue
-            with open('users/' + file, 'r') as f:
-                try:
-                    c = float(json.load(f)['credits'])
-                    if c != 0: users[file.replace(".json", '')] = c
-                except: pass
-
-        sortedUsers = sorted(users.items(), key=lambda x:x[1], reverse=True)
-        for i in range(len(sortedUsers)):
-            usr = sortedUsers[i]
-            if usr[0] == u.ID:
-                ranking = i+1
-                break
-        else:
-            ranking = len(sortedUsers)
-
-        score["Leaderboard Ranking"] = (11 - ranking) if ranking < 11 else 0 
-
-        unitybal = []
-        for line in tail("balanceLog.txt", tailLen):
-            if str(u.ID) in line:
-                unitybal.append(
-                    float(line.split("Now", 1)[1].split("CRED,", 1)[1].split("UNITY")[0].replace(" ", ""))
-                )
-
-        score["Unity differences"] = (max(unitybal) + min(unitybal) + (sum(unitybal) / len(unitybal))) ** 0.5
-        try:
-            score["Income Commands Used"] = u.getData("incomeCmdsUsed") ** (1/3)
-        except KeyError:
-            score["Income Commands Used"] = 0
-
-        # IF Complex, set to -1
-
-        for s in score:
-            if isinstance(score[s], complex):
-                score[s] = -1
-
-        totalScore = 0
-        for s in score:
-            totalScore += score[s]
-        return totalScore if returnValue else (totalScore, score)
-    except Exception: return 0 if returnValue else (0, {"An error occurred": -1})
 def calcCredit(amount: int, user: User = None) -> float:
     """Calculates credit earnings. This should ideally be only used when positive amounts are gained. A user object should be specified."""
     

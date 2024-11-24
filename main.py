@@ -461,55 +461,6 @@ async def leaderboard(message):
     await message.send(embed=embed)
 
 @bot.command(
-    help = "Display the people with the most Score",
-    aliases = ["lbscore", 'lbs']
-)
-@commands.cooldown(1, 30, commands.BucketType.channel) 
-async def leaderboardscore(message):
-
-    msg = await message.send(embed=basicMsg("Please wait...", "Calculating the score of all users is a complicated process that takes a while.\nTherefore, this command also can only be ran once per channel every 30 seconds."))
-
-    embed = discord.Embed(
-        title = "Top members with the most Score",
-        color = 0xFF00FF
-    )
-
-    usersDir = os.listdir('users')
-
-    users = []
-    for file in usersDir:
-        if file == "main.json": continue
-        u = file.replace(".json", '')
-        if User(u).getData("credits") != 0: users.append(u)
-
-    scores = {}
-    totalScore = 0
-    for u in users:
-        s = calcScore(User(u))
-        scores[u] = s
-        totalScore += s
-
-    sortedUsers = sorted(scores.items(), key=lambda x:x[1], reverse=True)
-
-    for i in range(len(sortedUsers)):
-        try:
-            usr = sortedUsers[i]
-
-            user = bot.get_user(int(usr[0]))
-
-            try:
-                embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: {round((usr[1]))}")
-            except AttributeError:
-                embed.add_field(name=f"{i + 1}. Unknown", value=f"Credits: {(usr[1])}")
-        except Exception as e:
-            embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
-  
-
-    embed.description = f"**Average Score**: `{round(totalScore / len(sortedUsers))}`"
-
-    await msg.edit(embed=embed)
-
-@bot.command(
     name = "about",
     help = "About the bot",
     aliases = ["info", "information", "botinfo"]
@@ -929,30 +880,6 @@ async def robcalc(message, percentage="5"):
     return (amounts[list(sortedAmounts)[0]], amounts[i])
 
 @bot.command(
-    help = "Rob Calculator",
-    aliases = ['kcashsend', 'kcashexchange']
-)
-async def kcash(message):
-    user = User(message.author.id)
- 
-    data = user.getData()
-
-    kcash = data['kcash'] if 'kcash' in data else 0
-
-    servs = {
-        "Home PC": {
-            "ip": "kcservers.ca",
-            "ip2": "192.168.1.71",
-            "examples": "RLWorld, KCSkyblock"
-        },
-        "Azure VM": {
-            "ip": "vm.kcservers.ca",
-            "ip2": "0.0.0.0",
-            "examples": "KCSMP4, ImpossibleCraft, KevChall"
-        },
-    }
-
-@bot.command(
     help = f"Beg for money",
     description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/4000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power, where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks)\nIf you got caught while in debt, you will have to pay `5 Unity` as a fine."""
 )
@@ -1000,96 +927,6 @@ async def beg(message, arg=None):
         embed = discord.Embed(title="Begging successful!",description=f"{names.get_first_name()} gave you `{numStr(winAmount)} Credits`.", color=0x00FF00)
 
     await message.send(embed=embed)
-
-@bot.command(
-    help = f"Rob someone using the traditional way.\nFormat: {prefix}rob <target> [percentage]",
-    description = """When you rob someone, you can specify an percentage amount of up to 15%. The default percentage is 5%. If you win the rob, you win that percentage, but if you fail the rob, you will lose that percentage.\nThe amount you will lose will also be increased with Credit difference between the target and you (`absolute value of (Your Credits - Target's Credits) / 10`)\nThe full loss equation can be repersented as: `Percent% * Your balance + | Your balance - Target balance | / 10` and win equation is `Percent% * Target balance * Credit Earning Perks`\nThere is a 1/3 chance to win a rob by default. btw this command is"""
-)
-@commands.cooldown(1, 30, commands.BucketType.user) 
-async def oldrob(message, target: discord.Member, percentage="5"):
-    user = User(message.author.id)
-    targetUser = User(target.id)
-
-    if not percentage.isnumeric() or int(percentage) not in range(1, 15 + 1):
-        embed = discord.Embed(title="An error occurred!",description=f"Percentage must be a integer between 1 - 15", color=0xFF0000)
-        await message.send(embed=embed)
-        rob.reset_cooldown(message)
-        return
-
-    if user.getData()['credits'] < 0:
-        embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when your balance is under 0!", color=0xFF0000)
-        await message.send(embed=embed)
-        oldrob.reset_cooldown(message)
-        return
-    if targetUser.getData()['credits'] < 0:
-        embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when the target's balance is under 0!", color=0xFF0000)
-        await message.send(embed=embed)
-        oldrob.reset_cooldown(message)
-        return
-
-    if target == message.author:
-        embed = discord.Embed(title="An error occurred!",description=f"Cannot rob yourself!\n*imagine being mj lol*", color=0xFF0000)
-        await message.send(embed=embed)
-        oldrob.reset_cooldown(message)
-        return
-
-    winAmount = int(percentage) / 100
-
-    r = random.randint(0,2)
-                       
-    if message.author.id in [989387917111721995,623339767756750849, 1228567790525616128,1220215410658513026]:
-        r = random.randint(0,4)
-        if r < 3: r = 0
-        print(f"Wei robbed, {r}")
-    
-    if message.author.id in [794389647006105602]:
-        r = random.randint(0,9)
-
-    if "robrate" not in user.getData():
-        user.setValue("robrate", [0,0])
-
-    robrate = user.getData("robrate")
-
-    if r == 0:
-        amount = round(targetUser.getData()['credits'] * winAmount, 2)
-        amount = calcCredit(amount, user)
-
-        # Balances
-        user.addBalance(credits = amount)
-        targetUser.addBalance(credits = -amount)        
-
-        # Add rates
-        robrate[0] += 1
-        user.setValue(
-            key = "robrate",
-            value = robrate
-        )
-
-        embed = discord.Embed(title="Success!",description=f"```ansi\n[2;31m[1;31m[0m[2;31m[0m[2;32m[2;32m[1;32mYou stole [0m[2;32m[0m[2;32m[0m[2;31m[1;31m[1;34m{amount} Credits[0m[1;31m[1;32m[0m[1;31m[0m[2;31m[0m[2;32m[1;32m from {target.display_name}![0m[2;32m[0m```", color=0x00FF00)
-
-    else:
-        differenceIncrease = round(abs(user.getData()['credits'] - targetUser.getData()['credits']) / 10, 2)
-        percentLost = round(user.getData()['credits'] * winAmount, 2)
-        lostAmount = round(percentLost + differenceIncrease, 2)
-    
-
-        user.addBalance(
-            credits = -lostAmount
-        )
-        targetUser.addBalance(
-            credits = lostAmount
-        )
-
-        robrate[1] += 1
-        user.setValue(
-            key = "robrate",
-            value = robrate
-        )
-
-        embed = discord.Embed(title="You got caught!",description=f"**```ansi\n[2;31m[1;31mYou paid {target.display_name}[0m[2;31m[0m[2;31m[1;31m [1;34m{lostAmount} Credits[0m[1;31m![0m[2;31m[0m```**Lost amount from percentage: `{percentLost} Credits`\nLost amount from difference: `{differenceIncrease} Credits`", color=0xFF0000)
-    await message.send(embed=embed)
-
-
 
 @bot.command(
     help = f"Rob someone the modern way.\nFormat: {prefix}rob <target>",
@@ -1795,30 +1632,6 @@ async def players_redir_commands(message: discord.Message):
         title = "Unknown command",
         description = f"Did you mean `{prefix}p {message.invoked_with}`?",
         color = 0xFF0000
-    ))
-
-@bot.command(
-    help = f"View the details of calculating your score",
-    aliases = ["detailedscore"],
-    hidden = True
-)
-async def score(message: discord.Message):
-    user = User(message.author.id)
-
-    totalScore, reasons = calcScore(user, tailLen=10000,returnValue=False)
-    reasonsTxt = []
-    for reason in reasons:
-        reasonsTxt.append(
-            f"**{reason}**: `{round(reasons[reason], 1)}`"
-        )
-    rtxt = "\n".join(reasonsTxt)
-    await message.send(embed=discord.Embed(
-        title = "Your Score calculation",
-        description= f"""### Your current score: `Approx. {round(totalScore, 1)}`
-## Reasons:
-*(These are approximates and may vary in the final result)*
-{rtxt}
-"""
     ))
 
 @bot.command(
