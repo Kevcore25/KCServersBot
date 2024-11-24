@@ -957,7 +957,7 @@ async def kcash(message):
     description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/4000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power, where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks)\nIf you got caught while in debt, you will have to pay `5 Unity` as a fine."""
 )
 @commands.cooldown(3, 30, commands.BucketType.user) 
-async def beg(message):
+async def beg(message, arg=None):
     user = User(message.author.id)
     
 
@@ -975,7 +975,11 @@ async def beg(message):
 
     r = random.randint(0,2)
                     
-        
+    # Add a warning if user is too in debt
+    if user.getData('unity') < -50 and arg is None:
+        await message.send(embed=errorMsg(f"You are running low on unity and should be saving up with commands such as daily.\nA high negative unity can be hard to recover and provides lower amounts of begging money.\nYou may choose ignore this warning by running this command with any arguments (e.g. `{prefix}beg ignore`)"))
+        return
+
     if r == 0:
         if user.getData('credits') < 0:
             user.addBalance(unity = -5)
@@ -996,7 +1000,6 @@ async def beg(message):
         embed = discord.Embed(title="Begging successful!",description=f"{names.get_first_name()} gave you `{numStr(winAmount)} Credits`.", color=0x00FF00)
 
     await message.send(embed=embed)
-
 
 @bot.command(
     help = f"Rob someone using the traditional way.\nFormat: {prefix}rob <target> [percentage]",
@@ -2025,7 +2028,8 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
 
         if autocash <= float(r['multiplier']) and not cashedOut and autocash != 0:
             won = cg.cash_out(betamount)
-            user.addBalance(credits=won)
+            actualwon = calcCredit(won, user)
+            user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
             cashedOut = True
 
             await message.send(f"Won {won}! (Autocashed)")             
