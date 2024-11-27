@@ -2316,6 +2316,8 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
         # Get the file size
         size = f.tell()
 
+        tf = "Unknown"
+
         # Start from the end of the file
         for i in range(size - 1, -1, -1):
             f.seek(i)
