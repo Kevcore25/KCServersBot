@@ -2360,16 +2360,17 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     xvalues = [i for i in range(len(balances))]
 
     xstrs.reverse()
-
-    # Create plot
-
-    plt.xlabel(f"Timeframe ({tf})")
-    plt.ylabel("Credit Balance")
-
     # If too much data then don't show on graph
     if len(xstrs) < 30:
         plt.xticks(xvalues, xstrs)
         tf = "Indexes"
+        
+    # Create plot
+    plt.xlabel(f"Timeframe ({tf})")
+    plt.ylabel("Credit Balance")
+
+
+
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
