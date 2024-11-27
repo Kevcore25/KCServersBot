@@ -471,12 +471,12 @@ async def botinfo(message):
         description = f"""
 __KCServers bot__
 The KCServers bot is made to provide easy access to KCMC information, such as the players on a server, as well as a player's KCash and stats.
-Player's using this bot can also start up servers with a small fee.
+Players using this bot can also start up servers with a small fee.
 
 __Currencies:__
 There are 5 currencies used by this bot. 2 of which are exclusive to the bot.
 **Credits**: The main currency of the bot. It is used with bot games, as well as exchanging Credits to KCash.
-**Unity**: A rarer currency, usually used to perform tasks that may influence others. A maximum of 200 Unity can be stored, and a minimum of -100 Unity can be obtained. For every 1 Unity in debt, the amount of Credits earned decreases by 1%. 
+**Unity**: A rarer currency, usually used to perform tasks that may influence others. A maximum of 200 Unity can be stored, and a minimum of -100 Unity can be obtained. For every 1 Unity in debt, the amount of Credits earned decreases by 1%. Also, every 1 Unity above 100 will give +0.1% Credit Earnings.
 **Gems**: A premium currency, usually only obtained in events. It can be used to be exchange into Credits and Unity, or purchase special items in the shop.
 **Gold**: A currency that is obtained through player mining (Using the `{prefix}players mine` command). It can be exchanged into Credits
 **KCash**: The global currency of KCMC. It is used in every server that supports the *KMCExtract* technology.
@@ -2247,7 +2247,7 @@ def human_time_duration(seconds):
     aliases = ['gb', 'graphbal', 'balgraph', 'bg', 'balancegraph']
 )
 @commands.cooldown(3, 10, commands.BucketType.user) 
-async def graphbalance(message: discord.Message, user: discord.Member = None, *, timeframe: str = "1 day ago"):
+async def graphbalance(message: discord.Message, user: discord.Member = None, *, timeframe: str = "1d"):
     # Timeframe. Use KCTimeFrame Format
     timeframe = timeframe.lower().replace(",", " ")
 
@@ -2357,7 +2357,9 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     plt.xlabel("Timeframe")
     plt.ylabel("Balance")
 
-    plt.xticks(xvalues, xstrs)
+    # If too much data then don't show on graph
+    if len(xstrs) < 50:
+        plt.xticks(xvalues, xstrs)
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
@@ -2372,7 +2374,17 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     #     # plotting, and tick replacement
     #     plt.plot(xnew, smooth, "b")
     # except ValueError:
-    plt.plot(xvalues, balances, "b")
+
+    # Slope color
+    try:
+        first, last = balances[0], balances[-1]
+        if first > last: color = 'red'
+        elif first < last: color = 'green'
+        else: color = 'gray'
+    except IndexError:
+        color = 'gray'
+
+    plt.plot(xvalues, balances, color=color)
 
 #    plt.plot(xvalues, balances)
 
