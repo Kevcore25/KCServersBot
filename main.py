@@ -2363,8 +2363,9 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     # If too much data then don't show on graph
     if len(xstrs) < 30:
         plt.xticks(xvalues, xstrs)
+    else:
         tf = "Indexes"
-        
+
     # Create plot
     plt.xlabel(f"Timeframe ({tf})")
     plt.ylabel("Credit Balance")
