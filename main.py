@@ -2354,7 +2354,6 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     # If there is only 1 item in the list, nothing will be graphed, so add the same value to the balance.
     if len(balances) == 1:
         balances = balances * 2
-        tf = "Indexes"
 
     balances.reverse()
 
@@ -2370,6 +2369,7 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     # If too much data then don't show on graph
     if len(xstrs) < 30:
         plt.xticks(xvalues, xstrs)
+        tf = "Indexes"
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
