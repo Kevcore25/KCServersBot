@@ -2337,14 +2337,24 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
 
                 # For string as X value
                 mst = datetime.datetime.fromtimestamp(t, datetime.timezone.utc) - datetime.timedelta(hours=7)
-                try:
-                    xstrs.append(mst.strftime("%-H:%M"))
-                except ValueError:
-                    xstrs.append(mst.strftime("%#H:%M"))
+
+                # Timeframes. Notice: Again, too much data will override it and it will not be shown
+                # For day (> 1 day) (Probably not shown)
+                if total > (60 * 60 * 24):
+                    xstrs.append(mst.strftime("%d"))
+                    tf = "Days"
+                else:
+                    # For hour time (within a reasonable amount, like <1 day)
+                    try:
+                        xstrs.append(mst.strftime("%-H:%M"))
+                    except ValueError:
+                        xstrs.append(mst.strftime("%#H:%M"))
+                    tf = "Hourtime"
 
     # If there is only 1 item in the list, nothing will be graphed, so add the same value to the balance.
     if len(balances) == 1:
         balances = balances * 2
+        tf = "Indexes"
 
     balances.reverse()
 
@@ -2354,11 +2364,11 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
 
     # Create plot
 
-    plt.xlabel("Timeframe")
-    plt.ylabel("Balance")
+    plt.xlabel(f"Timeframe ({tf})")
+    plt.ylabel("Credit Balance")
 
     # If too much data then don't show on graph
-    if len(xstrs) < 50:
+    if len(xstrs) < 30:
         plt.xticks(xvalues, xstrs)
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
