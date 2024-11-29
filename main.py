@@ -2525,8 +2525,8 @@ async def shop(message): # command is an argument
 from games import GoFish
 
 @bot.command(help = 'Play GoFish with the bot on difficulty 3 (less = harder)')
-async def gofish(message):
-    botDifficulty = 3
+async def gofish(message, botdiff = "3"):
+    botDifficulty = int(botdiff)
 
     u1 = User(message.author.id)
     u2 = User("bot2")
@@ -2579,7 +2579,14 @@ async def gofish(message):
         if len(game.totalCards) <= 0:
             await message.send("Game over!")
             if len(game.playersFullCards[u1]) > len(game.playersFullCards[u2]):
-                await message.send("Player won!")
+
+                # Add temporary credit gain
+
+                credits = calcCredit(25 / botDifficulty, u1)
+                
+                u1.addBalance(credits=credits)
+
+                await message.send(f"Player won! You gained `{credits} credits!`")
             else:
                 await message.send("Bot won!")
             return True
