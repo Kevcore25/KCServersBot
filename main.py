@@ -1136,7 +1136,7 @@ async def redeem(message, *, code: str):
             f"You obtained:" +
             (f"\n  `{'+' if credits > 0 else ''}{credits} Credits`" if credits != 0 else "") + 
             (f"\n  `{'+' if unity > 0 else ''}{unity} Unity`" if unity != 0 else "") + 
-            (f"\n  `{'+' if gems > 0 else ''}{gems} Credits`" if gems != 0 else "")
+            (f"\n  `{'+' if gems > 0 else ''}{gems} Gems`" if gems != 0 else "")
         ))
 
     except KeyError:
