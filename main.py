@@ -2059,10 +2059,34 @@ async def questions(message: discord.Message, subject = "RANDOM"):
     else:
         await message.send(embed=errorMsg(f"{subject} is not a vaild subject!\nVaild subjects include: {', '.join(str(i).capitalize() for i in list(questionsSub))}\nNOTICE: Choosing a subject reduces rewards by 75%"))
         questions.reset_cooldown(message)
-     
+
+
+# Pull MCHangman data from an official source so it is updated once a in while
+def pull_mch_data():
+    """Pulls data from the MC Property Encyclopedia"""
+
+    # Entity data
+    entityData = requests.get("https://joakimthorsen.github.io/MCPropertyEncyclopedia/data/entity_data.json").json().get('key_list')
+    # Block data
+    blockData = requests.get("https://joakimthorsen.github.io/MCPropertyEncyclopedia/data/block_data.json").json().get('key_list')
+    # Item data
+    itemData = requests.get("https://joakimthorsen.github.io/MCPropertyEncyclopedia/data/item_data.json").json().get('key_list')
+
+    # All data
+    data = entityData + blockData + itemData
+
+    # Write to file
+    with open('mcdata.txt', 'w') as f:
+        f.write(
+            '\n'.join(data)
+        )
+
+# Put in a thread to prevent code stalling
+threading.Thread(target=pull_mch_data).start()
+
 @bot.command(
     help = f"Play a simliar version of Hangman",
-    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `8 Credits` to play the game though negative balances are still allowed..""",
+    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `8 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
     aliases = ['mch', 'minecrafthangman']
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -2120,7 +2144,7 @@ async def mchangman(message: discord.Message):
     # Send MSG
     msg = await message.send(embed=discord.Embed(
         title = "Minecraft Item Guessing Game",
-        description = f"""A random word was chosen from a bank. Say a letter to guess a letter. Type the full word to win.
+        description = f"""A random word was chosen from a [bank](https://joakimthorsen.github.io/MCPropertyEncyclopedia/). Say a letter to guess a letter. Type the full word to win.
 At anytime in the game, type `exit` to exit out of the game.
 Winning will give you `{cred()} Credits`.
 
@@ -2130,7 +2154,7 @@ Attempts left: `{attempts}`
 Word Guesses left: `{guesses}`
 
 Guessed: `{', '.join(guessed if len(guessed) > 0 else (' ',))}`
-*There is {len(items)} items that the game can choose from*
+-# *There is {len(items)} items that the game can choose from*
         """,
         color=0xFF00FF
 
@@ -2139,7 +2163,7 @@ Guessed: `{', '.join(guessed if len(guessed) > 0 else (' ',))}`
     async def edit(text: str):
         await msg.edit(embed=discord.Embed(
             title = "Minecraft Item Guessing Game",
-            description = f"""A random word was chosen from a bank. Say a letter to guess a letter. Type the full word to win.
+            description = f"""A random word was chosen from a [bank](https://joakimthorsen.github.io/MCPropertyEncyclopedia/). Say a letter to guess a letter. Type the full word to win.
 At anytime in the game, type `exit` to exit out of the game.
 Winning will give you `{cred()} Credits`.
 

@@ -9,3 +9,7 @@ __pycache__/*
 start.sh
 balanceLog.txt
 previousCgs.json
+balanceLogs.txt
+questionData.json
+ignore/
+mcdata.txt
