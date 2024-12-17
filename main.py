@@ -2834,10 +2834,7 @@ async def gofish(message):
         if len(cards) == 0:
             game.get_from_deck(u1, random.choice(game.totalCards))
 
-
-        await message.send(f"\nYour turn!\nYour cards: {cards}")
-
-        card = await msginput(message, f"Card to ask (input)...")
+        card = await msginput(message, f"Your turn!\nYour cards: {cards}\n\nCard to ask (input)...")
 
 
         if card.isdigit():
