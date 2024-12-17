@@ -2812,7 +2812,7 @@ async def gofish(message, botdiff = "3"):
 
                 # Add temporary credit gain
 
-                credits = calcCredit(25 / botDifficulty, u1)
+                credits = calcCredit(40 / botDifficulty, u1)
                 
                 u1.addBalance(credits=credits)
 
