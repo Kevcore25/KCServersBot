@@ -2148,7 +2148,7 @@ async def mchangman(message: discord.Message):
 
     # Send MSG
     msg = await message.send(embed=discord.Embed(
-        title = "Minecraft Item Guessing Game",
+        title = "Minecraft Guessing Game",
         description = f"""A random word was chosen from a [bank](https://joakimthorsen.github.io/MCPropertyEncyclopedia/). Say a letter to guess a letter. Type the full word to win.
 At anytime in the game, type `exit` to exit out of the game.
 Winning will give you `{cred()} Credits`.
@@ -2167,7 +2167,7 @@ Guessed: `{', '.join(guessed if len(guessed) > 0 else (' ',))}`
 
     async def edit(text: str):
         await msg.edit(embed=discord.Embed(
-            title = "Minecraft Item Guessing Game",
+            title = "Minecraft Guessing Game",
             description = f"""A random word was chosen from a [bank](https://joakimthorsen.github.io/MCPropertyEncyclopedia/). Say a letter to guess a letter. Type the full word to win.
 At anytime in the game, type `exit` to exit out of the game.
 Winning will give you `{cred()} Credits`.
