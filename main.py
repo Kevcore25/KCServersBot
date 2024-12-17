@@ -2754,9 +2754,9 @@ async def shop(message): # command is an argument
 
 from games import GoFish
 
-@bot.command(help = 'Play GoFish with the bot on difficulty 3 (less = harder)')
-async def gofish(message, botdiff = "3"):
-    botDifficulty = int(botdiff)
+@bot.command(help = 'Play GoFish with the bot on difficulty 2 (less = harder)')
+async def gofish(message):
+    botDifficulty = 2
 
     u1 = User(message.author.id)
     u2 = User("bot2")
@@ -2812,7 +2812,7 @@ async def gofish(message, botdiff = "3"):
 
                 # Add temporary credit gain
 
-                credits = calcCredit(40 / botDifficulty, u1)
+                credits = calcCredit(40, u1)
                 
                 u1.addBalance(credits=credits)
 
