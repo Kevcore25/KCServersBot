@@ -2777,7 +2777,7 @@ async def gofish(message):
                     if gt > 0:
                         got = True
                     botKnowns.remove(c)
-                    await message.send(f"Bot asked {c} and got {gt} cards from you!")
+                    await message.send(f"Bot turn! Bot asked {c} and got {gt} cards from you!")
                     break
         else:
             # Guess a random card
@@ -2871,7 +2871,6 @@ async def gofish(message):
         if await determine(): break
         
         # Bot 
-        await message.send("Bot turn!")
         await bot()
     
 
