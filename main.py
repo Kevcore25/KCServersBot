@@ -1708,7 +1708,7 @@ async def work(message, cmd = None, value = None):
 
             # Job Bonuses
             if currentJob == "Unifier": unityGain += 0.75
-            elif currentJob == "Banker": creditGain += 50
+            elif currentJob == "Banker": creditGain += (50 * calcInflation())
 
             user.addBalance(credits=creditGain, unity=unityGain)
 
