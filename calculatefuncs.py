@@ -140,11 +140,14 @@ def calcWealthPower(u: User, decimal = False) -> int:
     except ZeroDivisionError:
         creditpower = 100
 
-    # Credit power should be at a minimum of -50%
+    # Pacifist job
+    if u.getData('job') == "Pacifist":
+        creditpower -= 50
+
+    # Credit power should be at a minimum of 0% (Updated from -50%)
     # Otherwise, a bug would occur where users get negative credits due to commands having a (1 + Wealth Power%) multiplication. 
-    # This is now limited to / 0.5, which is 2x of a 0% wealth power
-    if creditpower < -50:
-        creditpower = -50
+    if creditpower < 0:
+        creditpower = 0
 
     return round(1 + creditpower/100, 2) if decimal else round(creditpower) 
 
@@ -338,7 +341,9 @@ def calcCredit(amount: int, user: User = None) -> float:
 
         """ JOB """
         if data['job'] is not None:
-            amount *= round(1 + data['job']['credit perk'] / 100, 2)
+            with open('jobs.json', 'r') as f:
+                jobs = json.load(f)
+            amount *= round(1 + jobs[data['job']]['credit perk'] / 100, 2)
 
     """ EVENTS """
 
@@ -409,7 +414,9 @@ def calcCreditTxt(user: User) -> int:
 
     """ JOB """
     if data['job'] is not None:
-        amountTxt["[Job] " + data['job']['description']] = data['job']['credit perk']
+        with open('jobs.json', 'r') as f:
+            jobs = json.load(f)
+        amountTxt["[Job] " + data['job']] = jobs[data['job']]['credit perk']
 
     """ EVENTS """
 
@@ -428,6 +435,7 @@ def calculateRobDefense(member: discord.Member) -> int:
     * Already robbed that target within 5 minutes: Target Defense Rob +1
     * Target has `Rob Padlock`: Target Defense Rob +2
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
+    * Police job: Rob Defense +3
     """
     # Create user obj
     user = User(member.id)
@@ -448,19 +456,26 @@ def calculateRobDefense(member: discord.Member) -> int:
     # Already robbed
     if (time.time() - rob['attackedTime']) < 300:
         rdl += 1
+
+    # Police job
+    if user.getData('job') == "Police":
+        rdl += 3
     
     # Insights
     rdl -= rob['insights']
 
+    
+
     return rdl
 
 def calculateRobAttack(member: discord.Member) -> int:
-    """Calculate the Rob Defense level of a user"""
+    """Calculate the Rob Attack level of a user"""
 
     """
-    Factors that affect RDL
+    Factors that affect RAL
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
     * You have `Rob Stealth`: Rob Attack +2
+    * Robber job: Rob Attack +2
     """
 
     # Create user obj
@@ -475,6 +490,11 @@ def calculateRobAttack(member: discord.Member) -> int:
         rob = user.getData()['rob']
         ral = rob['atk']
     
+    # Robber job
+    if user.getData('job') == "Robber":
+        ral += 2
+    
+
     # Insights
     ral += rob['insights']
 

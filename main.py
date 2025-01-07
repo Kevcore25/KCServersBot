@@ -15,19 +15,19 @@ from traceback import print_exc as printError
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import make_interp_spline
-
+from dotenv import load_dotenv
 from calculatefuncs import *
 
-usersFile.botID = "1220215410658513026"
-
-KMCExtractLocation = "\\\\KCHOSTINGPC\\Desktop\\MENU\\ServerStuff\\!KMCExtract"
+load_dotenv()
 
 with open("botsettings.json", 'r') as f:
     data = json.load(f)
 
+    KMCExtractLocation = data['KMCExtract']
     prefix = data['prefix']
-    TOKEN = data['token']
     inflationAmt = data['inflation amount']
+    adminUsers = data['admins']
+    botAIChannel = data['AI Channel']
 
 activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.3.0)")
 bot = commands.Bot(
@@ -156,7 +156,7 @@ async def botAI():
             return json.load(f) 
     
         
-    channel = bot.get_channel(1241127368916209664)
+    channel = bot.get_channel(botAIChannel)
 
     # Commands
     async def run(command, **args):
@@ -615,7 +615,7 @@ async def send(message, target: discord.Member, amount: float):
     
 @bot.command(
     help = f"Get daily reward",
-    description = """The daily reward gives an amount of Credits and Unity based on wealth power.\nThe command be ran every 12 hours"""
+    description = """The daily reward gives an amount of Unity as well as Credits that scales with your wealth power.\nThe more wealth power you have, the less you earn.\nThe command be ran every 12 hours"""
 )
 async def daily(message):
     user = User(message.author.id)
@@ -626,8 +626,8 @@ async def daily(message):
         return
 
 
-    amount = round(50 / (1 + calcWealthPower(user)/100), 2)
-    unityAmt = round(5 / (1 + calcWealthPower(user)/100), 2)
+    amount = 50 / (calcWealthPower(user, True) / 5)
+    unityAmt = 3
 
 
     if random.randint(0,9) > 0:
@@ -645,9 +645,10 @@ async def daily(message):
     else:
         user.setValue('dailyTime', int(time.time()) + 3720)
         user.saveAccount()
-        embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(50 * (1 + calcWealthPower(user)/100))} Credits` but gain `{numStr(unityAmt * 3 + 1)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
+        credLost = calcWealthPower() / 2
+        embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(credLost)} Credits` but gain `{numStr(unityAmt * 3 + 1)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
         user.addBalance(
-            credits=-round(50 * (1 + calcWealthPower(user)/100), 2),
+            credits=-credLost,
             unity=unityAmt*3 + 1
         )
 
@@ -937,9 +938,14 @@ A new modern robbing system that rolls values instead of a fixed 33% to win.
 This robbing system rolls a dice from 1 to a set amount. If your dice roll is higher than the opponent's roll, you win the rob. Otherwise, you lose the rob.
 If you rolled the same as your target, a reroll is done.
 By default with no upgrades or whatsoever, your Rob Attack has a level of 5, and your Rob Defense has a level of 5. This means that while robbing someone, you can roll up to a number of 5.
+Certain actions and job professions can increase your Rob Attack and Rob Defense levels.
 
 While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
-The equation of this additional Defense gain is modelled by the equation: *`log(|(Your Balance) - (Target Balance)| + 1) ^ 2`*
+The equation of this additional Defense gain is modelled by the equations: 
+- *`(Target's RDL) \* ((Target Balance) / (User Balance) / 1.5) ^ 2`*
+- *`(Target's RDL) \* ((User Balance) / (Target Balance) / 1.2) ^ 2`*
+The highest value of the two equations will be used as the additional Defense gain.
+The additional Defense gain cannot be below 1 and the final Defense Level will be rounded to the nearest integer.
 
 Also when failing a rob, you gain an *Insight*, increasing your chances of suceeding at the cost of your rob defenses decreasing.
 Insights can stack up to 3 times and reset when succeeding a rob or being successfully robbed by another.
@@ -965,7 +971,7 @@ Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
     aliases = ["newrob"]
 )
 @commands.cooldown(1, 30, commands.BucketType.user) 
-async def rob(message, target: discord.Member):
+async def rob(message, target: discord.Member, ignorewarn = None):
     user = User(message.author.id)
     targetUser = User(target.id)
 
@@ -980,7 +986,7 @@ async def rob(message, target: discord.Member):
         rob.reset_cooldown(message)
         return
     if target == message.author:
-        embed = discord.Embed(title="An error occurred!",description=f"Cannot rob yourself!\n*imagine being mj lol*", color=0xFF0000)
+        embed = discord.Embed(title="An error occurred!",description=f"Cannot rob yourself!", color=0xFF0000)
         await message.send(embed=embed)
         rob.reset_cooldown(message)
         return
@@ -997,9 +1003,33 @@ async def rob(message, target: discord.Member):
     targetRDL = calculateRobDefense(target)
 
     # Additional target RDL
-    diffRDL = int(math.log10(abs(userBal - targetBal) + 1) ** 2)
-    targetRDL += diffRDL
+    try:
+        diff = ((targetBal / userBal) / 1.5) ** 2
+    except ZeroDivisionError:
+        diff = 10001
+    try:
+        diff2 = ((userBal / targetBal) / 1.2) ** 2
+    except ZeroDivisionError:
+        diff2 = 10001
 
+    # if higher, use diff2
+    if diff2 > diff: diff = diff2
+
+    if diff < 1: diff = 1
+
+    targetRDL *= diff
+    targetRDL = round(targetRDL)
+
+    # Warn
+    if ignorewarn is None and (targetRDL / userRAL) > 3:
+        await message.send(embed=discord.Embed(
+            title = "Warning",
+            description = f"""The target's Rob Defense Level ({targetRDL}) is more than 3x compared to your Rob Attack Level ({userRAL})\nYou are very likely to lose this robbery.\nYou may ignore this warning by running the command with any arguments (e.g. `{prefix}rob {target.global_name} ignore`)""",
+            color=0xFFAA00
+        ))
+        rob.reset_cooldown(message)
+        return
+    
     msg = await message.send(embed=discord.Embed(
             title = "Rob Results",
             description = f"""Robbing {target.mention}...""",
@@ -1071,8 +1101,8 @@ async def rob(message, target: discord.Member):
 **{winTxt}**""",
             color = 0xFF00FF,
         )
-        if diffRDL > 0:
-            em.set_footer(text = f"Target obtained +{diffRDL} Rob Defense due to differences in Credit balance")
+        if diff > 1:
+            em.set_footer(text = f"Target obtained a +{round((diff-1) * 100, 1)}% in Rob Defense due to differences in Credit balance")
 
         await msg.edit(embed=em)
 
@@ -1156,7 +1186,7 @@ async def creategift(message: discord.Message, amount: str, uses: int = 1, code:
 
     uses = int(uses)
 
-    if message.author.id in [623339767756750849]:
+    if message.author.id in adminUsers:
         # Gen a code
         if code is None:
             code = ''.join(random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]).upper() for i in range(8))
@@ -1636,66 +1666,86 @@ async def players_redir_commands(message: discord.Message):
 
 @bot.command(
     help = f"Work\nFormat: {prefix}work [apply <job>]",
-    description = """""",
+    description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nApplying for a job initially costs `5 Unity` and `500 Credits` (scales with Wealth Power)""",
     aliases = ['job'],
     hidden = True
 )
+@commands.cooldown(1, 3600, commands.BucketType.user)
 async def work(message, cmd = None, value = None):
     user = User(message.author.id)
     data = user.getData()
 
-    JOBS = {
-        "Software Developer": {
-            "description": "A developer working in KCServers. Solve 'easy' programming problems (Python for code) to earn money",
-            "work output": 25,
-            "credit perk": -5
-        },
-        # "Police": {
-        #     "description": "A policeman, catching thiefs. They have increased chances of robbers failing.",
-        #     "work output": 5,
-        #     "credit perk": -5
-        # },
-        # "Robber": {
-        #     "description": "A thief. They have increased chances of successful robs",
-        #     "work output": 5,
-        #     "credit perk": -5
-        # },
-        "Math": {
-            "description": "i need practice on quadratics lol",
-            "work output": 50,
-            "credit perk": -10
-        },
-        # "Gamer": {
-        #     "description": f"A KCMC gamer. The KCash earned from `{prefix}setserver` every minute increases by 0.5",
-        #     "work output": 0,
-        #     "credit perk": 0
-        # },
-        # "Nurse": {
-        #     "description": f"A nurse job. The Unity gained from `{prefix}daily` increases by 3",
-        #     "work output": 100,
-        #     "credit perk": -15
-        # },
-        # "Researcher": {
-        #     "description": f"A researcher. The Unity gained from `{prefix}daily` increases by 3",
-        #     "work output": -50,
-        #     "credit perk": 10
-        # }
-    }
+    # Base gains
+    baseCredits = 50 * calcInflation()
+    baseUnity = 0.5
 
+    with open('jobs.json', 'r') as f:
+        jobs = json.load(f)
+
+    # Get current job
+    currentJob = data['job']
+    
     if cmd is None:
-
         embed = discord.Embed(
-            title="Work jobs",
-            description=(
-                f"Apply using `{prefix}work apply <job>`\n"
-                "Work output is an additional money gain from work.\n"
-                "\n**Jobs:**\n" + 
-                "\n".join(f"""**{job}**: {JOBS[job]['description']}\nPerks: `{"+" + str(JOBS[job]['work output']) if JOBS[job]['work output'] >= 0 else JOBS[job]['work output']}% work output`, `{"+" + str(JOBS[job]['credit perk']) if JOBS[job]['credit perk'] >= 0 else JOBS[job]['credit perk']}% Credit earnings`""" for job in JOBS)
-            ), 
-            color=0xFF00FF
-        )
-        await message.send(embed=embed)
-        return
+                title="Work jobs",
+                description=(
+                    f"Apply using `{prefix}work apply <job>`" + 
+                    ("\n" if currentJob == None else f"\nWork using `{prefix}work work`") +
+                    "\nWork output is an additional money gain from work.\n" + 
+                    "\n**Jobs:**\n" + 
+                    "\n\n".join(f"""**{job}**: {jobs[job]['description']}\nCurrent base rates: `{numStr(baseCredits *(1 + jobs[job]['work output'] / 100))} Credits` and `{numStr(baseUnity * (1 + jobs[job]['work output'] / 100))} Unity`\nPerk: `{"+" + str(jobs[job]['credit perk']) if jobs[job]['credit perk'] >= 0 else jobs[job]['credit perk']}% Credit earnings`""" for job in jobs)
+                ), 
+                color=0xFF00FF
+            )
+    elif cmd == "work":
+
+        if currentJob is None:
+            embed = errorMsg("You must apply for a job first!")
+        else:
+            # Work
+            creditGain = calcCredit(baseCredits, user) * (1 + jobs[currentJob]['work output'] / 100)
+            unityGain = baseUnity * (1 + jobs[currentJob]['work output'] / 100)
+
+            # Job Bonuses
+            if currentJob == "Unifier": unityGain += 0.75
+            elif currentJob == "Banker": creditGain += 50
+
+            user.addBalance(credits=creditGain, unity=unityGain)
+
+            embed = discord.Embed(
+                title="Work",
+                description=(
+                    f"You earned `{numStr(creditGain)} Credits` and `{numStr(unityGain)} Unity` from working as a {currentJob}"
+                ),
+                color=0x00FF00
+            )
+            # Directly return without resetting the CD
+            await message.send(embed=embed)
+            return
+
+    elif cmd == "apply":
+        # Apply for the job
+        value = str(value).title()
+
+        if value in jobs:
+            credLost = 250 * calcWealthPower(user, decimal=True)
+            unityLost = 5 * calcWealthPower(user, decimal=True)
+
+            if user.getData('credits') < credLost or user.getData('unity') < unityLost:
+                embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Credits and/or Unity to apply for a job!\nJob cost: `{credLost} Credits` and `{unityLost} Unity`\n\nTips:\n1. Use other income commands (e.g. beg, daily) to gain Credits and/or Unity\n2. Lower your Wealth Power by having less Credits compared to the average\n3. Read the descriptions of commands using `{prefix}help <command>` to earn instant Credits")
+    
+            else:
+
+                user.addBalance(credits=-credLost, unity=-unityLost)
+                user.setValue('job', value)
+
+                embed = successMsg("Job applied", f"You paid `{numStr(credLost)} Credits` and `{numStr(unityLost)} Unity` to apply for the job of {value}!")
+
+    else: embed = errorMsg("Command is not vaild!")
+
+    await message.send(embed=embed)
+    work.reset_cooldown(message)
+
 
 
 
@@ -1788,10 +1838,6 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
         embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description="""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.""")        
         embed.set_image(url=f"attachment://cg{randomNum}.png")
         embed.set_footer(text="The only game you can earn so much?!")
-        if message.author.display_icon is not None:
-            embed.set_author(name=message.author.display_name, icon_url=message.author.display_icon)
-        else:
-            embed.set_author(name=message.author.display_name, icon_url="https://kevcoremc.github.io/purpletransparentKC.png")
 
         await msg.edit(attachments=[file], embed=embed)
 
@@ -1886,15 +1932,14 @@ threading.Thread(target=questionparser.updateTimer).start()
 )
 @commands.cooldown(1, 3600, commands.BucketType.user) 
 async def questions(message: discord.Message, subject = "RANDOM"):
-    await message.send("Sorry, but until there are more questions in the bank, I am disabling this command lol good luck with your unity problems")
-    return
+
 
     u = User(message.author.id)
 
-    # if message.author.id not in [989387917111721995, 623339767756750849, 639206421707227136, 695703574465740851, 889635268070629436]:
-    #     await message.send(embed=errorMsg("You are not whitelisted to use this command!\nCheck out this command in the official bot later (V.2.2)"))
-    #     return
-
+    if u.getData('job') != "Scholar":
+        await message.send("Sorry, but until there are more questions in the bank, I am disabling this command lol good luck with your unity problems")
+        questions.reset_cooldown(message)
+        return
     subject = str(subject).upper()
 
     questionsSub = questionparser.sortBySubject()
@@ -2423,13 +2468,13 @@ Guessed: `{', '.join(guessed if len(guessed) > 0 else (' ',))}`
            
         elif userInput == block.lower():            
 
-            c = calcCredit(10 + (hints * 2), u)
+            c = calcCredit(10 + (hints / 2), u)
             guesses -= 1 # minus 1 to the counter for edit
         
             # add money
             u.addBalance(credits=c)
 
-            await edit(f"*You won! You gained `{c} Credits`!*") # Makes it BOLD, not italtic
+            await edit(f"*You won! You gained `{numStr(c)} Credits`!*") # Makes it BOLD, not italtic
             mcpropertyguesser.reset_cooldown(message)
             return
         
@@ -2754,9 +2799,9 @@ async def shop(message): # command is an argument
 
 from games import GoFish
 
-@bot.command(help = 'Play GoFish with the bot on difficulty 2 (less = harder)')
+@bot.command(help = 'Play GoFish with the bot on difficulty 1 (less = harder)')
 async def gofish(message):
-    botDifficulty = 2
+    botDifficulty = 1
 
     u1 = User(message.author.id)
     u2 = User("bot2")
@@ -2812,7 +2857,7 @@ async def gofish(message):
 
                 # Add temporary credit gain
 
-                credits = calcCredit(40, u1)
+                credits = calcCredit(40, u1) * calcInflation()
                 
                 u1.addBalance(credits=credits)
 
@@ -3048,28 +3093,17 @@ async def on_command_error(ctx, error):
             if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
                 embed.description = "*This is most likely due to account errors.*"
         print(traceback.format_exc())
-        embed.set_footer(text=f"Debug notes: ln {traceback.extract_stack()[-1][1]}")
         await ctx.send(embed=embed)
         (ctx.command).reset_cooldown(ctx)
 
 
-
 @bot.command(aliases=['reload'], hidden=True)
-async def restart(ctx, arg1=None):
- 
-    if ctx.author.id == 623339767756750849:
-
+async def restart(ctx):
+    if ctx.author.id in adminUsers:
         await bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
-        if arg1 == "update":
-            embed=discord.Embed(title=f"Restarting the program...", description=f"and git pulling as well...", color=0x00CCFF)
-            await ctx.send(embed=embed, delete_after=3.0)
-            os.system('git pull')
-            time.sleep(3)
-        else:
-            embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
-            await ctx.send(embed=embed, delete_after=3.0)
+        embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
+        await ctx.send(embed=embed, delete_after=3.0)
         os.execl(sys.executable, sys.executable, *sys.argv)
 
-
-
-bot.run(TOKEN)
+# Run the bot based on the token in the .env file
+bot.run(os.getenv("DISCORD_TOKEN"))

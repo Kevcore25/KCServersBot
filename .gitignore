@@ -14,3 +14,5 @@ questionData.json
 ignore/
 mcdata.txt
 mcpgdata.json
+.env
+pingservers.json

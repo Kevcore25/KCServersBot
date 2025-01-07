@@ -134,8 +134,8 @@ Ancient Debris
 Andesite
 Anvil
 Azalea
-Bamboo Mosaic
 Bamboo
+Bamboo Mosaic
 Banners
 Barrel
 Barrier
@@ -186,8 +186,8 @@ Chain
 Chest
 Chiseled Bookshelf
 Chiseled Copper
-Chiseled Tuff Bricks
 Chiseled Tuff
+Chiseled Tuff Bricks
 Chorus Flower
 Chorus Plant
 Clay
@@ -199,8 +199,8 @@ Cobweb
 Cocoa
 Command Blocks
 Composter
-Concrete Powder
 Concrete
+Concrete Powder
 Conduit
 Copper Bulb
 Copper Grate
@@ -210,6 +210,7 @@ Coral Fans
 Corals
 Crafter
 Crafting Table
+Creaking Heart
 Crops
 Crying Obsidian
 Daylight Detector
@@ -219,8 +220,8 @@ Deepslate
 Detector Rail
 Diamond Ore
 Diorite
-Dirt Path
 Dirt
+Dirt Path
 Dispenser
 Doors
 Dragon Egg
@@ -230,11 +231,11 @@ Dropper
 Emerald Ore
 Enchanting Table
 End Gateway
-End Portal Frame
 End Portal
+End Portal Frame
 End Rod
-End Stone Bricks
 End Stone
+End Stone Bricks
 Ender Chest
 Farmland
 Fence Gates
@@ -250,8 +251,8 @@ Frosted Ice
 Fungi
 Furnace
 Gilded Blackstone
-Glass Pane
 Glass
+Glass Pane
 Glazed Terracotta
 Glow Lichen
 Glowstone
@@ -296,8 +297,8 @@ Melon
 Moss Block
 Moss Carpet
 Moving Piston
-Mud Bricks
 Mud
+Mud Bricks
 Muddy Mangrove Roots
 Mushroom Blocks
 Mushrooms
@@ -315,6 +316,9 @@ Observer
 Obsidian
 Packed Ice
 Packed Mud
+Pale Hanging Moss
+Pale Moss Block
+Pale Moss Carpet
 Pink Petals
 Piston
 Pitcher Crop
@@ -339,17 +343,20 @@ Redstone Ore
 Redstone Repeater
 Redstone Torch
 Reinforced Deepslate
+Resin Block
+Resin Bricks
+Resin Clump
 Respawn Anchor
 Roots
 Sand
 Sandstone
 Saplings
 Scaffolding
+Sculk
 Sculk Catalyst
 Sculk Sensor
 Sculk Shrieker
 Sculk Vein
-Sculk
 Sea Lantern
 Sea Pickle
 Seagrass
@@ -363,19 +370,19 @@ Small Dripleaf
 Smithing Table
 Smoker
 Sniffer Egg
-Snow Block
 Snow
+Snow Block
 Soul Sand
 Soul Soil
 Spawner
 Sponge
 Spore Blossom
-Stained Glass Panes
 Stained Glass
+Stained Glass Panes
 Stairs
 Stems
-Stone Bricks
 Stone
+Stone Bricks
 Stonecutter
 Structure Block
 Structure Void
@@ -389,15 +396,15 @@ Terracotta
 Tinted Glass
 TNT
 Torch
-Torchflower Crop
 Torchflower
+Torchflower Crop
 Trapdoors
 Trapped Chest
 Trial Spawner
-Tripwire Hook
 Tripwire
-Tuff Bricks
+Tripwire Hook
 Tuff
+Tuff Bricks
 Turtle Egg
 Twisting Vines
 Vault
