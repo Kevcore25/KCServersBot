@@ -16,3 +16,6 @@ mcdata.txt
 mcpgdata.json
 .env
 pingservers.json
+mcdata.json
+questionData.json
+questionBank.csv
