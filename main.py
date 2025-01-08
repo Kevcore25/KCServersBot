@@ -678,11 +678,14 @@ async def exchange(message, amount: float = None):
     exchangeFee = botsettings.get('Exchange fee', [500, 5])
 
     # Lower exchange rate based on Wealth Power
-    exchangeFee[0] = round(
-        (exchangeFee[0] * 2) 
-        /
-        math.log10(calcWealthPower(user, noperks=True)),
-     2)
+    try:
+        exchangeFee[0] = round(
+            (exchangeFee[0] * 2) 
+            /
+            math.log10(calcWealthPower(user, noperks=True)),
+        2)
+    except ValueError: # Logarithm of 0
+        exchangeFee[0] = 500
     # exchange fee cannot be higher than initial
     if exchangeFee[0] > 500: exchangeFee[0] = 500
 
