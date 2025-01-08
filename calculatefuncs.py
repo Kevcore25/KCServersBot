@@ -104,6 +104,8 @@ def calcInflation() -> float:
     for file in usersDir:
         with open('users/' + file, 'r') as f:
             try:
+                if file == "main.json": continue
+                
                 credits = float(json.load(f).get('credits'))
                 if credits != 0: 
                     totalCredits += credits
