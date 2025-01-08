@@ -298,12 +298,6 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     ign = str(userData['IGN'])#.replace('_', '\\_')
 
     try:
-        with open('pingservers.json', 'r') as f:
-            kcashEarningServ = json.load(f)[str(account.id)]
-    except:
-        kcashEarningServ = "None"
-
-    try:
         walletID = userData['LFN']
         if walletID is None:
             raise KeyError
@@ -377,8 +371,17 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     msg = await message.send(embed=embed)
 
 
-    # Get KCash - offline until a server/API is made
-    kcash = "Offline"
+    # Get KCash 
+
+    try:    
+        with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as f:
+            kmceusers = json.load(f)
+    
+        kcash = kmceusers[ign]['KCash']
+    except KeyError:
+        kcash = "Invaild IGN"
+    except:
+        kcash = "Error"
 
     embed.set_field_at(
         index = 1,
@@ -392,8 +395,8 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     #     inline=False
     # )
 
-    # Add KCash notice
-    embed.set_footer(text="A new global KCash server will be up later.")
+    # # Add KCash notice
+    # embed.set_footer(text="A new global KCash server will be up later.")
 
     await msg.edit(embed=embed)
 
@@ -645,7 +648,7 @@ async def daily(message):
     else:
         user.setValue('dailyTime', int(time.time()) + 3720)
         user.saveAccount()
-        credLost = calcWealthPower() / 2
+        credLost = calcWealthPower(user) / 2
         embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(credLost)} Credits` but gain `{numStr(unityAmt * 3 + 1)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
         user.addBalance(
             credits=-credLost,
