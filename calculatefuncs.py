@@ -117,7 +117,7 @@ def calcInflation() -> float:
     return inflationLvl
 
 
-def calcWealthPower(u: User, decimal = False) -> int:
+def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
     """Calculates wealth power and returns a percentage"""
     # Relative Power of Credits = (Credits ) / (Average Credits of Members)  
 
@@ -140,9 +140,10 @@ def calcWealthPower(u: User, decimal = False) -> int:
     except ZeroDivisionError:
         creditpower = 100
 
-    # Pacifist job
-    if u.getData('job') == "Pacifist":
-        creditpower -= 50
+    if not noperks:
+        # Pacifist job
+        if u.getData('job') == "Pacifist":
+            creditpower -= 50
 
     # Credit power should be at a minimum of 0% (Updated from -50%)
     # Otherwise, a bug would occur where users get negative credits due to commands having a (1 + Wealth Power%) multiplication. 

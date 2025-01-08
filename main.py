@@ -658,96 +658,79 @@ async def daily(message):
 
 
 @bot.command(
-    help = f"Converts a currency into another",
-    description = f"""Conversion rates can be found by running the command by itself.\nFormat of command: `{prefix}`""",
+    help = f"Converts Credits into KCash",
+    description = f"""Conversion rates can be found by running the command by itself.\n""",
     aliases = ["convert", "change"],
     hidden = True
 )
-async def exchange(message, fromCurrency = None, toCurrency = None, amount = 0):
+async def exchange(message, amount: float = None):
     user = User(message.author.id)
     data = user.getData()
     inflation = calcInflation()
-    exchangeRates = {
-#("credits", "unity"): round(0.1 / inflation, 4),
-        #("unity", "credits"): round(4 * (inflation ** 0.75)),
-    }
-    exchangeFee = (0, 5)
 
-    if fromCurrency is None:
-        exchangeRateTxt = "\n".join(f"1 {f} > {exchangeRates[(f,t)]} {t}" for f, t in exchangeRates)
-        embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange [from currency] <to currency> <amount of from currency to exchange>`\n*KCash exchange will be available periodically. Currently, it would be `1 Credit` > `{round(0.1 / inflation, 2)} KCash`*\n\n**Exchange fee**: `{exchangeFee[0]} Credits` and `{exchangeFee[1]} Unity` per exchange.\n**Exchange rates**:\n{exchangeRateTxt}""", color=0xFF00FF)
+    with open("botsettings.json", 'r') as f:
+        botsettings: dict = json.load(f)
+    
+    kcashrate = botsettings.get('KCash rate', 0.1)
+    exchangeFee = botsettings.get('Exchange fee', [500, 5])
 
-    elif fromCurrency not in ['gems']:
-        embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange from currency is not valid! Valid options are credits and unity.", color=0xFF0000)
-        
-    elif toCurrency not in ['credits','unity']:
-        embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange from currency is not valid! Valid options are credits and unity.", color=0xFF0000)
-    elif not str(amount).isnumeric() or int(amount) <= 0:
+    # Lower exchange rate based on Wealth Power
+    exchangeFee[0] = round(
+        (exchangeFee[0] * 2) 
+        /
+        math.log10(calcWealthPower(user, noperks=True)),
+     2)
+    # exchange fee cannot be higher than initial
+    if exchangeFee[0] > 500: exchangeFee[0] = 500
+
+
+    if amount is None:
+        embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange <credits>`\n\nCurrently, it would be `1 Credit` → `{round(kcashrate / inflation, 4)} KCash`\n\n**Exchange fee**: `{exchangeFee[0]} Credits` and `{exchangeFee[1]} Unity` per exchange.""", color=0xFF00FF)
+        embed.set_footer(text="Credit exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken account.")
+
+    elif amount <= 0:
         embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!", color=0xFF0000)
     else:
-    
-        for f, t in exchangeRates:
-            if f == fromCurrency and t == toCurrency:
-                exchangeRate = exchangeRates[(f,t)]
-                if data[f] < amount:
-                    embed = discord.Embed(title="Not enough currency!",description=f"Your {f.capitalize()} amount is less than the requested exchange amount which requires {amount}!", color=0xFF0000)
-                else:
-                    getAmount = round(amount * exchangeRate, 5)
-
-                    if t != "kcash":
-                        if f == "credits":
-                            user.addBalance(credits = -amount, unity = getAmount)
-                        else:
-                            user.addBalance(unity = -amount, credits = getAmount)
-
-                        # Exchange fee
-                        user.addBalance(credits = -exchangeFee[0], unity = -exchangeFee[1])
-
-                        embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} {f.capitalize()}` to `{getAmount} {t.capitalize()}`\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
-                    else:
-                        # NETWORK FETCHES
-                        try:
-                            with open(KMCExtractLocation + "\\users.json", 'r') as file:
-                                kmceusers = json.load(file)
-
-                            getAmount = round(amount * exchangeRate, 2)
-                            kmceusers[data['IGN']]['KCash'] += getAmount
-
-                            with open(KMCExtractLocation + "\\users.json", 'w') as file:
-                                kmceusers = json.dump(kmceusers, file)       
-                            user.addBalance(credits = -amount)
- 
-                            # Exchange fee
-                            user.addBalance(credits = exchangeFee[0], unity = exchangeFee[1])
-
-
-                            embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} {f.capitalize()}` to `{getAmount} KCash`.\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
-
-                        except KeyError:
-                            embed = discord.Embed(title="Not registered!",description=f"Your MC Username (`{data['IGN']}`) is not registered on KMCExtract!", color=0xFF0000)
-                break
+        # Check if user is vaild to exchange
+        
+        # If amount is more than balance
+        if (amount + exchangeFee[0]) > data['credits']:
+            embed = discord.Embed(
+                title="Not enough Credits!",
+                description=f"Your balance is less than the requested exchange amount which requires `{amount + exchangeFee[0]} Credits`!", 
+                color=0xFF0000
+            )
+        # Check unity
+        elif data['unity'] < exchangeFee[1]:
+            embed = discord.Embed(
+                title="Not enough Unity!",
+                description=f"Your Unity balance is less than the exchange fee of `{exchangeFee[1]} Unity`!", 
+                color=0xFF0000
+            )
 
         else:
-            embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange currencies is not valid! Run `{prefix}exchange` to see the details.", color=0xFF0000)
+            try:
+                with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as file:
+                    kmceusers = json.load(file)
 
+                getAmount = round(amount * kcashrate, 2)
+                kmceusers[data['IGN']]['KCash'] += getAmount
+
+                with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
+                    kmceusers = json.dump(kmceusers, file)       
+
+                user.addBalance(credits = -amount)
+
+                # Exchange fee
+                user.addBalance(credits = -exchangeFee[0], unity = -exchangeFee[1])
+
+
+                embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} Credits` to `{getAmount} KCash`.\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
+
+            except KeyError:
+                embed = discord.Embed(title="Not registered!",description=f"Your MC Username (`{data['IGN']}`) is not registered on KMCExtract!", color=0xFF0000)
 
     await message.send(embed=embed)
-
-
-
-
-# @bot.command(
-#     name = "test", 
-#     help = f"Yes",
-#     hidden = True
-# )
-# async def test_cmd(message):
-#     file: discord.File = await message.message.attachments[0].save("temp/tessocr.png")
-#     import pytesseract
-#     pytesseract.pytesseract.tesseract_cmd = r"E:\Programs\Tesseract\tesseract.exe"
-#     text = pytesseract.image_to_string('temp/tessocr.png',config='--psm 6')
-#     await message.send(text)
-
 
 @bot.command(
     help = f"Converts gems into another currency. Run the command by itself for more info.",
