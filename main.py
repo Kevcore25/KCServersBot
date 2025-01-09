@@ -166,15 +166,6 @@ async def botAI():
         except:
             printError()
 
-    async def rob():
-        try:
-            
-            bestrob, mostrob = robCalc(u)
-            if credits * 2 >= get_user(bestrob).get("credits") * 0.05:
-                await run('rob', target=bot.get_user(int(bestrob)))
-
-        except: printError()
-
     # Daily
     if (time.time() - data["dailyTime"] > 60*60*12) and (random.randint(0,99) == 0):
         await run('daily')
@@ -731,13 +722,13 @@ async def gemexchange(message, currency = None, amount = 0):
     data = user.getData()
     
     exchangeRates = {
-        ("gems", "unity"): 5,
-        ("gems", "credits"): round(500 * calcInflation()),
+        ("gems", "unity"): 0.5,
+        ("gems", "credits"): round(5 * calcInflation()),
     }
 
     if currency is None:
         exchangeRateTxt = "\n".join(f"1 {f} > {exchangeRates[(f,t)]} {t}" for f, t in exchangeRates)
-        embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange [from currency] <to currency> <amount of from currency to exchange>`\n*KCash exchange will be available periodically. It is `1 Credit` > `0.1 KCash`*\n\n**Exchange rates**:\n{exchangeRateTxt}""", color=0xFF00FF)
+        embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}gemexchange [to currency] <amount of gems to exchange>`\n\n**Exchange rates**:\n{exchangeRateTxt}""", color=0xFF00FF)
 
     elif currency not in ['credits','unity']:
         embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange from currency is not valid! Valid options are credits and unity.", color=0xFF0000)
@@ -1649,7 +1640,7 @@ async def players_redir_commands(message: discord.Message):
 
 @bot.command(
     help = f"Work\nFormat: {prefix}work [apply <job>]",
-    description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nApplying for a job initially costs `5 Unity` and `500 Credits` (scales with Wealth Power)""",
+    description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nApplying for a job initially costs `5 Unity` (scales with Wealth Power)""",
     aliases = ['job'],
     hidden = True
 )
@@ -1711,18 +1702,17 @@ async def work(message, cmd = None, value = None):
         value = str(value).title()
 
         if value in jobs:
-            credLost = 250 * calcWealthPower(user, decimal=True)
             unityLost = 5 * calcWealthPower(user, decimal=True)
 
-            if user.getData('credits') < credLost or user.getData('unity') < unityLost:
-                embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Credits and/or Unity to apply for a job!\nJob cost: `{credLost} Credits` and `{unityLost} Unity`\n\n## Tips:{WAYS_TO_EARN['credits']}")
+            if user.getData('unity') < unityLost:
+                embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Unity to apply for a job!\nJob cost: `{unityLost} Unity`\n\n## Tips:{WAYS_TO_EARN['unity']}")
     
             else:
 
-                user.addBalance(credits=-credLost, unity=-unityLost)
+                user.addBalance(unity=-unityLost)
                 user.setValue('job', value)
 
-                embed = successMsg("Job applied", f"You paid `{numStr(credLost)} Credits` and `{numStr(unityLost)} Unity` to apply for the job of {value}!")
+                embed = successMsg("Job applied", f"You paid `{numStr(unityLost)} Unity` to apply for the job of {value}!")
 
     else: embed = errorMsg("Command is not vaild!")
 
@@ -1808,7 +1798,7 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
     cashedOut = False
 
     #plot = cg.create_plot()
-
+    
     xpoints = [0]
     ypoints = [0.85]
     await msg.add_reaction("💰")
@@ -1879,7 +1869,7 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
         if r['crashed']:
 
             # Precog
-            if user.get_item("Precognition"):
+            if user.get_item("Precognition") and not cashedOut:
                 won = cg.cash_out(betamount)
                 actualwon = calcCredit(won, user)
                 user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
