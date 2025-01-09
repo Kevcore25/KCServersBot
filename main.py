@@ -123,43 +123,6 @@ async def kcashEarningLoop():
     except:
         printError()
 
-
-
-
-def robCalc(user: User, percentage = 5):
-    winAmount = int(percentage) / 100
-
-    amounts = {}
-    winAmounts = {}
-
-    for target in bot.get_all_members():
-        
-        if str(target.id) == str(user.ID) or (user.ID == "main" and (str(target.id) == str(bot.user.id))): continue
-
-        targetUser = User(target.id)
-
-        # Amounts
-        lostAmount = round(targetUser.getData('credits') / 20 + user.getData('credits') / 10, 2)
-        winAmounts[lostAmount] = round(targetUser.getData('credits')/10, 2)
-
-        amounts[lostAmount] = target.id
-
-    reversedWinAmounts = {v: k for k, v in winAmounts.items()}
-
-    sortedAmounts = {}
-    for i in sorted(list(amounts)):
-        sortedAmounts[i] = amounts[i]
-    
-    sortedReversed = sorted(list(reversedWinAmounts), reverse=True)
-
-    mostGainedLostAMT = reversedWinAmounts[sortedReversed[0]]
-    mostGained = amounts[mostGainedLostAMT]
-
-    allMembers = "\n".join(f"<@{amounts[i]}>: {i} lost, {winAmounts[i]} won" for i in sortedAmounts)
-    embed = discord.Embed(title="Best person to rob", description=f"""The least costly person to rob is <@{amounts[list(sortedAmounts)[0]]}> ({list(sortedAmounts)[0]}).\nThe most gained when robbing is <@{mostGained}> ({sortedReversed[0]}).\n\n**Values:**\n{allMembers}""")
-    
-    return amounts[list(sortedAmounts)[0]], sortedReversed[0]
-    
 previousba = 0
 
 
@@ -845,49 +808,6 @@ async def servers(message):
 
     await msg.edit(embed=embed)
 
-
-@bot.command(
-    help = "Rob Calculator",
-    aliases = ['calcrob', 'bestrob']
-)
-async def robcalc(message, percentage="5"):
-    user = User(message.author.id)
-    winAmount = int(percentage) / 100
-
-    amounts = {}
-    winAmounts = {}
-
-    for target in bot.get_all_members():
-        
-        if target == message.author: continue
-
-        targetUser = User(target.id)
-
-        lostAmount = round(targetUser.getData('credits') / 20 + user.getData('credits') / 10, 2)
-        winAmounts[lostAmount] = round(targetUser.getData('credits')/10, 2)
-    
-        amounts[lostAmount] = target.id
-
-        winAmounts[lostAmount] = round(targetUser.getData()['credits'] * winAmount, 2)
-
-    reversedWinAmounts = {v: k for k, v in winAmounts.items()}
-
-    sortedAmounts = {}
-    for i in sorted(list(amounts)):
-        sortedAmounts[i] = amounts[i]
-    
-    sortedReversed = sorted(list(reversedWinAmounts), reverse=True)
-
-    mostGainedLostAMT = reversedWinAmounts[sortedReversed[0]]
-    mostGained = amounts[mostGainedLostAMT]
-
-    allMembers = "\n".join(f"<@{amounts[i]}>: {i} lost, {winAmounts[i]} won" for i in sortedAmounts)
-    embed = discord.Embed(title="Best person to rob", description=f"""The least costly person to rob is <@{amounts[list(sortedAmounts)[0]]}> ({list(sortedAmounts)[0]}).\nThe most gained when robbing is <@{mostGained}> ({sortedReversed[0]}).\n\n**Values:**\n{allMembers}""")
-    
-    await message.send(embed=embed)
-
-    # For AI
-    return (amounts[list(sortedAmounts)[0]], amounts[i])
 
 @bot.command(
     help = f"Beg for money",
