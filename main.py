@@ -20,6 +20,36 @@ from calculatefuncs import *
 
 load_dotenv()
 
+WAYS_TO_EARN = {
+    "credits": ("""
+### Recommended
+1. **Jobs**: Apply for a job to earn rewards every hour.
+2. **Daily**: You can claim a daily reward for free every 12 hours.
+3. **Skill Games**: Games such as *MC Hangman* and *Gofish* prioritizes skill rather than gambling.
+4. **Beg**: Beg for a high chance at getting Credits.
+### Other ways 
+5. **Gambling Games**: Games such as *Crash Game* are high-risk, high-reward.
+6. **Rob**: Rob other players for a chance to earn some of their Credits.
+7. **Exchange**: Exchange Gems into Credits.     
+-# *Higher Wealth Powers can result in some features of the bot giving less rewards.*
+-# *Make sure to maximize your Credit Perks before gambling for best results!*
+"""),
+    "unity": ("""
+### Recommended
+1. **Jobs**: Apply for a job to earn rewards every hour.
+2. **Daily**: You can claim a daily reward for free every 12 hours.
+### Other ways 
+3. **Exchange**: Exchange Gems into Unity.     
+-# *Higher Wealth Powers can result in some features of the bot giving less rewards.*
+"""),
+    "gems": ("""
+### All ways
+1. **Events**: Limited-time events can give Gems as rewards. Be sure to participate in them!
+2. **Resets**: Periodically, balance resets happen, and Gems are given as compensation for the top 3 players in Credits.
+""")
+}
+
+
 with open("botsettings.json", 'r') as f:
     data = json.load(f)
 
@@ -29,7 +59,7 @@ with open("botsettings.json", 'r') as f:
     adminUsers = data['admins']
     botAIChannel = data['AI Channel']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.3.0)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.3.1)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -270,7 +300,7 @@ async def baljson(message, account: discord.Member = None):
 
     userData = user.getData()
 
-    embed.description = json.dumps(userData)
+    embed.description = "```json\n" + json.dumps(userData, indent=4) + "```"
 
     await message.send(embed=embed)
 
@@ -339,23 +369,13 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     with open('shop.json', 'r') as f:
         shopitems = json.load(f)
-    # Get count of itms
-    itemCount = {}
-    for i in userData['items']:
-        item = i['item']
-        if item not in itemCount:
-            itemCount[item] = 1
-        else:
-            itemCount[item] += 1
 
-    itemsPresent = []
-    for item in userData['items']:
-        if item['item'] not in itemsPresent:
-            itemsTxt.append(
-                f"**{item['item']}** ({itemCount[item['item']]}/{shopitems[item['item']]['limit']})" + ": " + 
-                (f"Expires <t:{round(item['expires'])}:R>" if item['expires'] != -1 else "Never expires")
-            )
-            itemsPresent.append(item['item'])
+    # Items
+    for id, item in userData['items'].items():
+        itemsTxt.append(
+            f"**{id}** ({item['count']}/{shopitems[id]['limit']})" + ": " + 
+            (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
+        )
 
     embed.add_field(
         name=f"Items", 
@@ -379,7 +399,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     
         kcash = kmceusers[ign]['KCash']
     except KeyError:
-        kcash = "Invaild IGN"
+        kcash = "Not registered"
     except:
         kcash = "Error"
 
@@ -459,7 +479,7 @@ async def leaderboard(message):
     # Average credits = total / number of users
     avgcredits = totalCredits / (i+1)
 
-    embed.description = f"**Total Credits**: `{numStr(totalCredits)}`\n**Inflation**: `{round(inflationLvl)}%`\n**Average Credits**: `{numStr(avgcredits)}`"
+    embed.description = f"**Total Credits**: `{numStr(totalCredits)}`\n**Inflation**: `{round(calcInflation() * 100)}%`\n**Average Credits**: `{numStr(avgcredits)}`"
 
     await message.send(embed=embed)
 
@@ -692,7 +712,7 @@ async def exchange(message, amount: float = None):
 
     if amount is None:
         embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange <credits>`\n\nCurrently, it would be `1 Credit` → `{round(kcashrate / inflation, 4)} KCash`\n\n**Exchange fee**: `{exchangeFee[0]} Credits` and `{exchangeFee[1]} Unity` per exchange.""", color=0xFF00FF)
-        embed.set_footer(text="Credit exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken account.")
+        embed.set_footer(text="Credit exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken into account.")
 
     elif amount <= 0:
         embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!", color=0xFF0000)
@@ -961,6 +981,9 @@ Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
 )
 @commands.cooldown(1, 30, commands.BucketType.user) 
 async def rob(message, target: discord.Member, ignorewarn = None):
+    # This code should be cleaned up later
+    # It is much more effective to use a class instead of functions within functions
+
     user = User(message.author.id)
     targetUser = User(target.id)
 
@@ -1036,9 +1059,70 @@ async def rob(message, target: discord.Member, ignorewarn = None):
         data[key] += value
         u.setValue("rob", data)
 
+    def lose():
+        # Lose money
+        user.addBalance(credits = -loseAmount)
+        targetUser.addBalance(credits = loseAmount)
+
+        # Rob stats
+        if robGet(user, 'insights') < 3:
+            robAdd(user, "insights", 1)
+
+        wl = robGet(user, "won/lost")
+        robSet(user, "won/lost", [wl[0], wl[1]+1])
+
     # Attacked times
     robSet(user, "attackTime", int(time.time()))
     robSet(targetUser, "attackedTime", int(time.time()))
+
+    # Lock
+    if targetUser.get_item("Lock", onlydetermine=True): 
+        # 75% to break lock if user has lock pick
+        if user.get_item("Lock Pick", onlydetermine=True):
+            if not random.randint(0,3) == 0:
+                em = discord.Embed(
+                    title = "Rob Results",
+                description = f"""Robbing {target.mention}...
+
+{target.mention} has a lock, but you **successfully picked it!**
+
+Rolling...""",
+                    color = 0xFF00FF,
+                )
+
+                targetUser.delete_item("Lock")
+
+                await msg.edit(embed=em)
+                await asyncio.sleep(3)
+            else: 
+                em = discord.Embed(
+                    title = "Rob Results",
+                    description = f"""Robbing {target.mention}...
+
+Unfortunately, {target.mention} has a lock, and the police caught you when you attempted to pick it!
+You were fined `{loseAmount} Credits` to {target.mention}""",
+                    color = 0xFF0000,
+                )
+                lose()
+
+                user.delete_item("Lock Pick")
+
+                await msg.edit(embed=em)
+                return
+        else:
+            em = discord.Embed(
+                title = "Rob Results",
+                description = f"""Robbing {target.mention}...
+
+Unfortunately, {target.mention} has a lock, and you did not bring a lock pick to break it.
+You were fined `{loseAmount} Credits` to {target.mention} after the police caught you.""",
+                color = 0xFF0000,
+            )
+            lose()
+
+            await msg.edit(embed=em)
+            return
+            
 
     # Logic
     # For loop is for rerolls
@@ -1068,17 +1152,7 @@ async def rob(message, target: discord.Member, ignorewarn = None):
                 case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
                 case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
 
-            # Lose money
-            user.addBalance(credits = -loseAmount)
-            targetUser.addBalance(credits = loseAmount)
-
-            # Rob stats
-            if robGet(user, 'insights') < 3:
-                robAdd(user, "insights", 1)
-
-            wl = robGet(user, "won/lost")
-            robSet(user, "won/lost", [wl[0], wl[1]+1])
-
+            lose()
 
         em = discord.Embed(
             title = "Rob Results",
@@ -1721,7 +1795,7 @@ async def work(message, cmd = None, value = None):
             unityLost = 5 * calcWealthPower(user, decimal=True)
 
             if user.getData('credits') < credLost or user.getData('unity') < unityLost:
-                embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Credits and/or Unity to apply for a job!\nJob cost: `{credLost} Credits` and `{unityLost} Unity`\n\nTips:\n1. Use other income commands (e.g. beg, daily) to gain Credits and/or Unity\n2. Lower your Wealth Power by having less Credits compared to the average\n3. Read the descriptions of commands using `{prefix}help <command>` to earn instant Credits")
+                embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Credits and/or Unity to apply for a job!\nJob cost: `{credLost} Credits` and `{unityLost} Unity`\n\n## Tips:{WAYS_TO_EARN['credits']}")
     
             else:
 
@@ -1883,6 +1957,18 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
             await message.send(f"Won {won}! (Autocashed)")             
 
         if r['crashed']:
+
+            # Precog
+            if user.get_item("Precognition"):
+                won = cg.cash_out(betamount)
+                actualwon = calcCredit(won, user)
+                user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
+                cashedOut = True
+
+                await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")             
+
+                user.delete_item("Precognition")
+
             plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (CRASHED!)")
 
             xpoints.append(cg.round)
@@ -2679,6 +2765,18 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
 
 
 @bot.command(
+    help = f"Guides on how to earn a currency.\nFormat: {prefix}earn <credits | unity | gems>",
+    aliases = ['howtoearn', 'waystoearn'],
+)
+async def earn(message, currency: str): 
+    currency = currency.lower()
+    
+    if currency in WAYS_TO_EARN:
+        await message.send(embed=basicMsg(f"Ways to earn {currency.capitalize()}", WAYS_TO_EARN[currency]))
+    else:
+        await message.send(embed=errorMsg(f"{currency.capitalize()} is not a valid currency!\nIt must be either Credits, Unity, or Gems"))
+
+@bot.command(
     help = f"Buy an item from the shop. Format: {prefix}buy <item id>",
     description = "Notice: For this command, item ID can contain spaces without the requirement of quotation marks.",
     aliases = ['purchase'],
@@ -2710,7 +2808,8 @@ async def buy(message, *itemID): # command is an argument
         ):
             items: list = u.getData('items')
 
-            itemPresent, itemCount = getItem(u, itemID, count = True)
+            itemCount = items[itemID]['count'] if itemID in items else 0
+
             # Max limit acheived
             if itemCount >= item['limit']:
                 await message.send(embed=errorMsg("Item limit reached!"))
@@ -2721,12 +2820,19 @@ async def buy(message, *itemID): # command is an argument
                 await message.send(embed=errorMsg("Item is out of stock!"))
                 return
 
-            items.append({
-                "item": itemID, 
-                "expires": (time.time() + item['expiry']) if item['expiry'] != -1 else -1,
-                "data": {}
-            })
+            # Append Items
+            if itemID not in items:
+                items[itemID] = {
+                    "expires": [],
+                    "data": {},
+                    "count": 0
+                }
 
+            items[itemID]['count'] += 1
+            if item['expiry'] != -1:
+                items[itemID]['expires'].append(int(time.time() + item['expiry']))
+            else:
+                items[itemID]['expires'].append(-1)
 
             # Remove balance
             u.addBalance(credits = -item['credits'], unity = -item['unity'], gems = -item["gems"])
@@ -2742,7 +2848,7 @@ async def buy(message, *itemID): # command is an argument
             await message.send(embed=successMsg(title="Item bought!", description=f"Successfully bought `{itemID}` for `{item['credits']} Credits`, `{item['unity']} Unity`, and `{item['gems']} Gems`"))
 
         else:
-            await message.send(embed=errorMsg(f"You do not have enough currencies to buy this item!"))
+            await message.send(embed=errorMsg(f"You do not have enough currencies to buy this item!\n## Tips:{WAYS_TO_EARN['credits']}"))
 
 
 

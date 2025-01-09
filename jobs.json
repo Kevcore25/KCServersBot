@@ -7,7 +7,7 @@
     "Developer": {
         "description": "A developer working in KCServers.",
         "work output": 50,
-        "credit perk": -5
+        "credit perk": -2.5
     },
     "Pacifist": {
         "description": "A pacifist role. They gain a bonus `-50% Wealth Power` perk.",
@@ -20,7 +20,7 @@
         "credit perk": 5
     },
     "Unifier": {
-        "description": "Unifiers help unity everyone. They gain a bonus `+0.75 Unity` for each work.",
+        "description": "Unifiers help unite everyone. They gain a bonus `+0.75 Unity` for each work.",
         "work output": -50,
         "credit perk": 0
     },
@@ -30,7 +30,7 @@
         "credit perk": 0
     },
     "Police": {
-        "description": "A policeman, catching thiefs. They have increased chances of robbers failing. (`+3 Rob Defense Levels`).",
+        "description": "A policeman, catching thiefs. They have increased chances of robbers failing (`+3 Rob Defense Levels`).",
         "work output": 0,
         "credit perk": -5
     },

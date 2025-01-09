@@ -11,13 +11,10 @@ userTemplate = {
     "job": None,
     "dailyTime": 0,
     "hourlyTime": 0,
-    "incomeCmdsUsed": 0,
     "bs%": 0,
     "rob": {
         "atk": 5,
         "def": 5, 
-        "eatk": 0, 
-        "edef": 0, 
         "insights": 0,
         "won/lost": [0, 0],
         "attackedTime": 0,
@@ -31,14 +28,20 @@ botID = 0
 
 def check_items(user) -> bool:
     """Checks for expired items and deletes them"""
-    items: list = user.getData('items')
+    items: dict = user.getData('items')
 
     deletedAnItem = False
 
-    for i in items.copy():
-        if int(time.time()) - i['expires'] > 0 and i['expires'] != -1:
-            items.remove(i)
-            deletedAnItem = True
+    for id, item in items.copy().items():
+        for expiry in item['expires']:
+            if int(time.time()) - expiry > 0 and expiry != -1:                
+                deletedAnItem = True
+
+                items[id]['count'] -= 1
+                if items[id]['count'] <= 0:
+                    del items[id]
+                    break
+                items[id]['expires'].remove(expiry)
 
     return user.setValue("items", items) if deletedAnItem else False
 
@@ -75,32 +78,62 @@ class User:
         
         return updated
 
-    def delete_item(self, item: str, all: bool = False) -> bool:
+    def delete_item(self, item: str, count: int = 1, all: bool = False) -> bool:
         """
         Deletes an item. If all is specified, then all items of that item ID will be deleted
         If the item cannot be deleted (not found) then False will be returned
         """
 
-        items: list = self.getData('items')
+        items: dict = self.getData('items')
 
-        deletedAnItem = False
-        for i in items.copy():
-            if item == i['item']:
-                del items[i]
-                deletedAnItem = True
-                if not all: break
+        try:
+            if all:
+                del items[item]
+            else:
+                items[item]['count'] -= count                
+                items[item]['expires'].pop(0)        
+                if items[item]['count'] <= 0:
+                    del items[item]
+            deletedAnItem = True
+        except KeyError as e:
+            print(f"Warning: Unable to delete item {item} for {self.ID}: {e}")
+            deletedAnItem = False
 
-        return self.setValue("items", items) if deletedAnItem else False
-    
-    def add_item(self, item: str, expiry: int = -1) -> bool:
+        if deletedAnItem:
+            return self.setValue("items", items)
+        else:
+            return False
+        
+    def get_item(self, item: str, onlydetermine: bool = False) -> None | dict:
+        """
+        Gets an item. If the item does not exist, then None will be returned
+        """
+
+        items: dict = self.getData('items')
+
+        # Check if the item exists
+        if item in items:
+            # Get item data
+            return items[item] if not onlydetermine else True
+        else:
+            return None if not onlydetermine else False
+
+
+    def add_item(self, item: str, expiry: int = -1, count: int = 1, data: dict = {}) -> bool:
         """Adds an item"""
-        items: list = self.getData('items')
+        items: dict = self.getData('items')
 
-        items.append({
-            "item": item, 
-            "expires": int(time.time() + expiry) if item['expires'] != -1 else -1,
-            "data": {}
-        })
+        exp = int(time.time() + expiry) if item['expires'] != -1 else -1,
+
+        if item in items:
+            items[item] = {
+                "expires": [exp],
+                "data": data,
+                "count": count
+            }
+        else:
+            items[item]['count'] += count
+            items[item]['expiry'].append(exp)
 
         # Add item
         return self.setValue("items", items)
@@ -208,21 +241,3 @@ class User:
         self.log()
 
         return True
-       
-
-    def delete_item(self, item: str, all: bool = False) -> bool:
-        """
-        Deletes an item. If all is specified, then all items of that item ID will be deleted
-        If the item cannot be deleted (not found) then False will be returned
-        """
-
-        items: list = self.getData('items')
-
-        deletedAnItem = False
-        for i in items.copy():
-            if item == i['item']:
-                del items[i]
-                deletedAnItem = True
-                if not all: break
-
-        return self.setValue("items", items) if deletedAnItem else False

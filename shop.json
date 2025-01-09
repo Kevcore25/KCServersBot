@@ -5,70 +5,34 @@
         "gems": 0,
         "description": "Prevents a robbery attempt. This item will still be used even if the robber would've paid you",
         "limit": 3,
-        "expiry": -1,
-        "stock": 999993
+        "expiry": 604800,
+        "stock": 999999
     },
     "Lock Pick": {
-        "credits": 30,
+        "credits": 75,
         "unity": 0,
         "gems": 0,
-        "description": "75% to ignore a lock. In the case that you picked the lock, you do not lose the lock pick",
-        "limit": 3,
+        "description": "75% to pick a lock. In the case that you picked the lock, you do not lose the lock pick",
+        "limit": 1,
         "expiry": -1,
         "stock": 999999
     },
-    "Auto Cash": {
+    "Precognition": {
         "credits": 0,
-        "unity": 5,
+        "unity": 50,
         "gems": 0,
-        "description": "For the next crash game, you will automatically cash out just before the game crashes, but the starting multiplier starts at 0.5",
-        "limit": 3,
-        "expiry": -1,
-        "stock": 999999
+        "description": "Allows you to see the future! For the next crash game, you will automatically cash out just before the game crashes",
+        "limit": 1,
+        "expiry": 604800,
+        "stock": 10
     },
-    "Unity": {
+    "Donation": {
         "credits": 50,
         "unity": -1,
         "gems": 0,
-        "description": "Exchange Credits into 1 Unity (Limited stock)",
-        "limit": 3,
-        "expiry": -1,
-        "stock": 20
-    },
-    "Rlw8 Update": {
-        "credits": 750,
-        "unity": -10,
-        "gems": 0,
-        "description": "When the stock reaches 0, an update will be made to RLWorld8",
-        "limit": 1,
-        "expiry": 2678400,
-        "stock": 4
-    },
-    "Increased Income": {
-        "credits": 0,
-        "unity": 40,
-        "gems": 0,
-        "description": "Until the next reset, gain a +5% Credit Earnings perk",
-        "limit": 1,
-        "expiry": 2678400,
-        "stock": 100
-    },
-    "Gambler": {
-        "credits": 0,
-        "unity": 30,
-        "gems": 0,
-        "description": "Begging success rate is increased from a 67% to a 70%, Crash rate decreases from a 10% to a 8%, Robbing success rate increases from a 33% to a 40%, and gain a -7.5% Credits Earning perk",
-        "limit": 1,
-        "expiry": 604800,
-        "stock": 100
-    },
-    "Grapher": {
-        "credits": 0,
-        "unity": 0,
-        "gems": 1,
-        "description": "Gives the following features (for the account):\n+ Allows viewing balance graph for others\n+ Maximum indexing for balance graph is increased from 1k to 10k\n+ Access to the supplygraph (sg) command, providing a graph for every single user and the total credits",
-        "limit": 1,
-        "expiry": -1,
-        "stock": 100
+        "description": "Donate money to help the poor. Exchanges Credits into 1 Unity (Limited stock)",
+        "limit": 100,
+        "expiry": 1,
+        "stock": 50
     }
 }
