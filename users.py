@@ -228,7 +228,7 @@ class User:
 
         self.data["unity"] = round(self.data["unity"] + unity, 5)
 
-        self.data["gems"] = round(self.data["gems"] + gems, 5)
+        self.data["gems"] = round(self.data["gems"] + gems)
 
         if self.data["unity"] > 200:
             self.data["unity"] = 200

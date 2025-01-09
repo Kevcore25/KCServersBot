@@ -349,7 +349,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     embed.add_field(
         name="Balances", 
-        value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/200`\n**Gems**: `{numStr(userData['gems'])}`"
+        value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/200`\n**Gems**: `{userData['gems']:>,}`"
     )
     embed.add_field(
         name="KCMC Info", 
@@ -2782,6 +2782,18 @@ async def earn(message, currency: str):
     aliases = ['purchase'],
 )
 async def buy(message, *itemID): # command is an argument    
+    # Detect amount
+
+    try:
+        amt: str = itemID[-1]
+        if amt.isdigit():
+            amount = int(amt)
+            itemID = itemID[:-1]
+        else:
+            amount = 1
+    except IndexError:
+        amount = 1
+
     if itemID is None: 
         await message.send(embed=errorMsg("Item ID is not specified"))
         return
