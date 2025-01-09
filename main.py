@@ -349,7 +349,7 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     embed.add_field(
         name="Balances", 
-        value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/200`\n**Gems**: `{userData['gems']:>,}`"
+        value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/200`\n**Gems**: `{int(userData['gems']):>,}`"
     )
     embed.add_field(
         name="KCMC Info", 

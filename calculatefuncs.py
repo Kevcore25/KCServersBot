@@ -389,7 +389,7 @@ def calcCreditTxt(user: User) -> int:
 
     # Excessive Unity (Every 1 above 100 grants +0.1%, up to 200 (+10%))
     if unity > 100:
-        amountTxt["Excess Unity"] = ((unity - 100) * 0.1) if unity <= 200 else 1.2
+        amountTxt["Excess Unity"] = round((unity - 100) * 0.1, 5) if unity <= 200 else 1.2
 
 
     """ NEGATIVES """
@@ -427,7 +427,7 @@ def calcCreditTxt(user: User) -> int:
         if amountTxt[i] >= 0:
             amountTxt[i] = "+" + str(amountTxt[i]) 
 
-    return "\n".join(f"{perk}: `{round(percentAmt, 5)}% Credit earnings`" for perk, percentAmt in amountTxt.items())
+    return "\n".join(f"{perk}: `{percentAmt}% Credit earnings`" for perk, percentAmt in amountTxt.items())
 
 def calculateRobDefense(member: discord.Member) -> int:
     """Calculate the Rob Defense level of a user"""
