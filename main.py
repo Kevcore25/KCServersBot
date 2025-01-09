@@ -2802,9 +2802,9 @@ async def buy(message, *itemID): # command is an argument
 
         # Check for balance
         if (
-            creds >= item['credits'] and
-            unity >= item['unity'] and
-            gems  >= item['gems']
+            (creds >= item['credits'] or item['credits'] <= 0) and
+            (unity >= item['unity'] or item['unity'] <= 0) and
+            (gems  >= item['gems'] or item['gems'] <= 0)
         ):
             items: list = u.getData('items')
 
