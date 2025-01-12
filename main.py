@@ -254,6 +254,16 @@ async def baljson(message, account: discord.Member = None):
 
     userData = user.getData()
 
+    # Blocked by user
+    if not userData['settings'].get("publicity", True) and account != message.author: 
+        await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
+        return
+
+    # Has password
+    if userData['settings'].get("password", "None") != "None": 
+        await message.send(embed=errorMsg("Cannot view this user's JSON file!"))
+        return
+    
     embed.description = "```json\n" + json.dumps(userData, indent=4) + "```"
 
     await message.send(embed=embed)
@@ -263,7 +273,7 @@ async def baljson(message, account: discord.Member = None):
     help = "Displays account stats",
     aliases = ["pf", "profile", "acc", "balance", "bal"]
 )
-async def account(message, account: discord.Member = None, usejson: str = "false"):
+async def account(message, account: discord.Member = None):
     embed = discord.Embed(
         title = "Account information",
         color = 0xFF00FF
@@ -274,9 +284,10 @@ async def account(message, account: discord.Member = None, usejson: str = "false
     user = User(account.id)
 
     userData = user.getData()
-    
-    if usejson.lower().startswith('t') or usejson.lower().startswith('j'):
-        await message.send(json.dumps(userData))
+
+    # Blocked by user
+    if not userData['settings'].get("publicity", True) and account != message.author: 
+        await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
         return
 
     ign = str(userData['IGN'])#.replace('_', '\\_')
@@ -374,6 +385,76 @@ async def account(message, account: discord.Member = None, usejson: str = "false
 
     await msg.edit(embed=embed)
 
+
+@bot.command(
+    help = f"Change your account settings",
+    aliases = ['setting', 'options']
+)
+async def settings(message, option: str = None, *, value: str | int | bool = None):
+    user = User(message.author.id)
+
+    options: dict[str, bool | int | str] = user.getData("settings")
+
+    vaildOptions = ["publicity", "IGN", "AI", "password"]
+
+    if option is None:
+        embed = discord.Embed(
+            title = "Account settings",
+            description = f"These are your account settings. You can change them by: running `{prefix}settings [(ID of option) <value>]`",
+            color = 0x00AAFF
+        )
+        
+        # Public account
+        embed.add_field(
+            name=f"Public Account (ID: `publicity`): {options.get('publicity', True)}", 
+            value=f"Whether your account can be viewed when another user passes an argument for the following commands: `account`, `graphbalance`, `baljson`.\nDefaults to True (On).",
+            inline=False
+        )
+            
+        # MC IGN
+        embed.add_field(
+            name=f"Minecraft Username (ID: `IGN`): {options.get('IGN', None)}", 
+            value=f"Your Minecraft username. This is required in order to exchange into KCash.\nThe username must be registered on KMCExtract!",
+            inline=False
+        )
+        
+        # Automation
+        embed.add_field(
+            name=f"Account Automation (ID: `AI`): {options.get('AI', False)}", 
+            value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the #bot-command-automation channel.\nDefaults to False (Off).",
+            inline=False
+        )
+            
+        # Password
+        pw = options.get("password", "None")
+        embed.add_field(
+            name=f"Password (ID: `password`): {pw if pw == 'None' else ('*' * len(pw))}", 
+            value=f"The password used for the future *Web KCServers Game*, allowing you to play without Discord.\nIf the password is set to None, this feature is disabled.\nIf this feature is enabled, `baljson` will no longer work on your account.\nDefaults to None\n-# **Please use an insecure password! The security of this can be easily breached**",
+            inline=False
+        )
+
+    elif value is None:
+        embed = errorMsg("A value must be specified!")
+    
+    else:
+        value = "".join(value)
+
+        if option in vaildOptions:
+            if value.isdigit(): value = int(value)
+            elif value.lower() == "on": value = True
+            elif value.lower() == "off": value = False
+
+            options[option] = value
+
+            user.setValue("settings", options)
+
+            embed = successMsg(description=f"Changed the value of `{option}` to `{value}`")
+
+        else:
+            embed = errorMsg("Must be a vaild option!\nDid you type the ID of the option instead of its name?")
+
+    await message.send(embed=embed)
+
 @bot.command(
     help = f"Force an account update",
     description = """Sometimes your account may be missing some valves. This command will make sure to find missing values and fix them. Corruptted values may not be fixed.""",
@@ -405,13 +486,15 @@ async def leaderboard(message):
         if file == "main.json": continue
         with open('users/' + file, 'r') as f:
             try:
-                c = float(json.load(f)['credits'])
-                if c != 0: users[file.replace(".json", '')] = c
+                data = json.load(f)
+                c = float(data['credits'])
+                if c != 0 and data.get('settings', {}).get("publicity", True): users[file.replace(".json", '')] = c
             except: pass
+
     totalCredits = 0
 
     sortedUsers = sorted(users.items(), key=lambda x:x[1], reverse=True)
-    # [("209348023", 1231)]
+
     for i in range(len(sortedUsers)):
         try:
             usr = sortedUsers[i]
@@ -2565,6 +2648,10 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
         if userid == bot.user.id:
             userid = 'main'
 
+    # Blocked by user
+    if not User(userid).getData('settings').get("publicity", True): 
+        await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
+        return
 
     # Initialize a list to store the balances
     balances = []
@@ -2637,18 +2724,6 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
 
     plt.title(f"{user.display_name}'s balance changes since {human_time_duration(total)} ago")
 
-    # try:
-    #     idx = range(len(xvalues))
-    #     xnew = np.linspace(min(idx), max(idx), 300)
-
-    #     # interpolation
-    #     spl = make_interp_spline(idx, balances, k=2)
-    #     smooth = spl(xnew)
-
-    #     # plotting, and tick replacement
-    #     plt.plot(xnew, smooth, "b")
-    # except ValueError:
-
     # Slope color
     try:
         first, last = balances[0], balances[-1]
@@ -2659,8 +2734,6 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
         color = 'gray'
 
     plt.plot(xvalues, balances, color=color)
-
-#    plt.plot(xvalues, balances)
 
     plt.savefig(f"temp/bal{userid}.png")
     plt.clf()

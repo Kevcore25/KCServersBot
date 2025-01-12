@@ -21,7 +21,8 @@ userTemplate = {
         "attackTime": 0,
     },
     "log": 0,
-    "redeemedCodes": []
+    "redeemedCodes": [],
+    "settings": {}
 }
 
 botID = 0
