@@ -3300,7 +3300,7 @@ Average Score: {avgscore}
             data['credits'] = 500
             data['unity'] = 20
 
-            data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*7)], "data": {}, "count": 1}}
+            data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*3)], "data": {}, "count": 1}}
             data['job'] = None
             data['bs%'] = 0
             data['helpCmds'] = []

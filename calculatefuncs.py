@@ -387,7 +387,7 @@ def calcCredit(amount: int, user: User = None) -> float:
 
         # Prosperous Reset bonus
         if user.get_item('Prosperous Reset', True):
-            amount *= (1 + 0.1)
+            amount *= (1 + 0.15)
 
         # Both set IGN and LFN (+2%)
         try:
@@ -462,7 +462,7 @@ def calcCreditTxt(user: User) -> int:
     
     # Reset bonus
     if user.get_item('Prosperous Reset', True):
-        amountTxt["Reset Bonus"] = 10
+        amountTxt["Reset Bonus"] = 15
 
     # Both set IGN and LFN (+2%)
     try:
