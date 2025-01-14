@@ -3233,6 +3233,12 @@ async def restart(ctx):
 @bot.command( hidden=True)
 async def reset(message):
     if message.author.id in adminUsers:
+        await message.send(f"""# A reset has been called!
+If the bot is not restarted within 5 minutes, a reset will happen!
+Any balances (e.g. Credits) will be lost after the reset, so please make sure to exchange them before it is too late!
+<@&1328848138252980311>""")
+        time.sleep(300)
+
         # Obtain scores
         usersDir = os.listdir('users')
 
