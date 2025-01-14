@@ -2687,49 +2687,53 @@ async def graphbalance(message: discord.Message, user: discord.Member = None, *,
     balances = []
     xstrs = []
 
-    with open(os.path.join("balanceLogs", str(userid)), 'rb') as f:
-        # Move the pointer to the end of the file
-        f.seek(0, 2)
-        # Get the file size
-        size = f.tell()
+    try:
+        with open(os.path.join("balanceLogs", str(userid)), 'rb') as f:
+            # Move the pointer to the end of the file
+            f.seek(0, 2)
+            # Get the file size
+            size = f.tell()
 
-        tf = "Unknown"
+            tf = "Unknown"
 
-        # Start from the end of the file
-        for i in range(size - 1, -1, -1):
-            f.seek(i)
-            # Read a byte
-            char = f.read(1)
-            # If it's a newline character and we haven't reached the end of file
-            if char == b'\n' and i < size - 1:
-                # Add the line to the list
-                ln = f.readline().decode().rstrip()
-                try:
-                    t = int(ln.split(" ")[0])
-                except ValueError: continue
-
-                if (time.time() - t) > total:
-                    break
-
-                bal = ln.split(" ")[1]
-                balances.append(float(bal))
-
-                # For string as X value
-                mst = datetime.datetime.fromtimestamp(t, datetime.timezone.utc) - datetime.timedelta(hours=7)
-
-                # Timeframes. Notice: Again, too much data will override it and it will not be shown
-                # For day (> 1 day) (Probably not shown)
-                if total > (60 * 60 * 24):
-                    xstrs.append(mst.strftime("%d"))
-                    tf = "Days"
-                else:
-                    # For hour time (within a reasonable amount, like <1 day)
+            # Start from the end of the file
+            for i in range(size - 1, -1, -1):
+                f.seek(i)
+                # Read a byte
+                char = f.read(1)
+                # If it's a newline character and we haven't reached the end of file
+                if char == b'\n' and i < size - 1:
+                    # Add the line to the list
+                    ln = f.readline().decode().rstrip()
                     try:
-                        xstrs.append(mst.strftime("%-H:%M"))
-                    except ValueError:
-                        xstrs.append(mst.strftime("%#H:%M"))
-                    tf = "Hourtime"
+                        t = int(ln.split(" ")[0])
+                    except ValueError: continue
 
+                    if (time.time() - t) > total:
+                        break
+
+                    bal = ln.split(" ")[1]
+                    balances.append(float(bal))
+
+                    # For string as X value
+                    mst = datetime.datetime.fromtimestamp(t, datetime.timezone.utc) - datetime.timedelta(hours=7)
+
+                    # Timeframes. Notice: Again, too much data will override it and it will not be shown
+                    # For day (> 1 day) (Probably not shown)
+                    if total > (60 * 60 * 24):
+                        xstrs.append(mst.strftime("%d"))
+                        tf = "Days"
+                    else:
+                        # For hour time (within a reasonable amount, like <1 day)
+                        try:
+                            xstrs.append(mst.strftime("%-H:%M"))
+                        except ValueError:
+                            xstrs.append(mst.strftime("%#H:%M"))
+                        tf = "Hourtime"
+    except FileNotFoundError:
+        await message.send(embed=errorMsg("No balance logs have been recorded!"))
+        return 
+    
     # If there is only 1 item in the list, nothing will be graphed, so add the same value to the balance.
     if len(balances) == 1:
         balances = balances * 2
@@ -3224,6 +3228,128 @@ async def restart(ctx):
         embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
         await ctx.send(embed=embed, delete_after=3.0)
         os.execl(sys.executable, sys.executable, *sys.argv)
+
+
+@bot.command( hidden=True)
+async def reset(message):
+    if message.author.id in adminUsers:
+        # Obtain scores
+        usersDir = os.listdir('users')
+
+        users = []
+        for file in usersDir:
+            if file == "main.json": continue
+            u = file.replace(".json", '')
+            if User(u).getData("credits") != 0: 
+                users.append(u)
+
+
+        scores = {}
+        totalScore = 0
+        for u in users:
+            s = calcScore(User(u))
+            scores[u] = s
+            totalScore += s
+
+        sortedScore = sorted(scores.items(), key=lambda x:x[1], reverse=True)
+
+
+        avgscore = round(totalScore / len(sortedScore), 2)
+
+        await message.send(f"""# THE BOT IS RESETTING!!!
+Average Score: {avgscore}
+        """)
+
+        await asyncio.sleep(3)
+        msgs = []
+        for i in range(5):
+            try:
+                usr = sortedScore[i]
+            except IndexError: 
+                break
+
+            score = usr[1]
+            user = usr[0]
+            with open("users/"+user+'.json', 'r') as f:
+                data = json.load(f)
+
+            msgs.append(basicMsg(
+                title=f"""Place #{i+1}""",
+                description = f"""
+## <@{user}>
+### **Total Score**: `{score}`
+{calcScore(User(user), msg=True)[1]}
+### Gems Gained: `{(5 - i) ** 2 * 2}`"""))
+            # Add
+            data['gems'] += (5 - i) ** 2 * 2
+        
+            with open("users/"+user+'.json', 'w') as f:
+                json.dump(data, f)
+
+        usersDir = os.listdir('users')
+
+        for user in usersDir:
+            with open(os.path.join('users', user), 'r') as f:
+                data = json.load(f)
+
+            try:
+                os.remove(os.path.join("balanceLogs", user.replace('.json', '')))
+            except FileNotFoundError:
+                pass
+
+            data['credits'] = 500
+            data['unity'] = 20
+
+            data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*7)], "data": {}, "count": 1}}
+            data['job'] = None
+            data['bs%'] = 0
+            data['helpCmds'] = []
+            data['log'] = 0
+            data['rob'] = {
+                "atk": 5,
+                "def": 5, 
+                "insights": 0,
+                "won/lost": [0, 0],
+                "attackedTime": 0,
+                "attackTime": 0,
+            }
+            if 'players' in data:
+                del data['players']
+
+            with open(os.path.join('users', user), 'w') as f:
+                json.dump(data, f)
+
+        # Main bot
+        with open("users/main.json", 'r') as f:
+            data = json.load(f)
+
+        data['credits'] = 50000
+        data['unity'] = 0
+        data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
+        data['job'] = 'Player'
+        data['bs%'] = 100
+        data['helpCmds'] = []
+        data['log'] = 0
+        data['rob'] = {
+            "atk": 0,
+            "def": 10, 
+            "insights": 0,
+            "won/lost": [0, 0],
+            "attackedTime": 0,
+            "attackTime": 0,
+        }
+        if 'players' in data:
+            del data['players']
+
+        with open("users/main.json", 'w') as f:
+            json.dump(data, f)
+
+        # Send msgs
+        for msg in msgs:
+            await message.send(embed=msg)
+            await asyncio.sleep(5)
+
+        await message.send("# THE BOT HAS BEEN RESETTED!\nCongratulations to the top 5 members of this reset!")
 
 # Run the bot based on the token in the .env file
 bot.run(os.getenv("DISCORD_TOKEN"))

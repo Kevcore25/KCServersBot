@@ -114,6 +114,7 @@ def calcInflation() -> float:
 
 
     # Inflation % = Total Credits of Members / (Inflation amount * Amount of Members) x 100 (%)
+    print(totalCredits, inflationAmt, amtOfUsers)
     inflationLvl = totalCredits / (inflationAmt * amtOfUsers)
     if inflationLvl < 1: inflationLvl = 1
     return inflationLvl
@@ -222,7 +223,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
         with open(os.path.join("balanceLogs", str(u.ID)), 'r') as f:
             ballogs = f.readlines()
     except FileNotFoundError:
-        return (0, {"Haven't played": 0}) if msg else 0
+        return (0, "**Haven't played**: `0`") if msg else 0
     
     totalUnity = 0
     totalCred = 0
