@@ -178,6 +178,82 @@ def calcAvgCredits() -> int:
         return 0
 
 
+def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
+    """
+    Calculates the score of a user
+    
+    Factors that affect score:
+    - Ranking on leaderboard ((11 - current) ^ 1.2, cannot be under 0)
+    - Average Credits earned (For up to 10k Cred, up to 50 can be obtained. Cannot be over 50)
+    - Amount of transactions (Sqrt(x/2), cannot be over 50)
+    - Average Unity earned (For up to 200 Unity, up to 40 can be obtained)
+    """
+    scores = {}
+    # Leaderboard
+    usersDir = os.listdir('users')
+
+    users = {}
+    for file in usersDir:
+        if file == "main.json": continue
+        try:
+            with open(os.path.join("users", file), 'r') as f:
+                try:
+                    c = float(json.load(f)['credits'])
+                    if c != 0: users[file.replace(".json", '')] = c
+                except: pass
+        except FileNotFoundError:
+            pass
+
+    sortedUsers = sorted(users.items(), key=lambda x:x[1], reverse=True)
+    rge = len(sortedUsers)
+    if rge > 10: rge = 0
+    for i in range(len(sortedUsers)):
+        usr = sortedUsers[i]
+        if usr[0] == u.ID:
+            ranking = i+1
+            break
+    else:
+        ranking = 11
+
+    scores['Leaderboard Ranking'] = (11 - ranking) ** 1.2
+
+    # Average earned
+    try:
+        with open(os.path.join("balanceLogs", str(u.ID)), 'r') as f:
+            ballogs = f.readlines()
+    except FileNotFoundError:
+        return (0, {"Haven't played": 0}) if msg else 0
+    
+    totalUnity = 0
+    totalCred = 0
+
+    for log in ballogs:
+        try:
+            totalCred += float(log.split(' ')[1])
+            totalUnity += float(log.split(' ')[2])
+        except IndexError: pass
+
+    credScore = (1 / 200) * (totalCred / len(ballogs))
+    if credScore > 50: credScore = 50
+    scores['Average Credits'] = credScore
+    scores['Average Unity'] = (1/5) * (totalUnity / len(ballogs))
+
+    # Amount of transactions
+    transScore = ((u.getData('log')) / 2) ** 0.5
+    if transScore > 50: transScore = 50
+    scores['Number of Transactions'] = transScore
+
+    # MSG or just send
+    if msg:
+        txt = []
+        for name, score in scores.items():
+            txt.append(f"**{name}**: `{round(score, 2)}`")
+        return (round(sum(scores.values()), 2), "\n".join(txt))
+    else:
+        return round(sum(scores.values()), 5)
+
+
+    
 def calcScoreOld(u: User) -> int:
     """Calculates the score of a user"""
     score = 0
@@ -308,6 +384,9 @@ def calcCredit(amount: int, user: User = None) -> float:
         if str(user.ID) == "main":
             amount *= (1 + 2)
 
+        # Prosperous Reset bonus
+        if user.get_item('Prosperous Reset', True):
+            amount *= (1 + 0.1)
 
         # Both set IGN and LFN (+2%)
         try:
@@ -379,7 +458,10 @@ def calcCreditTxt(user: User) -> int:
     # hourly
     if str(user.ID) == "main":
         amountTxt["Is the main bot"] = 200
-
+    
+    # Reset bonus
+    if user.get_item('Prosperous Reset', True):
+        amountTxt["Reset Bonus"] = 10
 
     # Both set IGN and LFN (+2%)
     try:
@@ -425,7 +507,7 @@ def calcCreditTxt(user: User) -> int:
 
     for i in amountTxt:
         if amountTxt[i] >= 0:
-            amountTxt[i] = "+" + str(amountTxt[i]) 
+            amountTxt[i] = "+" + str(round(amountTxt[i], 5)) 
 
     return "\n".join(f"{perk}: `{percentAmt}% Credit earnings`" for perk, percentAmt in amountTxt.items())
 

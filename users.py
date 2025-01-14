@@ -6,8 +6,6 @@ userTemplate = {
     "gems": 0,
     "tags": [],
     "items": {},
-    "IGN": None,
-    "LFN": None,
     "job": None,
     "dailyTime": 0,
     "hourlyTime": 0,
@@ -77,6 +75,9 @@ class User:
                 updated = True
                 data[key] = userTemplate[key]
         
+        if updated:
+            self.saveAccount(data)
+
         return updated
 
     def delete_item(self, item: str, count: int = 1, all: bool = False) -> bool:
@@ -105,7 +106,7 @@ class User:
         else:
             return False
         
-    def get_item(self, item: str, onlydetermine: bool = False) -> None | dict:
+    def get_item(self, item: str, onlydetermine: bool = True) -> None | dict:
         """
         Gets an item. If the item does not exist, then None will be returned
         """

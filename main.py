@@ -1,6 +1,6 @@
 """
 PIP REQUIREMENTS:
-pip install requests mcstatus discord.py names matplotlib scipy
+pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
 import discord, json, random, time, traceback, names, re, datetime
 from discord.ext import commands, tasks
@@ -59,7 +59,7 @@ with open("botsettings.json", 'r') as f:
     adminUsers = data['admins']
     botAIChannel = data['AI Channel']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.3.1)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.4.0)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -174,7 +174,6 @@ async def botAI():
         await run('hourly')
 
     # Determine the chance based on botactive
-
     if botactive > 0:
         r = random.randint(0, (105 - botactive * 5))
     else:
@@ -253,14 +252,15 @@ async def baljson(message, account: discord.Member = None):
     user = User(account.id)
 
     userData = user.getData()
+    options = user.getData('settings')
 
     # Blocked by user
-    if not userData['settings'].get("publicity", True) and account != message.author: 
+    if not options.get("publicity", True) and account != message.author: 
         await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
         return
 
     # Has password
-    if userData['settings'].get("password", "None") != "None": 
+    if options.get("password", "None") != "None": 
         await message.send(embed=errorMsg("Cannot view this user's JSON file!"))
         return
     
@@ -284,13 +284,14 @@ async def account(message, account: discord.Member = None):
     user = User(account.id)
 
     userData = user.getData()
+    options = user.getData('settings')
 
     # Blocked by user
-    if not userData['settings'].get("publicity", True) and account != message.author: 
+    if not options.get("publicity", True) and account != message.author: 
         await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
         return
 
-    ign = str(userData['IGN'])#.replace('_', '\\_')
+    ign = userData['settings'].get("IGN", "None")
 
     try:
         walletID = userData['LFN']
@@ -337,10 +338,16 @@ async def account(message, account: discord.Member = None):
 
     # Items
     for id, item in userData['items'].items():
-        itemsTxt.append(
-            f"**{id}** ({item['count']}/{shopitems[id]['limit']})" + ": " + 
-            (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
-        )
+        try:
+            itemsTxt.append(
+                f"**{id}** ({item['count']}/{shopitems[id]['limit']})" + ": " + 
+                (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
+            )
+        except KeyError:
+            itemsTxt.append(
+                f"**{id}**" + ": " + 
+                (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
+            )
 
     embed.add_field(
         name=f"Items", 
@@ -421,7 +428,7 @@ async def settings(message, option: str = None, *, value: str | int | bool = Non
         # Automation
         embed.add_field(
             name=f"Account Automation (ID: `AI`): {options.get('AI', False)}", 
-            value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the #bot-command-automation channel.\nDefaults to False (Off).",
+            value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the #bot-command-automation channel.\nDefaults to False (Off).\n**This feature will not be available until V.5.0!**",
             inline=False
         )
             
@@ -521,6 +528,50 @@ async def leaderboard(message):
     await message.send(embed=embed)
 
 @bot.command(
+    help = "Display the people with the most Credits",
+    aliases = ["lbs", 'slb', 'leaderboardscore']
+)
+async def scoreleaderboard(message):
+    embed = discord.Embed(
+        title = "Top members with the most score",
+        color = 0xFF00FF
+    )
+
+    usersDir = os.listdir('balanceLogs')
+
+    users = {}
+    for file in usersDir:
+        if file == "main": continue
+
+        if data.get('settings', {}).get("publicity", True): 
+            users[file.replace(".json", '')] = calcScore(User(file.replace(".json", '')))
+
+    totalCredits = 0
+
+    sortedUsers = sorted(users.items(), key=lambda x:x[1], reverse=True)
+
+    for i in range(len(sortedUsers)):
+        try:
+            usr = sortedUsers[i]
+
+            user = bot.get_user(int(usr[0]))
+
+            totalCredits += usr[1]
+            try:
+                embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: {numStr(usr[1])}")
+            except AttributeError:
+                embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: {numStr(usr[1])}")
+        except Exception as e:
+            embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
+
+    # Average credits = total / number of users
+    avgcredits = totalCredits / (i+1)
+
+    embed.description = f"**Average Score**: `{numStr(avgcredits)}`"
+
+    await message.send(embed=embed)
+
+@bot.command(
     name = "about",
     help = "About the bot",
     aliases = ["info", "information", "botinfo"]
@@ -559,14 +610,11 @@ async def set_ign(message, ign = None):
     
     if ign is None:
         embed = discord.Embed(title="Failed",description=f"Minecraft username not specified!", color=0xFF0000)
-    else:
-        ign = ign.replace("\\", "")
-        if user.setValue('IGN', ign):
-            embed = discord.Embed(title="Success",description=f"Your Minecraft username is now set to `{ign}`", color=0x00FF00)
-        else:
-            embed = discord.Embed(title="Failed",description=f"An unknown error occurred while trying to set your MC username", color=0xFF0000)
+        await message.send(embed=embed)
 
-    await message.send(embed=embed)
+    else:    
+        await settings(message, "IGN", value=(ign,))
+    
 
 
 
@@ -743,6 +791,7 @@ async def exchange(message, amount: float = None):
         2)
     except ValueError: # Logarithm of 0
         exchangeFee[0] = 500
+        
     # exchange fee cannot be higher than initial
     if exchangeFee[0] > 500: exchangeFee[0] = 500
 
@@ -777,7 +826,7 @@ async def exchange(message, amount: float = None):
                     kmceusers = json.load(file)
 
                 getAmount = round(amount * kcashrate, 2)
-                kmceusers[data['IGN']]['KCash'] += getAmount
+                kmceusers[user.getData('settings').get("IGN", None)]['KCash'] += getAmount
 
                 with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
                     kmceusers = json.dump(kmceusers, file)       
@@ -881,6 +930,25 @@ async def servers(message):
 
 
     await msg.edit(embed=embed)
+
+@bot.command(
+    help = f"Get your current score",
+    description = f"""Factors that affect score:
+- Ranking on leaderboard ((11 - current) ^ 1.2. Cannot be under 0)
+- Average Credits earned ((1/200) * (Avg. Credits). Cannot be over 50)
+- Amount of transactions (sqrt(transactions/2). Cannot be over 50)
+- Average Unity earned ((1/5) * (Avg. Unity))"""
+)
+async def score(message, user: discord.Member = None):
+    if user is None:
+        u = User(message.author.id)
+    else:
+        u = User(user.id)
+
+    totalscore, reason = calcScore(u, msg=True) 
+
+    embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 3 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, helpCmds, log, players""", color=0xFF00FF)
+    await message.send(embed=embed)
 
 
 @bot.command(
@@ -1431,66 +1499,6 @@ async def invest(message, arg = "", arg2=''):
     help = f"Own a portion of the bot balance (Scam)",
     description = f"You can own a portion of the bot's balance. When buying a stock, your account will own a % of the bot (Stock%). The maximum Stock% that can be obtained is 30%. When you exchange ({prefix}stock exchange), you will take a % of the bot's balance with a moderate fee. The fee equation is (fee = `(final bot bal - init bot bal) * 0.1`, fee > 0 else fee = 0). Additionally, the % in your account loses value over time (about 0.2% per day but cannot go below 50% of the init Stock%)",
 )
-async def stockold(message, server=None):
-
-    """
-    stock {
-        stockpct: float
-        initbal: float
-        inittime: time.time()
-    }
-    """
-    # Create an account JYI
-    User(message.author.id)
-
-    if server is None:
-        embed = discord.Embed(title="Command description:", description = bot.get_command("addserver").description + f"\nFormat: {prefix}addserver [server IP]", color=0xFF00FF)
-        await message.send(embed=embed)
-        return
-    else:
-
-        embed = discord.Embed(title="Please wait...", description = f"The bot is currently trying to fetch the status of `{server}`...", color=0xFF00FF)
-
-        msg = await message.send(embed=embed)
-        # Check if the current player count is over 12 or offline
-
-        try:
-            if server.lower() != "none":
-                if server.startswith('kcservers.ca'):
-                    try:
-                        serverStatus = JavaServer.lookup(server, timeout=1).status()
-                    except (TimeoutError, ConnectionError):
-                        server = server.replace("kcservers.ca", "192.168.1.71")
-                        serverStatus = JavaServer.lookup(server, timeout=1).status()
-                else:
-                    serverStatus = JavaServer.lookup(server, timeout=1).status()
-
-
-            if server.lower() != "none" and serverStatus.players.online > 12:
-                embed = discord.Embed(title="Failed", description=f"{server} is not a small server!", color=0xFF0000)
-
-            else:
-                with open('pingservers.json', 'r') as f:
-                    data = json.load(f)
-
-                data[str(message.author.id)] = server
-                embed = discord.Embed(title="Success:", description=f"A KCash-earning server is now set to `{server}`", color=0x00FF00)
-
-                with open('pingservers.json', 'w') as f:
-                    json.dump(data, f, indent=4)
-
-        except (ConnectionError, TimeoutError):
-            embed = discord.Embed(title="Failed", description=f"`{server}` is offline (timed out)!", color=0xFF0000)
-
-    
-
-
-        await msg.edit(embed=embed)
-
-@bot.command(
-    help = f"Own a portion of the bot balance (Scam)",
-    description = f"You can own a portion of the bot's balance. When buying a stock, your account will own a % of the bot (Stock%). The maximum Stock% that can be obtained is 30%. When you exchange ({prefix}stock exchange), you will take a % of the bot's balance with a moderate fee. The fee equation is (fee = `(final bot bal - init bot bal) * 0.1`, fee > 0 else fee = 0). Additionally, the % in your account loses value over time (about 0.2% per day but cannot go below 50% of the init Stock%)",
-)
 async def userstatus(message, member: discord.Member):
 
     
@@ -1723,7 +1731,7 @@ async def players_redir_commands(message: discord.Message):
 
 @bot.command(
     help = f"Work\nFormat: {prefix}work [apply <job>]",
-    description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nApplying for a job initially costs `5 Unity` (scales with Wealth Power)""",
+    description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity` (scales with Wealth Power)""",
     aliases = ['job'],
     hidden = True
 )
@@ -1759,26 +1767,47 @@ async def work(message, cmd = None, value = None):
         if currentJob is None:
             embed = errorMsg("You must apply for a job first!")
         else:
-            # Work
-            creditGain = calcCredit(baseCredits, user) * (1 + jobs[currentJob]['work output'] / 100)
-            unityGain = baseUnity * (1 + jobs[currentJob]['work output'] / 100)
+            # Amount to fire
+            # Should be int(-Unity/10) times, time >= 1, time E I
+            fireamt = int(-user.getData('unity')/5)
+            if fireamt < 0: fireamt = 1
+            for i in range(fireamt):
+                if random.randint(0, 19) == 0:
+                    # Fired
+                    unityLost = 10 * calcWealthPower(user, decimal=True)
 
-            # Job Bonuses
-            if currentJob == "Unifier": unityGain += 0.75
-            elif currentJob == "Banker": creditGain += (50 * calcInflation())
+                    user.addBalance(unity=-unityLost)
+                    user.setValue('job', None)
 
-            user.addBalance(credits=creditGain, unity=unityGain)
+                    embed = discord.Embed(
+                        title="Work",
+                        description=(
+                            f"Your boss fired you and you no longer have anymore!\nYou also lost `{unityLost} Unity`."
+                        ),
+                        color=0xFF0000
+                    )
+                    break
+            else:
+                # Work
+                creditGain = calcCredit(baseCredits, user) * (1 + jobs[currentJob]['work output'] / 100)
+                unityGain = baseUnity * (1 + jobs[currentJob]['work output'] / 100)
 
-            embed = discord.Embed(
-                title="Work",
-                description=(
-                    f"You earned `{numStr(creditGain)} Credits` and `{numStr(unityGain)} Unity` from working as a {currentJob}"
-                ),
-                color=0x00FF00
-            )
-            # Directly return without resetting the CD
-            await message.send(embed=embed)
-            return
+                # Job Bonuses
+                if currentJob == "Unifier": unityGain += 0.75
+                elif currentJob == "Banker": creditGain += (50 * calcInflation())
+
+                user.addBalance(credits=creditGain, unity=unityGain)
+
+                embed = discord.Embed(
+                    title="Work",
+                    description=(
+                        f"You earned `{numStr(creditGain)} Credits` and `{numStr(unityGain)} Unity` from working as a {currentJob}"
+                    ),
+                    color=0x00FF00
+                )
+                # Directly return without resetting the CD
+                await message.send(embed=embed)
+                return
 
     elif cmd == "apply":
         # Apply for the job
@@ -1960,7 +1989,8 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
 
                 await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")             
 
-                user.delete_item("Precognition")
+                if user.ID != "main": 
+                    user.delete_item("Precognition")
 
             plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (CRASHED!)")
 

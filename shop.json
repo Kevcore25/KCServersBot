@@ -6,7 +6,7 @@
         "description": "Prevents a robbery attempt. This item will still be used even if the robber would've paid you",
         "limit": 3,
         "expiry": 604800,
-        "stock": 999998
+        "stock": 999999
     },
     "Lock Pick": {
         "credits": 75,
@@ -33,6 +33,6 @@
         "description": "Donate money to help the poor. Exchanges Credits into 1 Unity (Limited stock)",
         "limit": 100,
         "expiry": 1,
-        "stock": 48
+        "stock": 50
     }
 }
