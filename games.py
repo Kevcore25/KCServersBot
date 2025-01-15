@@ -19,11 +19,11 @@ class CrashGame:
         """Change the multiplier and return the result"""
 
         # 10% time, -.2
-        if randint(0,9) == 0:
-            self.multiplier -= 0.2
-        else:
+        # if randint(0,9) == 0:
+        #     self.multiplier -= 0.2
+        # else:
             # self.multiplier += randint(5,15) / 100
-            self.multiplier += randint(2,10) / 200 * self.round
+        self.multiplier += randint(2,10) / 200 * self.round
 
         self.multiplier = round(self.multiplier, 3)
         

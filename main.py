@@ -356,7 +356,7 @@ async def account(message, account: discord.Member = None):
     )
     embed.add_field(
         name="Other Info", 
-        value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`",
+        value=f"**Wealth Power**: `Calculating...`\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `Calculating...`",
         inline=False
     )
 
@@ -380,12 +380,12 @@ async def account(message, account: discord.Member = None):
         name="KCMC Info", 
         value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`"
     )    
-    # embed.set_field_at(
-    #     index = 5,
-    #     name="Other Info", 
-    #     value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**bs%**: `{userData['BS%']}`",
-    #     inline=False
-    # )
+    embed.set_field_at(
+        index = 5,
+        name="Other Info", 
+        value=f"**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{numStr(calcScore(user))}`",
+        inline=False
+    )
 
     # # Add KCash notice
     # embed.set_footer(text="A new global KCash server will be up later.")
@@ -428,7 +428,7 @@ async def settings(message, option: str = None, *, value: str | int | bool = Non
         # Automation
         embed.add_field(
             name=f"Account Automation (ID: `AI`): {options.get('AI', False)}", 
-            value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the #bot-command-automation channel.\nDefaults to False (Off).\n**This feature will not be available until V.5.0!**",
+            value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the <#{botsettings['AI Channel']}> channel.\nDefaults to False (Off).\n**This feature will not be available until V.5.0!**",
             inline=False
         )
             
@@ -947,7 +947,7 @@ async def score(message, user: discord.Member = None):
 
     totalscore, reason = calcScore(u, msg=True) 
 
-    embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 3 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, helpCmds, log, players""", color=0xFF00FF)
+    embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 5 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, helpCmds, log, players""", color=0xFF00FF)
     await message.send(embed=embed)
 
 
@@ -3236,8 +3236,9 @@ async def reset(message):
         await message.send(f"""# A reset has been called!
 If the bot is not restarted within 5 minutes, a reset will happen!
 Any balances (e.g. Credits) will be lost after the reset, so please make sure to exchange them before it is too late!
+-# Warning: Exchanging Credits into KCash may affect your score ranking!
 <@&1328848138252980311>""")
-        time.sleep(300)
+        await asyncio.sleep(300)
 
         # Obtain scores
         usersDir = os.listdir('users')
