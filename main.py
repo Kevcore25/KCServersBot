@@ -2,7 +2,7 @@
 PIP REQUIREMENTS:
 pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
-import discord, json, random, time, traceback, names, re, datetime
+import discord, json, random, time, traceback, names, re, datetime, pytz
 from discord.ext import commands, tasks
 import time, os, sys, threading, dns, requests, asyncio, math
 import dns.resolver
@@ -58,6 +58,7 @@ with open("botsettings.json", 'r') as f:
     inflationAmt = data['inflation amount']
     adminUsers = data['admins']
     botAIChannel = data['AI Channel']
+    serverID = data['Server ID']
 
 activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.4.0)")
 bot = commands.Bot(
@@ -125,6 +126,50 @@ async def kcashEarningLoop():
 
 previousba = 0
 
+def statusloop():
+    threading.Timer(300, statusloop).start()
+    try:
+        # Define the MST timezone
+        mst_timezone = pytz.timezone('US/Mountain')
+
+        # Get the current time in UTC
+        utc_now = datetime.datetime.now(pytz.utc)
+
+        # Convert the current time to MST
+        mst_now = utc_now.astimezone(mst_timezone)
+
+        # Extract hour, minute, and day of the week
+        hour_of_day = mst_now.hour
+        minute_of_hour = mst_now.minute
+        day_of_week = mst_now.weekday()  # 0 = Monday, 6 = Sunday
+
+        # Print the results
+        # print(f"Hour of Day: {hour_of_day}")
+        # print(f"Minute of Hour: {minute_of_hour}")
+        # print(f"Day of Week: {day_of_week} (0 = Monday, 6 = Sunday)")
+        with open("userschedules.json", 'r') as f:
+            data = json.load(f)
+
+        for user in bot.get_guild(serverID).members:
+            u = str(user.id)
+            if u not in data:
+                data[u] = {"day": [], "hr": [], "min": [], "status": []}
+            
+            data[u]['day'].append(day_of_week)
+            data[u]['min'].append(minute_of_hour)
+            data[u]['hr'].append(hour_of_day)
+            
+            if user.status in [discord.Status.dnd, discord.Status.online]:
+                status = 1
+            else:
+                status = 0
+            
+            data[u]['status'].append(status)
+
+        with open("userschedules.json", 'w') as f:
+            json.dump(data, f)
+    except:
+        printError()
 
 @tasks.loop(seconds = 3)
 async def botAI():
@@ -209,11 +254,10 @@ async def botAI():
 async def on_ready():    
     usersFile.botID = str(bot.user.id)
     print("Ready, starting loops")
-
+    
+    statusloop()
 
     await botAI.start()
-
-
     await kcashEarningLoop.start()
     print("Ready!")
 
@@ -1013,20 +1057,26 @@ Certain actions and job professions can increase your Rob Attack and Rob Defense
 
 While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
 The equation of this additional Defense gain is modelled by the equations: 
-- *`(Target's RDL) \* ((Target Balance) / (User Balance) / 1.5) ^ 2`*
-- *`(Target's RDL) \* ((User Balance) / (Target Balance) / 1.2) ^ 2`*
+- _`(Target's RDL) * ((Target Balance) / (User Balance) / 1.5) ^ 2`_
+- _`(Target's RDL) * ((User Balance) / (Target Balance) / 1.75) ^ 2`_
 The highest value of the two equations will be used as the additional Defense gain.
 The additional Defense gain cannot be below 1 and the final Defense Level will be rounded to the nearest integer.
 
 Also when failing a rob, you gain an *Insight*, increasing your chances of suceeding at the cost of your rob defenses decreasing.
 Insights can stack up to 3 times and reset when succeeding a rob or being successfully robbed by another.
 
-Additional factors:
+**Additional factors**
 * Target is offline or idle: Target Defense Rob -1
-* Already robbed that target within 5 minutes: Target Defense Rob +1
+* Already robbed that target within 5 minutes: Target Defense Rob +2
 * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
 target
 Essentially, it is way easier for the target to gain Rob Defenses than it is for you to gain Rob Attacks, making it harder for you to successfully rob someone.
+
+**Locks and Lock Picks**
+If the target has a `Lock`, you cannot rob that target unless you have a `Lock Pick`.
+Lock picks have a 75% of bypassing a lock, and a 25% of getting caught.
+If you bypass the lock, it is not over, and you still have to win the rob.
+If you do not bypass, your lock pick will be confiscated.
 
 **Amounts**
 Win Amount: 
@@ -1082,7 +1132,7 @@ async def rob(message, target: discord.Member, ignorewarn = None):
     except ZeroDivisionError:
         diff = 10001
     try:
-        diff2 = ((userBal / targetBal) / 1.2) ** 2
+        diff2 = ((userBal / targetBal) / 1.75) ** 2
     except ZeroDivisionError:
         diff2 = 10001
 
@@ -1227,7 +1277,7 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
             color = 0xFF00FF,
         )
         if diff > 1:
-            em.set_footer(text = f"Target obtained a +{round((diff-1) * 100, 1)}% in Rob Defense due to differences in Credit balance")
+            em.set_footer(text = f"Target obtained a +{round((diff-1) * 100)}% in Rob Defense due to differences in Credit balance")
 
         await msg.edit(embed=em)
 

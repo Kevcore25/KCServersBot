@@ -519,7 +519,7 @@ def calculateRobDefense(member: discord.Member) -> int:
     Factors that affect RDL
     * Target is offline or idle: Target Defense Rob -1
     * Already robbed that target within 5 minutes: Target Defense Rob +1
-    * Target has `Rob Padlock`: Target Defense Rob +2
+    * Target has `Lock`: Target Defense Rob +2
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
     * Police job: Rob Defense +3
     """
@@ -541,7 +541,7 @@ def calculateRobDefense(member: discord.Member) -> int:
 
     # Already robbed
     if (time.time() - rob['attackedTime']) < 300:
-        rdl += 1
+        rdl += 2
 
     # Police job
     if user.getData('job') == "Police":
@@ -585,3 +585,52 @@ def calculateRobAttack(member: discord.Member) -> int:
     ral += rob['insights']
 
     return ral
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import numpy as np
+
+# Simulate some historical data (in reality, you'd use your actual data)
+# Example data columns: 'hour_of_day', 'day_of_week', 'is_online' (0 for offline, 1 for online)
+# data = {
+#     'hour_of_day': [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+#     'day_of_week': [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3],  # 0 = Monday, 1 = Tuesday, etc.
+#     'is_online': [1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0]  # Example labels
+# }
+
+def predict_discord_status(userID: int, hour_of_day, minute_of_hour, day_of_week) -> tuple[bool, float]:
+    """Predict when someone will be online. """
+    with open("userschedules.json", 'r') as f:
+        data = json.load(f).get(userID)
+
+    # Convert to a DataFrame
+    df = pd.DataFrame(data)
+
+    # Feature matrix X (hour_of_day, minute_of_hour, day_of_week)
+    X = df[['hr', 'min', 'day']]
+
+    # Target variable y (is_online)
+    y = df['status']
+
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    # Initialize and train a Random Forest Classifier
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Predict on the test set
+    y_pred = model.predict(X_test)
+
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    
+
+    # Predict if you'll be online or offline at a given time
+    def predict_availability(hour_of_day, minute_of_hour, day_of_week):
+        prediction = model.predict([[hour_of_day, minute_of_hour, day_of_week]])[0]
+        return ('Online', accuracy) if prediction == 1 else ('Offline', accuracy)
+
+    predict_availability(hour_of_day, minute_of_hour, day_of_week)
