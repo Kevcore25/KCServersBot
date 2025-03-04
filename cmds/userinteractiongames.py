@@ -465,3 +465,5 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
             description = f"Did you mean `{prefix}p {message.invoked_with}`?",
             color = 0xFF0000
         ))
+
+

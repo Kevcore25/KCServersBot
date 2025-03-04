@@ -1338,7 +1338,7 @@ bot.remove_command('help')
     help = "Shows information about a bot command.",
     description = \
 f"""**How to use the help command**:\nThe help command returns a list of all bot commands as well as a basic description under each command.\nThe help command can be specified with a command as an argument to obtain more details about the command.\n\n**How to read arguments**:\nEach argument that is enclosed with arrows (<>) means the argument is __mandatory__, meaning that you must specify it when running the command.\nAn argument enclosed with square brackets ([]) means that the argument is __optional__, and you do not need to specify it for the command to work properly.\nFor example, the current help command format is: `{prefix}help [command]`\nSince you specified the help command, it returned this message."""
-)
+) 
 async def help(message: discord.Message, command: str = "1"): # command is an argument
     embed = discord.Embed(
         title = "Help",
