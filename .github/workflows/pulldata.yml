@@ -10,6 +10,6 @@ jobs:
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PW }}
+        key: ${{ secrets.KEY }}
         port: ${{ secrets.PORT }}
         script: cd KCServersBot && git reset --hard HEAD && git pull
