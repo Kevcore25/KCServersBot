@@ -1,15 +1,48 @@
 """Calculation functions"""
 
-
 import users as usersFile
 from users import User
 import discord, os, json, time
+import random
 
 with open("botsettings.json", 'r') as f:
     botsettings = json.load(f)
 
-inflationAmt = botsettings['inflation amount']
+    KMCExtractLocation = botsettings['KMCExtract']
+    prefix = botsettings['prefix']
+    inflationAmt = botsettings['inflation amount']
+    adminUsers = botsettings['admins']
+    botAIChannel = botsettings['AI Channel']
+    serverID = botsettings['Server ID']
 
+WAYS_TO_EARN = {
+    "credits": ("""
+### Recommended
+1. **Jobs**: Apply for a job to earn rewards every hour.
+2. **Daily**: You can claim a daily reward for free every 12 hours.
+3. **Skill Games**: Games such as *MC Hangman* and *Gofish* prioritizes skill rather than gambling.
+4. **Beg**: Beg for a high chance at getting Credits.
+### Other ways 
+5. **Gambling Games**: Games such as *Crash Game* are high-risk, high-reward.
+6. **Rob**: Rob other players for a chance to earn some of their Credits.
+7. **Exchange**: Exchange Gems into Credits.     
+-# *Higher Wealth Powers can result in some features of the bot giving less rewards.*
+-# *Make sure to maximize your Credit Perks before gambling for best results!*
+"""),
+    "unity": ("""
+### Recommended
+1. **Jobs**: Apply for a job to earn rewards every hour.
+2. **Daily**: You can claim a daily reward for free every 12 hours.
+### Other ways 
+3. **Exchange**: Exchange Gems into Unity.     
+-# *Higher Wealth Powers can result in some features of the bot giving less rewards.*
+"""),
+    "gems": ("""
+### All ways
+1. **Events**: Limited-time events can give Gems as rewards. Be sure to participate in them!
+2. **Resets**: Periodically, balance resets happen, and Gems are given as compensation for the top 3 players in Credits.
+""")
+}
 
 # Source : chatgpt lol stackoverflow is UESLSES
 def tail(filename, lines=100) -> list[str]:
@@ -543,10 +576,16 @@ def calculateRobDefense(member: discord.Member) -> int:
     if (time.time() - rob['attackedTime']) < 300:
         rdl += 2
 
-    # Police job
-    if user.getData('job') == "Police":
-        rdl += 3
     
+    # Job roles
+    match user.getData('job'):
+        case "Police":
+            rdl += 3
+        case "Terrorist":
+            rdl -= 3
+    
+
+
     # Insights
     rdl -= rob['insights']
 
@@ -574,10 +613,14 @@ def calculateRobAttack(member: discord.Member) -> int:
         rob = user.getData()['rob']
         ral = rob['atk']
     
-    # Robber job
-    if user.getData('job') == "Robber":
-        ral += 2
+    # Job roles
+    match user.getData('job'):
+        case "Robber":
+            ral += 2
+        case "Terrorist":
+            ral += 8
     
+
 
     # Insights
     ral += rob['insights']
