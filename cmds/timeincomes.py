@@ -144,7 +144,7 @@ class TimeIncomes(commands.Cog):
 
                     # Job Bonuses
                     if currentJob == "Unifier": unityGain += 0.75
-                    elif currentJob == "Banker": creditGain += (50 * calcInflation())
+                    elif currentJob == "Banker": creditGain += (100 * calcInflation())
 
                     user.addBalance(credits=creditGain, unity=unityGain)
 

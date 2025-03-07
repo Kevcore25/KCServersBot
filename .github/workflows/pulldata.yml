@@ -12,4 +12,4 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: cd KCServersBot && git reset --hard HEAD && git pull
+        script: cd KCServersBot && git pull

@@ -576,10 +576,16 @@ def calculateRobDefense(member: discord.Member) -> int:
     if (time.time() - rob['attackedTime']) < 300:
         rdl += 2
 
-    # Police job
-    if user.getData('job') == "Police":
-        rdl += 3
     
+    # Job roles
+    match user.getData('job'):
+        case "Police":
+            rdl += 3
+        case "Terrorist":
+            rdl -= 3
+    
+
+
     # Insights
     rdl -= rob['insights']
 
@@ -607,10 +613,14 @@ def calculateRobAttack(member: discord.Member) -> int:
         rob = user.getData()['rob']
         ral = rob['atk']
     
-    # Robber job
-    if user.getData('job') == "Robber":
-        ral += 2
+    # Job roles
+    match user.getData('job'):
+        case "Robber":
+            ral += 2
+        case "Terrorist":
+            ral += 8
     
+
 
     # Insights
     ral += rob['insights']

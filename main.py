@@ -473,7 +473,7 @@ async def questions(message: discord.Message, subject = "RANDOM"):
 
     u = User(message.author.id)
 
-    if u.getData('job') != "Scholar":
+    if u.getData('job') != "Student":
         await message.send("Sorry, but until there are more questions in the bank, I am disabling this command lol good luck with your unity problems")
         questions.reset_cooldown(message)
         return
