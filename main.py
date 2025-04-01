@@ -722,9 +722,8 @@ async def mchangman(message: discord.Message):
     # Credit formula.
     cred = lambda: round(calcCredit(
         (
-            100
+            20
             / (22 - attempts)
-            - 2.5
         ),
      u), 2)
     
