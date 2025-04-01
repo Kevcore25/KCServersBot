@@ -156,17 +156,8 @@ class TimeIncomes(commands.Cog):
             value = str(value).title()
 
             if value in jobs:
-                unityLost = 5 * calcWealthPower(user, decimal=True)
-
-                if user.getData('unity') < unityLost:
-                    embed = errorMsg(title="Not enough balance!", description=f"You don't have enough Unity to apply for a job!\nJob cost: `{unityLost} Unity`\n\n## Tips:{WAYS_TO_EARN['unity']}")
-        
-                else:
-
-                    user.addBalance(unity=-unityLost)
-                    user.setValue('job', value)
-
-                    embed = successMsg("Job applied", f"You paid `{numStr(unityLost)} Unity` to apply for the job of {value}!")
+                user.setValue('job', value)
+                embed = successMsg("Job applied", f"You applied for the job of {value}!")
 
         else: embed = errorMsg("Command is not vaild!")
 
