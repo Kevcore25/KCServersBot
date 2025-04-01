@@ -64,13 +64,12 @@ for user in users:
     with open("users/" + user + ".json", 'r') as f:
         data = json.load(f)
 
-    data['credits'] = 500
+    data['credits'] = 50
     data['unity'] = 20
 
     data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*7)], "data": {}, "count": 1}}
     data['job'] = None
     data['bs%'] = 0
-    data['helpCmds'] = []
     data['log'] = 0
     data['rob'] = {
         "atk": 5,
@@ -95,7 +94,6 @@ data['unity'] = 0
 data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
 data['job'] = 'Player'
 data['bs%'] = 100
-data['helpCmds'] = []
 data['log'] = 0
 data['rob'] = {
     "atk": 0,
@@ -108,5 +106,5 @@ data['rob'] = {
 if 'players' in data:
     del data['players']
 
-with open("users/" + user + ".json", 'w') as f:
+with open("users/" + "main.json", 'w') as f:
     json.dump(data, f)

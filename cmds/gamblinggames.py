@@ -22,10 +22,11 @@ class GambleGames(commands.Cog):
         totalCredits = 0
 
         for file in usersDir:
+            if file == "main.json": continue
             with open('users/' + file, 'r') as f:
                 totalCredits += json.load(f)['credits']
 
-        winAmount = round((totalCredits/4000 + 20) * random.randint(5,15)/10 * calcInflation(), 2)
+        winAmount = round((totalCredits/4000 + 1) * random.randint(5,15)/10 * calcInflation(), 2)
 
         winAmount = round(winAmount / (1 + calcWealthPower(user)/100), 2)
 

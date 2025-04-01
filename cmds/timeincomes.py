@@ -49,8 +49,8 @@ class TimeIncomes(commands.Cog):
             return
 
 
-        amount = 50 / (calcWealthPower(user, True) / 5)
-        unityAmt = 3
+        amount = 20 / (calcWealthPower(user, True))
+        unityAmt = 5
 
 
         if random.randint(0,9) > 0:
@@ -90,10 +90,6 @@ class TimeIncomes(commands.Cog):
         user = User(message.author.id)
         data = user.getData()
 
-        # Base gains
-        baseCredits = 50 * calcInflation()
-        baseUnity = 0.5
-
         with open('jobs.json', 'r') as f:
             jobs = json.load(f)
 
@@ -108,7 +104,7 @@ class TimeIncomes(commands.Cog):
                     ("\n" if currentJob == None else f"\nWork using `{prefix}work work`") +
                     "\nWork output is an additional money gain from work.\n" + 
                     "\n**Jobs:**\n" + 
-                    "\n\n".join(f"""**{job}**: {jobs[job]['description']}\nCurrent base rates: `{numStr(baseCredits *(1 + jobs[job]['work output'] / 100))} Credits` and `{numStr(baseUnity * (1 + jobs[job]['work output'] / 100))} Unity`\nPerk: `{"+" + str(jobs[job]['credit perk']) if jobs[job]['credit perk'] >= 0 else jobs[job]['credit perk']}% Credit earnings`""" for job in jobs)
+                    "\n\n".join(f"""**{job}**: {jobs[job]['description']}\nCurrent base rates: `{numStr(jobs[job]['credits'])} Credits` and `{numStr(jobs[job]['unity'])} Unity`\nPerk: `{"+" + str(jobs[job]['credit perk']) if jobs[job]['credit perk'] >= 0 else jobs[job]['credit perk']}% Credit earnings`""" for job in jobs)
                 ), 
                 color=0xFF00FF
             )
@@ -139,12 +135,8 @@ class TimeIncomes(commands.Cog):
                         break
                 else:
                     # Work
-                    creditGain = calcCredit(baseCredits, user) * (1 + jobs[currentJob]['work output'] / 100)
-                    unityGain = baseUnity * (1 + jobs[currentJob]['work output'] / 100)
-
-                    # Job Bonuses
-                    if currentJob == "Unifier": unityGain += 0.75
-                    elif currentJob == "Banker": creditGain += (100 * calcInflation())
+                    creditGain = calcCredit(jobs[currentJob]['credits'])
+                    unityGain = jobs[currentJob]['unity']
 
                     user.addBalance(credits=creditGain, unity=unityGain)
 

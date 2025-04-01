@@ -165,7 +165,7 @@ def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
             if file == "main.json": continue
             try:
                 credits = float(json.load(f).get('credits'))
-                if credits <= 0: 
+                if credits >= 0: 
                     totalCredits += credits
                     amtOfUsers += 1
             except: pass

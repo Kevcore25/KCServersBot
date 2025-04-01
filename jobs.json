@@ -1,52 +1,56 @@
 {
     "Player": {
-        "description": "A KCMC player.",
-        "work output": 0,
+        "description": "A KCMC player. Standard work job with no downsides. Recommended for new players.",
+        "credits": 10,
+        "unity": 5,
         "credit perk": 0
     },
     "Developer": {
         "description": "A developer working in KCServers.",
-        "work output": 50,
-        "credit perk": -5
+        "credits": 15,
+        "unity": 7.5,
+        "credit perk": -7.5
     },
     "Pacifist": {
         "description": "A pacifist role. They gain a bonus `-50% Wealth Power` perk.",
-        "work output": -50,
+        "credits": 10.5,
+        "unity": 2.4,
         "credit perk": -5
     },
     "Tennis": {
         "description": "A professional tennis player both playing nationals and teaching other players.",
-        "work output": -40,
+        "credits": 8.5,
+        "unity": 7.35,
         "credit perk": 5
     },
     "Unifier": {
-        "description": "Unifiers help unite everyone. They gain a bonus `+0.75 Unity` for each work.",
-        "work output": -50,
+        "description": "Unifiers help unite everyone.",
+        "credits": 5,
+        "unity": 10,
         "credit perk": -2
     },
     "Banker": {
-        "description": "They gain a bonus `+100 Credits` (scales with inflation) for each work.",
-        "work output": -50,
+        "description": "Bankers help regulate the bank economy and they also take extra for themselves!",
+        "credits": 20,
+        "unity": 2.5,
         "credit perk": -1
     },
     "Police": {
         "description": "A policeman, catching thiefs. They have increased chances of robbers failing (`+3 Rob Defense Levels`).",
-        "work output": -10,
+        "credits": 5,
+        "unity": 7,
         "credit perk": 2
     },
     "Robber": {
         "description": "A thief. They have increased chances of successful robs (`+2 Rob Attack Levels`).",
-        "work output": 156,
+        "credits": 30,
+        "unity": -1,
         "credit perk": -20
     },
     "Student": {
         "description": "A student. Gain access to the `questions` command.",
-        "work output": -99,
+        "credits": 0,
+        "unity": 0,
         "credit perk": -10
-    },
-    "Terrorist": {
-        "description": "[Limited Time] Terrorist role! Gain `+85 Rob Attack Levels` but `-3 Rob Defense Levels`! No way your failing robs anymore!",
-        "work output": 50,
-        "credit perk": -90
     }
 }

@@ -18,7 +18,7 @@ class Exchanges(commands.Cog):
         
         exchangeRates = {
             ("gems", "unity"): 1,
-            ("gems", "credits"): round(50 * calcInflation()),
+            ("gems", "credits"): round(5 * calcInflation()),
         }
 
         if currency is None:

@@ -4,15 +4,13 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 from users import User
 import time
-from cardgames import *
-
-jackpot = True
-       
+from cardgames import *       
 class CrashGame:
     def __init__(self) -> None:
         self.multiplier = 1
         self.round = 0
         self.multipliers = [self.multiplier]
+        self.jackpot = False
 
 
     def change_multiplier(self) -> float:
@@ -34,12 +32,11 @@ class CrashGame:
     def determine_crash(self) -> bool:
         """Determines if the round will crash"""
 
-        global jackpot
 
-        if not jackpot:
+        if self.jackpot:
             print("JP")
             if (randint(0,30) == 0 or self.multiplier >= 100) and self.round > 50:
-                jackpot = True
+                self.jackpot = False
                 print("jackpot expired")
                 return True # Crashes
             else:

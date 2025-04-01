@@ -401,6 +401,9 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
                 cashedOut = True
 
                 await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")
+
+                # APRIL FOOLS UPDATE LOL
+                cg.jackpot = True
             if str(userMsg[0].emoji) == "🛑":
                 plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (Stopped by user)")
                 p()
@@ -673,7 +676,7 @@ threading.Thread(target=pull_mch_data).start()
 
 @bot.command(
     help = f"Play a simliar version of Hangman",
-    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `8 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
+    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
     aliases = ['mch', 'minecrafthangman']
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -720,13 +723,13 @@ async def mchangman(message: discord.Message):
     cred = lambda: round(calcCredit(
         (
             100
-            / (32 - attempts - guesses)
-            - 1
+            / (22 - attempts)
+            - 2.5
         ),
-     u))
+     u), 2)
     
-    # Subtract 8 credits from user
-    u.addBalance(credits=-8)
+    # Subtract 2 credits from user
+    u.addBalance(credits=-2)
 
     # Send MSG
     msg = await message.send(embed=discord.Embed(
@@ -1388,8 +1391,8 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
             if originalcmd not in cmdsUsed and not bot.get_command(command).hidden:
                 cmdsUsed.append(originalcmd)
                 u.setValue("helpCmds", cmdsUsed)
-                u.addBalance(credits=50)
-                embed.set_footer(text="+50 Credits due to viewing the details about this command for the first time!")
+                u.addBalance(gems=1)
+                embed.set_footer(text="+1 Gem due to viewing the details about this command for the first time!")
 
         else:
             embed.description = f"Command `{command}` is not a vaild command!"
@@ -1556,13 +1559,12 @@ Average Score: {avgscore}
             except FileNotFoundError:
                 pass
 
-            data['credits'] = 500
+            data['credits'] = 50
             data['unity'] = 20
 
             data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*3)], "data": {}, "count": 1}}
             data['job'] = None
             data['bs%'] = 0
-            data['helpCmds'] = []
             data['log'] = 0
             data['rob'] = {
                 "atk": 5,
@@ -1587,7 +1589,6 @@ Average Score: {avgscore}
         data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
         data['job'] = 'Player'
         data['bs%'] = 100
-        data['helpCmds'] = []
         data['log'] = 0
         data['rob'] = {
             "atk": 0,

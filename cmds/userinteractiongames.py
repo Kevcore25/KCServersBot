@@ -15,7 +15,8 @@ class InteractionGames(commands.Cog):
         help = f"Rob someone the modern way.\nFormat: {prefix}rob <target>",
         description = """
 A new modern robbing system that rolls values instead of a fixed 33% to win.
-    
+**As of V.5.0, the robbing system slightly changed. See the Unity section of this description for more details**
+
 **Dice Roll System**
 This robbing system rolls a dice from 1 to a set amount. If your dice roll is higher than the opponent's roll, you win the rob. Otherwise, you lose the rob.
 If you rolled the same as your target, a reroll is done.
@@ -24,8 +25,8 @@ Certain actions and job professions can increase your Rob Attack and Rob Defense
 
 While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
 The equation of this additional Defense gain is modelled by the equations: 
-- _`(Target's RDL) * ((Target Balance) / (User Balance) / 1.5) ^ 2`_
-- _`(Target's RDL) * ((User Balance) / (Target Balance) / 1.75) ^ 2`_
+- _`(Target's RDL) * ((Target Balance) / (User Balance) / 1.5))`_
+- _`(Target's RDL) * ((User Balance) / (Target Balance) / 1.75)`_
 The highest value of the two equations will be used as the additional Defense gain.
 The additional Defense gain cannot be below 1 and the final Defense Level will be rounded to the nearest integer.
 
@@ -55,6 +56,13 @@ Lose Amount:
 The amount you lose by failing to rob someone is based on a percentage of your balance and the target's balance.
 You may go into debt if there is a large balance difference between you and the target.
 Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
+
+**Unity in robbing**
+When robbing someone, you lose unity as a result. 
+Negative unity increases the Target's RDL in addition to balance difference.
+The formula for this is ||*`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your Unity) < 0`*||
+A failed rob decreases Unity by 2.
+A successful rob increases Unity by 0.25
     """,
         aliases = ["newrob"]
     )
@@ -142,6 +150,7 @@ Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
             # Lose money
             user.addBalance(credits = -loseAmount)
             targetUser.addBalance(credits = loseAmount)
+            user.addBalance(unity = -2)
 
             # Rob stats
             if robGet(user, 'insights') < 3:
@@ -217,6 +226,7 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
                 # Win Money
                 user.addBalance(credits = winAmount)
                 targetUser.addBalance(credits = -winAmount)
+                user.addBalance(unity = 0.25)
 
                 # Rob stats
                 robSet(user, "insights", 0)
