@@ -20,3 +20,4 @@ mcdata.json
 questionData.json
 questionBank.csv
 userschedules.json
+cmds/__pycache__/
