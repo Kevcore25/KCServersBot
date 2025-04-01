@@ -19,12 +19,12 @@
     },
     "Precognition": {
         "credits": 0,
-        "unity": 50,
-        "gems": 0,
+        "unity": 0,
+        "gems": 100,
         "description": "Allows you to see the future! For the next crash game, you will automatically cash out just before the game crashes",
         "limit": 1,
         "expiry": 604800,
-        "stock": 10
+        "stock": 1
     },
     "Donation": {
         "credits": 5,
