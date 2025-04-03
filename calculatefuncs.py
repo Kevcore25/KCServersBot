@@ -217,10 +217,10 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     Calculates the score of a user
     
     Factors that affect score:
-    - Ranking on leaderboard ((11 - current) ^ 1.2, cannot be under 0)
-    - Average Credits earned (For up to 10k Cred, up to 50 can be obtained. Cannot be over 50)
+    - Ranking on leaderboard ((11 - current), cannot be under 0)
+    - Average Credits earned (For up to 1k Cred, up to 50 can be obtained. Cannot be over 50)
     - Amount of transactions (Sqrt(x/2), cannot be over 50)
-    - Average Unity earned (For up to 200 Unity, up to 40 can be obtained)
+    - Average Unity earned (For up to 200 Unity, up to 20 can be obtained)
     """
     scores = {}
     # Leaderboard
@@ -249,7 +249,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     else:
         ranking = 11
 
-    scores['Leaderboard Ranking'] = (11 - ranking) ** 1.2
+    scores['Leaderboard Ranking'] = (11 - ranking)
 
     # Average earned
     try:
@@ -267,10 +267,10 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
             totalUnity += float(log.split(' ')[2])
         except IndexError: pass
 
-    credScore = (1 / 200) * (totalCred / len(ballogs))
+    credScore = (1 / 20) * (totalCred / len(ballogs))
     if credScore > 50: credScore = 50
     scores['Average Credits'] = credScore
-    scores['Average Unity'] = (1/5) * (totalUnity / len(ballogs))
+    scores['Average Unity'] = (1/10) * (totalUnity / len(ballogs))
 
     # Amount of transactions
     transScore = ((u.getData('log')) / 2) ** 0.5

@@ -20,7 +20,7 @@ class TimeIncomes(commands.Cog):
             data["hourlyTime"] = 0
 
         if time.time() - data["hourlyTime"] < 60*60:
-            embed = discord.Embed(title="On Cooldown!",description=f"You can claim the hourly reward <t:{int(data['dailyTime'] + 60*60)}:R>", color=0xFF0000)
+            embed = discord.Embed(title="On Cooldown!",description=f"You can claim the hourly reward <t:{int(data['hourlyTime'] + 60*60)}:R>", color=0xFF0000)
             await message.send(embed=embed)
             return
         
@@ -68,7 +68,7 @@ class TimeIncomes(commands.Cog):
         else:
             user.setValue('dailyTime', int(time.time()) + 3720)
             user.saveAccount()
-            credLost = calcWealthPower(user) / 2
+            credLost = calcWealthPower(user) / 20
             embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(credLost)} Credits` but gain `{numStr(unityAmt * 3 + 1)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
             user.addBalance(
                 credits=-credLost,
