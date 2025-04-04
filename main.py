@@ -1534,15 +1534,18 @@ Average Score: {avgscore}
             with open("users/"+user+'.json', 'r') as f:
                 data = json.load(f)
 
+            gemsGained = (5 - i) * 10
+
             msgs.append(basicMsg(
                 title=f"""Place #{i+1}""",
                 description = f"""
 ## <@{user}>
 ### **Total Score**: `{score}`
 {calcScore(User(user), msg=True)[1]}
-### Gems Gained: `{(5 - i) ** 2 * 2}`"""))
+### Gems Gained: `{gemsGained}`"""))
+            
             # Add
-            data['gems'] += (5 - i) ** 2 * 2
+            data['gems'] += gemsGained
         
             with open("users/"+user+'.json', 'w') as f:
                 json.dump(data, f)
