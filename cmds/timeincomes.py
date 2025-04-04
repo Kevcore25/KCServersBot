@@ -157,7 +157,8 @@ class TimeIncomes(commands.Cog):
 
             if value in jobs:
                 user.setValue('job', value)
-                embed = successMsg("Job applied", f"You applied for the job of {value}!")
+                user.addBalance(unity = -10)
+                embed = successMsg("Job applied", f"You applied for the job of {value}!\nYou lost 10 Unity during the process.")
 
         else: embed = errorMsg("Command is not vaild!")
 
