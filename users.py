@@ -232,8 +232,9 @@ class User:
 
         self.data["gems"] = round(self.data["gems"] + gems)
 
-        if self.data["unity"] > 200:
-            self.data["unity"] = 200
+        if self.data["unity"] > 100:            
+            self.data['credits'] += (self.data["unity"] - 100) # Convert excess Unity into Credits
+            self.data["unity"] = 100
         elif self.data["unity"] < -100:
             self.data["unity"] = -100
 

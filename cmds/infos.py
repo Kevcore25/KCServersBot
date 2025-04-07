@@ -24,9 +24,15 @@ Players using this bot can also start up servers with a small fee.
 __Currencies:__
 There are 5 currencies used by this bot. 2 of which are exclusive to the bot.
 **Credits**: The main currency of the bot. It is used with bot games, as well as exchanging Credits to KCash.
-**Unity**: A unit of status measurement (think of it as Reputation). A maximum of 200 Unity can be stored, and a minimum of -100 Unity can be obtained. For every 1 Unity in debt, the amount of Credits earned decreases by 1%. Also, every 1 Unity above 100 will give +0.1% Credit Earnings.
+
+**Unity**: A unit of status measurement (think of it as Reputation). A maximum of 100 Unity can be stored, and a minimum of -100 Unity can be obtained. 
+For every 1 Unity in debt, the amount of Credits earned decreases by 1%. Also, every 1 Unity above 100 will give +0.1% Credit Earnings.
+Every Unity earned after 100 will be converted into Credits (Rate: 1 Unity > 1 Credit)
+
 **Gems**: A premium currency, usually only obtained in events. It can be used to be exchange into Credits and Unity, or purchase special items in the shop.
+
 **Gold**: A currency that is obtained through player mining (Using the `{prefix}players mine` command). It can be exchanged into Credits
+
 **KCash**: The global currency of KCMC. It is used in every server that supports the *KMCExtract* technology.
 """,
             color = 0xFF00FF
