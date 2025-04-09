@@ -122,6 +122,10 @@ class User:
         else:
             return None if not onlydetermine else False
 
+    def item_exists(self, item: str):
+        """Alias to get_item with onlydetermine = True"""
+        return self.get_item(item, onlydetermine = True)
+
 
     def add_item(self, item: str, expiry: int = -1, count: int = 1, data: dict = {}) -> bool:
         """Adds an item"""
@@ -234,9 +238,16 @@ class User:
 
         self.data["gems"] = round(self.data["gems"] + gems)
 
-        if self.data["unity"] > 200:            
-            self.data['credits'] += (self.data["unity"] - 200) # Convert excess Unity into Credits
-            self.data["unity"] = 100
+        if self.data["unity"] > 200:
+            # Unity Increase item                
+            if self.item_exists("Unity Increase"):
+                if self.data['unity'] > 300:
+                    self.data['credits'] += (self.data["unity"] - 300) # Convert excess Unity into Credits
+                    self.data["unity"] = 300
+            else:
+                self.data['credits'] += (self.data["unity"] - 200) # Convert excess Unity into Credits
+                self.data["unity"] = 200
+
         elif self.data["unity"] < -100:
             self.data["unity"] = -100
 

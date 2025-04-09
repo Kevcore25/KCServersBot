@@ -97,11 +97,11 @@ def get_prefix(val: float, accuracy: int = 1, symbol: str = "") -> str:
     # return newValue.replace('.0','') if accuracy == 0 else newValue
 
     if val >= 1_000_000_000_000:  # Really?
-        val = str(int((val / 1_000_000_000_000), accuracy)) + "T"
+        val = str(int((val / 1_000_000_000_000))) + "T"
     elif val >= 1_000_000_000:
-        val = str(int((val / 1_000_000_000), accuracy)) + "G"
+        val = str(int((val / 1_000_000_000))) + "G"
     elif val >= 1_000_000:
-        val = str(int((val / 1_000_000), accuracy)) + "M"
+        val = str(int((val / 1_000_000))) + "M"
     elif val >= 1_000:
         val = str(int((val / 1_000))) + "k"
     else:
@@ -166,6 +166,9 @@ def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
     totalWealth, amtOfUsers = 0 ,0
     botCred = User("main").getData("credits")
     for file in usersDir:
+        # Do not count bot in wealth power
+        if file == "main.json": continue
+
         try:
             userWealth = calcWealth(User(file.replace(".json", "")), botCred)
             if userWealth > 0:
@@ -366,7 +369,7 @@ def calcWealth(u: User, botCred = None) -> float:
 
     return (
         userData['credits'] + 
-        userData['bs%'] * botCred +
+        userData['bs%'] * botCred / 100 +
         (userData['unity'] + 150) / 250
     )
 

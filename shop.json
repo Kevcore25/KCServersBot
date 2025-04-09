@@ -30,9 +30,36 @@
         "credits": 5,
         "unity": -1,
         "gems": 0,
-        "description": "Donate money to help the poor. Exchanges Credits into 1 Unity (Limited stock)",
+        "description": "Donate money to help the poor.",
         "limit": 100,
         "expiry": 1,
+        "stock": 999999
+    },
+    "Account Viewer": {
+        "credits": 0,
+        "unity": 0.05,
+        "gems": 0,
+        "description": "Allows you to use the account and graphbalance commands on other players!",
+        "limit": 100,
+        "expiry": -1,
+        "stock": 999999
+    },
+    "Popularity": {
+        "credits": 0,
+        "unity": 0.1,
+        "gems": 0,
+        "description": "The chance of the next beg succeeding increases from 67% to 80%.",
+        "limit": 100,
+        "expiry": -1,
+        "stock": 999999
+    },
+    "Unity Increase": {
+        "credits": 0,
+        "unity": 0,
+        "gems": 30,
+        "description": "The maximum unity obtainable increases from 200 to 300.\nThis item expires every reset.",
+        "limit": 1,
+        "expiry": -1,
         "stock": 50
     }
 }

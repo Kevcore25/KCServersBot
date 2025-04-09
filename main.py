@@ -1102,7 +1102,7 @@ async def buy(message, *itemID): # command is an argument
             if item['stock'] <= 0:
                 await message.send(embed=errorMsg("Item is out of stock!"))
                 return
-
+            
             # Append Items
             if itemID not in items:
                 items[itemID] = {
@@ -1111,24 +1111,38 @@ async def buy(message, *itemID): # command is an argument
                     "count": 0
                 }
 
-            items[itemID]['count'] += 1
-            if item['expiry'] != -1:
-                items[itemID]['expires'].append(int(time.time() + item['expiry']))
-            else:
-                items[itemID]['expires'].append(-1)
+            for bought in range(amount):
+                item = shopitems[itemID]
+
+                # Out of stock
+                itemCount = items[itemID]['count']
+                if item['stock'] <= 0 or itemCount >= item['limit']:
+                    bought -= 1
+                    break
+        
+                items[itemID]['count'] += 1
+
+                if item['expiry'] != -1:
+                    items[itemID]['expires'].append(int(time.time() + item['expiry']))
+                else:
+                    items[itemID]['expires'].append(-1)
+
+  
+                shopitems[itemID]['stock'] -= 1
+
+            # bought times
+            bought += 1
 
             # Remove balance
-            u.addBalance(credits = -item['credits'], unity = -item['unity'], gems = -item["gems"])
+            u.addBalance(credits = -round(item['credits'] * bought, 5), unity = -round(item['unity'] * bought, 5), gems = -round(item["gems"] * bought))
+
             # Add item
             u.setValue("items", items)
-
-            # Remove a stock
-            shopitems[itemID]['stock'] -= 1
 
             with open("shop.json", 'w') as f:
                 json.dump(shopitems, f, indent=4)
 
-            await message.send(embed=successMsg(title="Item bought!", description=f"Successfully bought `{itemID}` for `{item['credits']} Credits`, `{item['unity']} Unity`, and `{item['gems']} Gems`"))
+            await message.send(embed=successMsg(title="Item bought!", description=f"Successfully bought `{bought}` `{itemID}` for `{item['credits'] * bought} Credits`, `{item['unity'] * bought} Unity`, and `{item['gems'] * bought} Gems`"))
 
         else:
             await message.send(embed=errorMsg(f"You do not have enough currencies to buy this item!\n## Tips:{WAYS_TO_EARN['credits']}"))
@@ -1453,26 +1467,26 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
 
 
 
-@bot.event 
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
+# @bot.event 
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandOnCooldown):
           
-        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-        await ctx.send(embed=embed)
-    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-        (ctx.command).reset_cooldown(ctx)
-        await ctx.send(embed=embed)
+#         embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+#         await ctx.send(embed=embed)
+#     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+#         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+#         (ctx.command).reset_cooldown(ctx)
+#         await ctx.send(embed=embed)
 
-    else:
-        embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
-        embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-        if "KeyError" in str(error):
-            if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
-                embed.description = "*This is most likely due to account errors.*"
-        print(traceback.format_exc())
-        await ctx.send(embed=embed)
-        (ctx.command).reset_cooldown(ctx)
+#     else:
+#         embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
+#         embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
+#         if "KeyError" in str(error):
+#             if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
+#                 embed.description = "*This is most likely due to account errors.*"
+#         print(traceback.format_exc())
+#         await ctx.send(embed=embed)
+#         (ctx.command).reset_cooldown(ctx)
 
 
 @bot.command(aliases=['reload'], hidden=True)

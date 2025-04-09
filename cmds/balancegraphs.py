@@ -98,6 +98,15 @@ class BalanceGraphs(commands.Cog):
             await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
             return
 
+        # Requires Account Viewer for not self
+        if user.id != message.author.id:
+            authoruser = User(message.author.id)
+            if authoruser.item_exists("Account Viewer"):
+                authoruser.delete_item("Account Viewer")
+            else:
+                await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
+                return
+            
         # Initialize a list to store the balances
         balances = []
         xstrs = []
@@ -295,6 +304,15 @@ class BalanceGraphs(commands.Cog):
         if not User(userid).getData('settings').get("publicity", True): 
             await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
             return
+
+        # Requires Account Viewer for not self
+        if user.id != message.author.id:
+            authoruser = User(message.author.id)
+            if authoruser.item_exists("Account Viewer"):
+                authoruser.delete_item("Account Viewer")
+            else:
+                await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
+                return
 
         # Initialize a list to store the balances
         balances = []

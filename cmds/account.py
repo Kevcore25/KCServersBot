@@ -28,6 +28,16 @@ class AccountViewers(commands.Cog):
             await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
             return
 
+        # Requires Account Viewer for not self
+        if account != message.author:
+            authoruser = User(message.author.id)
+            if authoruser.item_exists("Account Viewer"):
+                authoruser.delete_item("Account Viewer")
+            else:
+                await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
+                return
+
+
         ign = userData['settings'].get("IGN", "None")
 
         try:
@@ -52,7 +62,7 @@ class AccountViewers(commands.Cog):
 
         embed.add_field(
             name="Balances", 
-            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/200`\n**Gems**: `{int(userData['gems']):>,}`"
+            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/{300 if user.item_exists('Unity Increase') else 200}`\n**Gems**: `{int(userData['gems']):>,}`"
         )
         embed.add_field(
             name="KCMC Info", 
@@ -158,6 +168,16 @@ class AccountViewers(commands.Cog):
         if options.get("password", "None") != "None": 
             await message.send(embed=errorMsg("Cannot view this user's JSON file!"))
             return
+        
+        # Requires Account Viewer for not self
+        if account != message.author:
+            authoruser = User(message.author.id)
+            if authoruser.item_exists("Account Viewer"):
+                authoruser.delete_item("Account Viewer")
+            else:
+                await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
+                return
+
         
         embed.description = "```json\n" + json.dumps(userData, indent=4) + "```"
 

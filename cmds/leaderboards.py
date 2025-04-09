@@ -90,9 +90,9 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: {numStr(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: ≈{round(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: {numStr(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: ≈{round(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 

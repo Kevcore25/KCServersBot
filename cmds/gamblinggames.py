@@ -30,7 +30,12 @@ class GambleGames(commands.Cog):
 
         winAmount = round(winAmount / (1 + calcWealthPower(user)/100), 2)
 
-        r = random.randint(0,2)
+        # Popularity item
+        if user.item_exists("Popularity"):
+            r = random.randint(0, 4)
+            user.delete_item("Popularity")
+        else:
+            r = random.randint(0,2)
                         
         # Add a warning if user is too in debt
         if user.getData('unity') < -50 and arg is None:
