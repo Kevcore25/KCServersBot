@@ -275,7 +275,7 @@ async def msginput(ctx: discord.Message, text: str | None, timeout: int = 60) ->
 
 @bot.command(
     help = f"Play the crash game!",
-    description = """This version is modified and split into "rounds" which take about 1 second to update. Each turn has a chance of crashing.""",
+    description = """This version is modified and split into "rounds" which take about 1 second to update. Each turn has a chance of crashing.\nYou lose `1 Unity` for playing but gain `1 Unity` for cashing out.""",
     aliases = ['cg', 'crash']
 )
 @commands.cooldown(1, 300, commands.BucketType.user) 
@@ -331,7 +331,7 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
         await message.send(embed=discord.Embed(description="A maxmium of 10k Credits can be betted!", color=0xFF0000))
         crashgame.reset_cooldown(message)
         return
-    user.addBalance(credits=-betamount)
+    user.addBalance(credits=-betamount, unity = -1)
 
     msg = await message.send(embed=discord.Embed(
         title="Starting...",
@@ -397,7 +397,7 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
                 
                 won = cg.cash_out(betamount)
                 actualwon = calcCredit(won, user)
-                user.addBalance(credits=actualwon)
+                user.addBalance(credits=actualwon, unity=1)
                 cashedOut = True
 
                 await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")
@@ -676,7 +676,7 @@ threading.Thread(target=pull_mch_data).start()
 
 @bot.command(
     help = f"Play a simliar version of Hangman",
-    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
+    description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2.5 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
     aliases = ['mch', 'minecrafthangman']
 )
 @commands.cooldown(1, 30, commands.BucketType.user)
@@ -727,8 +727,8 @@ async def mchangman(message: discord.Message):
         ),
      u), 2)
     
-    # Subtract 2 credits from user
-    u.addBalance(credits=-2)
+    # Subtract 2.5 credits from user
+    u.addBalance(credits=-2.5)
 
     # Send MSG
     msg = await message.send(embed=discord.Embed(
@@ -1586,7 +1586,7 @@ Average Score: {avgscore}
         with open("users/main.json", 'r') as f:
             data = json.load(f)
 
-        data['credits'] = 50000
+        data['credits'] = 100000
         data['unity'] = 0
         data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
         data['job'] = 'Player'

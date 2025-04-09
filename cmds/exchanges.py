@@ -115,8 +115,10 @@ class Exchanges(commands.Cog):
 
                     ign = user.getData('settings').get("IGN", None)
 
-                    getAmount = round(amount * kcashrate, 2)
-                    kmceusers[ign]['KCash'] += getAmount
+                    getAmount = round(amount * kcashrate)
+
+                    # Round Value
+                    kmceusers[ign]['KCash'] = round( kmceusers[ign]['KCash'] + getAmount )
 
                     with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
                         kmceusers = json.dump(kmceusers, file)       

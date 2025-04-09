@@ -25,6 +25,8 @@ userTemplate = {
 
 botID = 0
 
+add_balance = lambda userID, credits: User(userID).addBalance(credits=credits)
+
 def check_items(user) -> bool:
     """Checks for expired items and deletes them"""
     items: dict = user.getData('items')
@@ -232,8 +234,8 @@ class User:
 
         self.data["gems"] = round(self.data["gems"] + gems)
 
-        if self.data["unity"] > 100:            
-            self.data['credits'] += (self.data["unity"] - 100) # Convert excess Unity into Credits
+        if self.data["unity"] > 200:            
+            self.data['credits'] += (self.data["unity"] - 200) # Convert excess Unity into Credits
             self.data["unity"] = 100
         elif self.data["unity"] < -100:
             self.data["unity"] = -100

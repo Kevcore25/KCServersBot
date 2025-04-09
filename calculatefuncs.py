@@ -154,39 +154,43 @@ def calcInflation() -> float:
 
 
 def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
-    """Calculates wealth power and returns a percentage"""
+    """
+    Calculates wealth power and returns a percentage.
+    Wealth power is a measurement of wealth compared to other users.
+    Users with negative or zero balances are not considered. 
+    """
     # Relative Power of Credits = (Credits ) / (Average Credits of Members)  
 
     usersDir = os.listdir('users')
 
-    totalCredits, amtOfUsers = 0 ,0
+    totalWealth, amtOfUsers = 0 ,0
+    botCred = User("main").getData("credits")
     for file in usersDir:
-        with open('users/' + file, 'r') as f:
-            if file == "main.json": continue
-            try:
-                credits = float(json.load(f).get('credits'))
-                if credits >= 0: 
-                    totalCredits += credits
-                    amtOfUsers += 1
-            except: pass
+        try:
+            userWealth = calcWealth(User(file.replace(".json", "")), botCred)
+            if userWealth > 0:
+                totalWealth += userWealth
+                amtOfUsers += 1
+        except: pass
 
     try:
-        credits = u.getData("credits")
-        creditpower = (credits) / ((totalCredits - credits) / (amtOfUsers)) * 100
+        wealth = calcWealth(u, botCred)
+        wealthpower = (wealth) / ((totalWealth - wealth) / (amtOfUsers)) * 100
     except ZeroDivisionError:
-        creditpower = 100
+        # This edge case means the user "owns" the economy
+        wealthpower = 100
 
     if not noperks:
         # Pacifist job
         if u.getData('job') == "Pacifist":
-            creditpower -= 50
+            wealthpower -= 50
 
     # Credit power should be at a minimum of 0% (Updated from -50%)
     # Otherwise, a bug would occur where users get negative credits due to commands having a (1 + Wealth Power%) multiplication. 
-    if creditpower < 0:
-        creditpower = 0
+    if wealthpower < 0:
+        wealthpower = 0
 
-    return round(1 + creditpower/100, 2) if decimal else round(creditpower) 
+    return round(1 + wealthpower/100, 2) if decimal else round(wealthpower) 
 
 
 def calcAvgCredits() -> int:
@@ -344,11 +348,32 @@ def calcScoreOld(u: User) -> int:
 
     return round(score)
 
+def calcWealth(u: User, botCred = None) -> float:
+    """
+    Calculates the approximate wealth of a user.
+    Wealth is the measure of how rich someone is based on not only by his/her credits, but also his/her Bot Stock % and Unity
 
+    Mainly used for the calcWealthPower function. 
+
+    Wealth is calculated using this formula:
+    (Credits + BS% * Bot Credits) * (Unity + 150) / 250
+    """
+
+    if botCred is None: 
+        botCred = User('main').getData('credits')
+
+    userData = u.getData()
+
+    return (
+        userData['credits'] + 
+        userData['bs%'] * botCred +
+        (userData['unity'] + 150) / 250
+    )
 
 def calcTradeValue(u: User) -> float:
     """Calculates the trade value of a user"""
     bal = u.getData("credits")
+
     try:
         gold = u.getData("players").get("gold")
     except KeyError:

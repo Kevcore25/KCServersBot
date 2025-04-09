@@ -105,7 +105,7 @@ class AccountUtils(commands.Cog):
         help = f"Get your current score",
         description = f"""Factors that affect score:
     - Ranking on leaderboard ((11 - current) ^ 1.2. Cannot be under 0)
-    - Average Credits earned ((1/200) * (Avg. Credits). Cannot be over 50)
+    - Average Credits earned ((1/20) * (Avg. Credits). Cannot be over 50)
     - Amount of transactions (sqrt(transactions/2). Cannot be over 50)
     - Average Unity earned ((1/5) * (Avg. Unity))"""
     )

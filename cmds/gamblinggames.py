@@ -10,7 +10,7 @@ class GambleGames(commands.Cog):
 
     @commands.command(
         help = f"Beg for money",
-        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/4000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power, where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks)\nIf you got caught while in debt, you will have to pay `5 Unity` as a fine."""
+        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/4000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power, where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks)\nIf you got caught while in debt, you will have to pay an additional `5 Unity` as a fine.\nIf you get caught while not in debt, you lose `0.1 Unity`\nHowever, if someone donated money to you, you gain `0.05 Unity`"""
     )
     @commands.cooldown(3, 30, commands.BucketType.user) 
     async def beg(self, message, arg=None):
@@ -41,20 +41,22 @@ class GambleGames(commands.Cog):
             if user.getData('credits') < 0:
                 user.addBalance(unity = -5)
 
-                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nYou did not have anymore Credits, so you paid the police `5 Unity`.", color=0xFF0000)
+                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nYou did not have anymore Credits, so you lost `5 Unity`.", color=0xFF0000)
 
             else:
                 loseAmount = round(winAmount * 1.75, 3)
 
-                user.addBalance(credits = -loseAmount)
+                user.addBalance(credits = -loseAmount, unity=-0.1)
 
-                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nAs a result, you paid the police `{numStr(loseAmount)} Credits`.", color=0xFF0000)
+                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nAs a result, you paid the police `{numStr(loseAmount)} Credits`.\n-# You also lost 0.1 Unity!", color=0xFF0000)
 
         else:
             winAmount = calcCredit(winAmount, user)
-            user.addBalance(credits = winAmount)
+            user.addBalance(credits = winAmount, unity = 0.05)
 
-            embed = discord.Embed(title="Begging successful!",description=f"{names.get_first_name()} gave you `{numStr(winAmount)} Credits`.", color=0x00FF00)
+            gender = "male" if random.randint(0, 1) == 0 else "female"
+
+            embed = discord.Embed(title="Begging successful!",description=f"{names.get_first_name(gender)} gave you `{numStr(winAmount)} Credits`.\n-# {'He' if gender == 'male' else 'She'} also earned you 0.05 Unity!", color=0x00FF00)
 
         await message.send(embed=embed)
 
