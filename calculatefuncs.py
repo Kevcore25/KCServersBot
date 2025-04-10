@@ -726,13 +726,18 @@ def predict_discord_status(userID: int, hour_of_day, minute_of_hour, day_of_week
     
     return predict_availability(hour_of_day, minute_of_hour, day_of_week)
 
-def convPyclassToType(pytype):    
-    if pytype is int: return "Integer"    
-    elif pytype is float: return "Decimal"
-    elif pytype is str: return "Text"
-    elif pytype is bool: return "True/False"
-    elif pytype is discord.member.Member: return "User"
-    else: return str(pytype)[8:-2]
+def convPyclassToType(pytype):
+    print(pytype)
+    if str(pytype)[:12] == "typing.Union":
+        types = str(pytype)[13:-1]
+        return types.replace(", ", " or ").replace("int", "Integer").replace("float", "Decimal").replace("str", "Text").replace("bool", "True/False")
+    else:
+        if pytype is int: return "Integer"    
+        elif pytype is float: return "Decimal"
+        elif pytype is str: return "Text"
+        elif pytype is bool: return "True/False"
+        elif pytype is discord.member.Member: return "User"
+        else: return str(pytype)[8:-2]
 
 def formatParamsOneLine(params: dict[str, discord.ext.commands.Parameter]) -> str:
     text = []
@@ -777,5 +782,5 @@ def formatParamsMulti(command: discord.ext.commands.Command, prefix="!") -> str:
             else: 
                 paramDesc.append(f"{param.name}: {paramType}")
 
-    return f"```yml\n{prefix}{command} " + " ".join(paramText) + "``````properties\n" + "\n".join(paramDesc) + "```"
+    return f"```yml\n{prefix}{command} " + " ".join(paramText) + "```" + ("```properties\n" + "\n".join(paramDesc) + "```" if len(paramDesc) > 0 else "")
 

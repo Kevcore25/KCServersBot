@@ -118,7 +118,7 @@ class AccountUtils(commands.Cog):
 
         totalscore, reason = calcScore(u, msg=True) 
 
-        embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 5 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, helpCmds, log, players""", color=0xFF00FF)
+        embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 5 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, kcashExchanged, log, players""", color=0xFF00FF)
         await message.send(embed=embed)
 
 
