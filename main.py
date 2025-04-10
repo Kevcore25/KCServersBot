@@ -217,7 +217,7 @@ async def botAI():
                 if credits >= 0: await run('beg')
         case 2: 
             if round(credits / 100) > 0: 
-                await run('crashgame', betamount = round(credits/100 if credits < 10000 else 100), autocash = random.randint(11, 20) / 10)
+                await run('crashgame', betAmount = round(credits/100 if credits < 10000 else 100), autocash = random.randint(11, 20) / 10)
        # case 3: (await run('beg') for i in range(2))
         case _:
             pass
