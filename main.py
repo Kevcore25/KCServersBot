@@ -35,7 +35,7 @@ with open("botsettings.json", 'r') as f:
     botAIChannel = botsettings['AI Channel']
     serverID = botsettings['Server ID']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.1)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.2)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -44,7 +44,9 @@ bot = commands.Bot(
     intents=discord.Intents().all()
 )
 
-
+if "shopstock.json" not in os.listdir():
+    with open("shopstock.json", "x") as f: 
+        f.write("{}")
 
 
 botactive = 0
@@ -279,13 +281,13 @@ async def msginput(ctx: discord.Message, text: str | None, timeout: int = 60) ->
     aliases = ['cg', 'crash']
 )
 @commands.cooldown(1, 300, commands.BucketType.user) 
-async def crashgame(message: discord.Message, betamount: float = None, autocash: float = "0"):
+async def crashgame(message: discord.Message, betAmount: float = None, autoCash: float = "0"):
     user = User(message.author.id)
 
     with open("previousCgs.json",'r') as f:
         previousCgs = json.load(f)  
         
-    if betamount is None:
+    if betAmount is None:
  
 
         plt.xlabel("Game Number")
@@ -319,19 +321,19 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
    # x = int(input("Enter a number: ")); print("Yay!" if x == 25 else ("NO!" if (str(x) in "".join("-" + str(i) for i in range(100))) else (print("Yes" if (x > 100 and (x > 1000 or x > 10000)) else "Yes...") if x > 10 else (print("No" if x > 5 else "... too small")))))
 
    
-    betamount = round(float(betamount), 2)
-    autocash = float(autocash)
+    betAmount = round(float(betAmount), 2)
+    autoCash = float(autoCash)
 
     
-    if betamount < 0 or betamount > user.getData('credits'):
+    if betAmount < 0 or betAmount > user.getData('credits'):
         await message.send(embed=discord.Embed(description="Invalid bet amount!", color=0xFF0000))
         crashgame.reset_cooldown(message)
         return
-    if betamount > 10000:
+    if betAmount > 10000:
         await message.send(embed=discord.Embed(description="A maxmium of 10k Credits can be betted!", color=0xFF0000))
         crashgame.reset_cooldown(message)
         return
-    user.addBalance(credits=-betamount, unity = -1)
+    user.addBalance(credits=-betAmount, unity = -1)
 
     msg = await message.send(embed=discord.Embed(
         title="Starting...",
@@ -395,12 +397,12 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
         else:
             if not cashedOut:
                 
-                won = cg.cash_out(betamount)
+                won = cg.cash_out(betAmount)
                 actualwon = calcCredit(won, user)
                 user.addBalance(credits=actualwon, unity=1)
                 cashedOut = True
 
-                await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")
+                await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betAmount)} Credits`)")
 
                 # APRIL FOOLS UPDATE LOL
                 cg.jackpot = True
@@ -412,8 +414,8 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
         
         r = cg.next_round()
 
-        if autocash <= float(r['multiplier']) and not cashedOut and autocash != 0:
-            won = cg.cash_out(betamount)
+        if autoCash <= float(r['multiplier']) and not cashedOut and autoCash != 0:
+            won = cg.cash_out(betAmount)
             actualwon = calcCredit(won, user)
             user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
             cashedOut = True
@@ -424,12 +426,12 @@ async def crashgame(message: discord.Message, betamount: float = None, autocash:
 
             # Precog
             if user.get_item("Precognition") and not cashedOut:
-                won = cg.cash_out(betamount)
+                won = cg.cash_out(betAmount)
                 actualwon = calcCredit(won, user)
                 user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
                 cashedOut = True
 
-                await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betamount)} Credits`)")             
+                await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betAmount)} Credits`)")             
 
                 if user.ID != "main": 
                     user.delete_item("Precognition")
@@ -1048,8 +1050,8 @@ async def earn(message, currency: str):
         await message.send(embed=errorMsg(f"{currency.capitalize()} is not a valid currency!\nIt must be either Credits, Unity, or Gems"))
 
 @bot.command(
-    help = f"Buy an item from the shop. Format: {prefix}buy <item id>",
-    description = "Notice: For this command, item ID can contain spaces without the requirement of quotation marks.",
+    help = "Buy an item from the shop",
+    description = f"Notice: For this command, item ID can contain spaces without the requirement of quotation marks.\nThe last argument can be a number, which specifies how much you want to buy. Therefore, the command format is:\n`{prefix}buy <Item ID> [amount to buy]`",
     aliases = ['purchase'],
 )
 async def buy(message, *itemID): # command is an argument    
@@ -1098,8 +1100,17 @@ async def buy(message, *itemID): # command is an argument
                 await message.send(embed=errorMsg("Item limit reached!"))
                 return
             
+            # Get initial stock
+            with open('shopstock.json', 'r') as f:
+                stocks = json.load(f)
+
+            if itemID not in stocks:
+                stocks[itemID] = 0
+
+            stock = item['stock'] - stocks[itemID]
+
             # Out of stock
-            if item['stock'] <= 0:
+            if stock <= 0:
                 await message.send(embed=errorMsg("Item is out of stock!"))
                 return
             
@@ -1116,7 +1127,7 @@ async def buy(message, *itemID): # command is an argument
 
                 # Out of stock
                 itemCount = items[itemID]['count']
-                if item['stock'] <= 0 or itemCount >= item['limit']:
+                if stock <= 0 or itemCount >= item['limit']:
                     bought -= 1
                     break
         
@@ -1128,7 +1139,7 @@ async def buy(message, *itemID): # command is an argument
                     items[itemID]['expires'].append(-1)
 
   
-                shopitems[itemID]['stock'] -= 1
+                stock -= 1
 
             # bought times
             bought += 1
@@ -1141,6 +1152,12 @@ async def buy(message, *itemID): # command is an argument
 
             with open("shop.json", 'w') as f:
                 json.dump(shopitems, f, indent=4)
+
+            # Set stock
+            stocks[itemID] += bought
+            with open('shopstock.json', 'w') as f:
+                stocks = json.dump(stocks, f, indent = 4)
+
 
             await message.send(embed=successMsg(title="Item bought!", description=f"Successfully bought `{bought}` `{itemID}` for `{item['credits'] * bought} Credits`, `{item['unity'] * bought} Unity`, and `{item['gems'] * bought} Gems`"))
 
@@ -1169,10 +1186,10 @@ async def shop(message): # command is an argument
     with open("shop.json", 'r') as f:
         shopitems = json.load(f)
 
-    for i in shopitems:
+    for id in shopitems:
 
         costs = []
-        item = shopitems[i]
+        item = shopitems[id]
         inflation = calcInflation()
         if item['credits'] != 0: costs.append(f"{round(item['credits'] * inflation, 2)} Credits")
         if item['unity'] != 0: costs.append(f"{item['unity']} Unity")
@@ -1185,7 +1202,16 @@ async def shop(message): # command is an argument
         else:
             costsTxt = "Free"
 
-        embed.add_field(name=f"{i} ({costsTxt})", value=item['description'] + f"\n*{('Expires after `' + time_format(item['expiry']) + '`') if item['expiry'] != -1 else 'Never expires'} | Limit: `{item['limit']}` | Stock: `{get_prefix(item['stock'], 0)}`*", inline=False)
+        # Get stock
+        with open('shopstock.json', 'r') as f:
+            stocks = json.load(f)
+
+        if id in stocks:
+            stock = item['stock'] - stocks[id]
+        else:
+            stock = item['stock']
+
+        embed.add_field(name=f"{id} ({costsTxt})", value=item['description'] + f"\n*{('Expires after `' + time_format(item['expiry']) + '`') if item['expiry'] != -1 else 'Never expires'} | Limit: `{item['limit']}` | Stock: `{get_prefix(stock, 0)}`*", inline=False)
 
     await message.send(embed=embed)
 
@@ -1354,8 +1380,13 @@ bot.remove_command('help')
     help = "Shows information about a bot command.",
     description = \
 f"""**How to use the help command**:\nThe help command returns a list of all bot commands as well as a basic description under each command.\nThe help command can be specified with a command as an argument to obtain more details about the command.\n\n**How to read arguments**:\nEach argument that is enclosed with arrows (<>) means the argument is __mandatory__, meaning that you must specify it when running the command.\nAn argument enclosed with square brackets ([]) means that the argument is __optional__, and you do not need to specify it for the command to work properly.\nFor example, the current help command format is: `{prefix}help [command]`\nSince you specified the help command, it returned this message."""
-) 
-async def help(message: discord.Message, command: str = "1"): # command is an argument
+)
+async def help(message: discord.Message, commandOrPage: str = "1"): # command is an argument
+    """
+    Help command
+
+    :params command: Page number or command
+    """
     embed = discord.Embed(
         title = "Help",
         color=0xFF00FF
@@ -1366,11 +1397,11 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
     # This means a rewrite of the code is needed
 
     # If a number on command is not specified then it is probably a detailed view. In that case,
-    if not str(command).isdigit():
-        command = command.lstrip(prefix)
-        if command in bot.all_commands:
-            cmd = command
-            originalcmd = str(bot.get_command(command))
+    if not str(commandOrPage).isdigit():
+        commandOrPage = commandOrPage.lstrip(prefix)
+        if commandOrPage in bot.all_commands:
+            cmd = commandOrPage
+            originalcmd = str(bot.get_command(commandOrPage))
 
             description = f"**{prefix}{originalcmd}**\n"
 
@@ -1388,7 +1419,10 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
             aliases = bot.all_commands[cmd].aliases
             # Prevent repeating
             if len(aliases) > 0: 
-                description += "\n\n**Aliases: **\n" + ", ".join(prefix+i for i in aliases)
+                description += "\n\n**Aliases:**\n" + ", ".join(prefix+i for i in aliases)
+
+            # Format
+            description += "\n\n**Detected Command Format:**" + formatParamsMulti(bot.all_commands[cmd]) 
 
             embed.description = description
 
@@ -1401,14 +1435,14 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
                 u.setValue("helpCmds", [])
 
             cmdsUsed = u.getData('helpCmds')
-            if originalcmd not in cmdsUsed and not bot.get_command(command).hidden:
+            if originalcmd not in cmdsUsed and not bot.get_command(commandOrPage).hidden:
                 cmdsUsed.append(originalcmd)
                 u.setValue("helpCmds", cmdsUsed)
                 u.addBalance(gems=1)
                 embed.set_footer(text="+1 Gem due to viewing the details about this command for the first time!")
 
         else:
-            embed.description = f"Command `{command}` is not a vaild command!"
+            embed.description = f"Command `{commandOrPage}` is not a vaild command!"
 
         await message.send(embed=embed)
         return
@@ -1462,31 +1496,43 @@ async def help(message: discord.Message, command: str = "1"): # command is an ar
         return user == message.author and (str(reaction.emoji) in ('⬅️', '➡️') and reaction.message.channel == message.channel)
     
     # Step 4. Send embed to chat
-    msg = await message.send(embed=get_help_commands(int(command)))
+    msg = await message.send(embed=get_help_commands(int(commandOrPage)))
 
 
 
 
-# @bot.event 
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.CommandOnCooldown):
+@bot.event 
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
           
-#         embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-#         await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-#         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-#         (ctx.command).reset_cooldown(ctx)
-#         await ctx.send(embed=embed)
-
-#     else:
-#         embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
-#         embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-#         if "KeyError" in str(error):
-#             if str(error).replace("Command raised an exception: ", '').replace("KeyError", "").replace("'", "") in usersFile.userTemplate:
-#                 embed.description = "*This is most likely due to account errors.*"
-#         print(traceback.format_exc())
-#         await ctx.send(embed=embed)
-#         (ctx.command).reset_cooldown(ctx)
+        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.BadArgument): #or if the command isnt found then:
+        params = ctx.command.clean_params
+        embed=discord.Embed(description=f"Invalid command arguments!\nCommand format:\n`{prefix}{ctx.command} {formatParamsOneLine(params)}`", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.CommandNotFound): #or if the command isnt found then:
+        if not str(ctx.command).replace("!", "") == "":
+            embed=discord.Embed(description=f"`{ctx.command}` is not a valid command!", color=0xff0000)
+            await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.ConversionError): #or if the command isnt found then:
+        embed=discord.Embed(description=f"A conversion error occurred! Check to see if you have the correct format for arguments.", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(title='An error occurred:', colour=0xFF0000) #Red
+        embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
+        if "KeyError" in str(error):
+            if str(error).replace("Command raised an exception: ", '').replace("KeyError: ", "").replace("'", "") in usersFile.userTemplate:
+                embed.description = "*This is most likely due to account errors.*"
+        print(traceback.format_exc())
+        await ctx.send(embed=embed)
+        (ctx.command).reset_cooldown(ctx)
 
 
 @bot.command(aliases=['reload'], hidden=True)

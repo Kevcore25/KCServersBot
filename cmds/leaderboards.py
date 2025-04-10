@@ -42,9 +42,9 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Credits: {numStr(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Credits: ≈{get_prefix(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Credits: {numStr(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Credits: ≈{get_prefix(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 
@@ -90,9 +90,9 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: ≈{round(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: ≈{get_prefix(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: ≈{round(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: ≈{get_prefix(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 

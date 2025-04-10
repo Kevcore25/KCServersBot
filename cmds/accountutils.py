@@ -107,7 +107,8 @@ class AccountUtils(commands.Cog):
     - Ranking on leaderboard ((11 - current) ^ 1.2. Cannot be under 0)
     - Average Credits earned ((1/20) * (Avg. Credits). Cannot be over 50)
     - Amount of transactions (sqrt(transactions/2). Cannot be over 50)
-    - Average Unity earned ((1/5) * (Avg. Unity))"""
+    - Average Unity earned ((1/5) * (Avg. Unity))
+    - KCash Exchanged (1/500 * (KCash Exchanged). Cannot be over 20)"""
     )
     async def score(self, message, user: discord.Member = None):
         if user is None:

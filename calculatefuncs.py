@@ -4,6 +4,7 @@ import users as usersFile
 from users import User
 import discord, os, json, time
 import random
+import discord.ext.commands
 
 with open("botsettings.json", 'r') as f:
     botsettings = json.load(f)
@@ -83,8 +84,9 @@ def errorMsg(description = "Unknown error", cause = None, title = "An error occu
     c = '\n\n**Cause:** ' + str(cause) if cause is not None else ''
     return discord.Embed(title=title, description=f"{description}{c}", color=0xFF0000)
 
-def get_prefix(val: float, accuracy: int = 1, symbol: str = "") -> str:
+def get_prefix(val: float, accuracy: int = 0, symbol: str = "") -> str:
     """Returns a number with a shortened prefix, like 125356 into 125.3K"""
+    # value = val
     # if round(value / 1000000000, accuracy) > 0:
     #     newValue = str(round(value / 1000000000, accuracy)) + "T"
     # elif round(value / 1000000, accuracy) > 0:
@@ -97,15 +99,19 @@ def get_prefix(val: float, accuracy: int = 1, symbol: str = "") -> str:
     # return newValue.replace('.0','') if accuracy == 0 else newValue
 
     if val >= 1_000_000_000_000:  # Really?
-        val = str(int((val / 1_000_000_000_000))) + "T"
+        val = str(int(val / 1000000000000 * (10 ** accuracy)) / (10 ** accuracy)) + "T"
     elif val >= 1_000_000_000:
-        val = str(int((val / 1_000_000_000))) + "G"
+        val = str(int(val / 1000000000 * (10 ** accuracy)) / (10 ** accuracy)) + "G"
     elif val >= 1_000_000:
-        val = str(int((val / 1_000_000))) + "M"
+        val = str(int(val / 1000000 * (10 ** accuracy)) / (10 ** accuracy)) + "M"
     elif val >= 1_000:
-        val = str(int((val / 1_000))) + "k"
+        val = str(int(val / 1000 * (10 ** accuracy)) / (10 ** accuracy)) + "K"
     else:
         val = str(int(val))
+
+    if accuracy == 0 and not val.isdigit():
+        val = str(int(float(val[:-1]))) + val[-1]
+
     return val + symbol
 
 def time_format(seconds: int) -> str:
@@ -228,7 +234,9 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     - Average Credits earned (For up to 1k Cred, up to 50 can be obtained. Cannot be over 50)
     - Amount of transactions (Sqrt(x/2), cannot be over 50)
     - Average Unity earned (For up to 200 Unity, up to 20 can be obtained)
+    - KCash Exchanged (For up to 10k exchanged, up to 20 can be obtained)
     """
+
     scores = {}
     # Leaderboard
     usersDir = os.listdir('users')
@@ -257,6 +265,8 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
         ranking = 11
 
     scores['Leaderboard Ranking'] = (11 - ranking)
+    if scores['Leaderboard Ranking'] < 0:
+        scores['Leaderboard Ranking'] = 0
 
     # Average earned
     try:
@@ -284,6 +294,11 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     if transScore > 50: transScore = 50
     scores['Number of Transactions'] = transScore
 
+    # KCash Exchanged
+    scores['KCash Exchanged'] = (1/500) * u.getData('kcashExchanged')
+    if scores['KCash Exchanged'] > 20:
+        scores['KCash Exchanged'] = 20
+    
     # MSG or just send
     if msg:
         txt = []
@@ -710,4 +725,57 @@ def predict_discord_status(userID: int, hour_of_day, minute_of_hour, day_of_week
         return ('Online', accuracy) if prediction == 1 else ('Offline', accuracy)
     
     return predict_availability(hour_of_day, minute_of_hour, day_of_week)
+
+def convPyclassToType(pytype):    
+    if pytype is int: return "Integer"    
+    elif pytype is float: return "Decimal"
+    elif pytype is str: return "Text"
+    elif pytype is bool: return "True/False"
+    elif pytype is discord.member.Member: return "User"
+    else: return str(pytype)[8:-2]
+
+def formatParamsOneLine(params: dict[str, discord.ext.commands.Parameter]) -> str:
+    text = []
+    for p in params:
+        param = params[p]
+        paramType = convPyclassToType(param.converter)
+        if param.required:
+            text.append(f"<{param.name}: {paramType}>")
+        else:
+            if param.default is not None:
+                text.append(f"[{param.name}: {paramType} (default {param.default})]")
+            else: 
+                text.append(f"[{param.name}: {paramType}]")
+
+    return " ".join(text)
+
+def formatParamsMulti(command: discord.ext.commands.Command, prefix="!") -> str:
+    # Param
+    params = command.clean_params
+    # e.g. <number> [text] 
+    paramText = []
+    paramDesc = []
+    for p in params:
+        # PARAM
+        param = params[p]
+
+        # Get type of the parameter
+        paramType = convPyclassToType(param.converter)
+
+        # If it is required, then do required text stuff
+        if param.required:
+            paramText.append(f"<{param.name}>")
+
+            # Description to go along it
+            paramDesc.append(f"{param.name}: {paramType}")
+
+        else:                
+            paramText.append(f"[{param.name}]")
+
+            if param.default is not None:
+                paramDesc.append(f"{param.name}: {paramType} (Default value: {param.default})")
+            else: 
+                paramDesc.append(f"{param.name}: {paramType}")
+
+    return f"```yml\n{prefix}{command} " + " ".join(paramText) + "``````properties\n" + "\n".join(paramDesc) + "```"
 

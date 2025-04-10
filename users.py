@@ -4,6 +4,7 @@ userTemplate = {
     "credits": 0,
     "unity": 50,
     "gems": 0,
+    "kcashExchanged": 0,
     "tags": [],
     "items": {},
     "job": None,
@@ -176,6 +177,15 @@ class User:
         self.saveAccount()
         return True
     
+    def addValue(self, key: str, amount: int | float) -> bool:
+        try:
+            self.data[key] += amount
+            self.saveAccount()
+            return True
+        except KeyError:
+            self.update()
+            return self.addValue(key, amount)
+        
     def changeMainBal(self, credits) -> bool:
         """Changes the balance of main."""
         return User("main").addBalance(-credits)

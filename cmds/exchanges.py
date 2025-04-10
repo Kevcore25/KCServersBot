@@ -128,6 +128,8 @@ class Exchanges(commands.Cog):
                     # Exchange fee
                     user.addBalance(credits = -exchangeFee[0], unity = -exchangeFee[1])
 
+                    # Add
+                    user.addValue("kcashExchanged", amount)
 
                     embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} Credits` to `{getAmount} KCash`.\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
 
