@@ -42,7 +42,7 @@
         "description": "Allows you to use the account and graphbalance commands on other players!",
         "limit": 100,
         "expiry": -1,
-        "stock": 10
+        "stock": 1000000
     },
     "Popularity": {
         "credits": 0,
@@ -69,16 +69,16 @@
         "description": "Directly purchase a certain amount of Credits and Unity.\nLimited to 1 time per season (reset)",
         "limit": 1,
         "expiry": -1,
-        "stock": 100
+        "stock": 5
     },
     "New Identity": {
-        "credits": 0,
+        "credits": -50,
         "unity": -300,
         "gems": 20,
-        "description": "Instantly gain `300 Unity` and `50 Credits`, allowing you to recover from negative Unity.\nCan only be bought once per season.",
+        "description": "Instantly gain `300 Unity` and some Credits, allowing you to recover from negative Unity.\nCan only be bought once per season.",
         "limit": 1,
         "expiry": -1,
-        "stock": 100
+        "stock": 5
     },
     "Gem Minerals": {
         "credits": 100,
@@ -86,15 +86,6 @@
         "gems": -1,
         "description": "Every season (reset), you can buy `Gems` up to a certain amount of times.\nGain bonus Gems by being top 5 in the score leaderboard.",
         "limit": 10,
-        "expiry": -1,
-        "stock": 50
-    },
-    "Crate Of Credits": {
-        "credits": 0,
-        "unity": 0,
-        "gems": 120,
-        "description": "The maximum unity obtainable increases from 200 to 300.\nThis item expires every reset.",
-        "limit": 1,
         "expiry": -1,
         "stock": 50
     }

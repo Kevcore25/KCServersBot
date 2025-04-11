@@ -28,10 +28,10 @@ There are 5 currencies used by this bot. 2 of which are exclusive to the bot.
 
 **Unity**: A unit of status measurement (think of it as Reputation). A maximum of 200 Unity can be stored, and a minimum of -100 Unity can be obtained. 
 For every 1 Unity in debt, the amount of Credits earned decreases by 1%. Also, every 1 Unity above 100 will give +0.1% Credit Earnings.
-Every Unity earned after 100 will be converted into Credits (Rate: 1 Unity > 1 Credit)
+Overflowing Unity will be converted into Credits (Rate: 1 Unity > 1 Credit)
 
-**Gems**: A premium currency, usually only obtained in events.
-It can be used to be exchange into Credits and Unity, or purchase special items in the shop.
+**Gems**: A premium currency, usually only obtained in events and seasonal resets.
+It can be used for exchanging Gems into Credits and Unity, or purchasing special items in the shop.
 
 **Gold**: A currency that is obtained through player mining (Using the `{prefix}players mine` command).
 As of V.5.0, the players system has been **deprecated.** The players system may be rebuilt in the future.
@@ -136,3 +136,17 @@ detail - Also shows the server's MOTD / description
 
 
         await msg.edit(embed=embed)
+
+
+
+    @commands.command(
+        help = f"Guides on how to earn a currency.\nFormat: {prefix}earn <credits | unity | gems>",
+        aliases = ['howtoearn', 'waystoearn'],
+    )
+    async def earn(self, message, currency: str): 
+        currency = currency.lower()
+        
+        if currency in WAYS_TO_EARN:
+            await message.send(embed=basicMsg(f"Ways to earn {currency.capitalize()}", WAYS_TO_EARN[currency]))
+        else:
+            await message.send(embed=errorMsg(f"{currency.capitalize()} is not a valid currency!\nIt must be either Credits, Unity, or Gems"))

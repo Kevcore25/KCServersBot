@@ -8,3 +8,8 @@ from cmds.infos import Informations
 from cmds.leaderboards import LeaderboardCog
 from cmds.timeincomes import TimeIncomes
 from cmds.userinteractiongames import InteractionGames
+from cmds.crashgame import CrashGameCog
+from cmds.questionsquiz import QuestionsQuiz
+from cmds.mcguessinggames import MCGuessingGames
+from cmds.shop import ShopCog
+from cmds.cardgames import CardGames
