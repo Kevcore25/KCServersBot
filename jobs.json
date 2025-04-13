@@ -8,7 +8,7 @@
     "Developer": {
         "description": "A developer working in KCServers.",
         "credits": 15,
-        "unity": 7.5,
+        "unity": 5,
         "credit perk": -5
     },
     "Pacifist": {
@@ -19,26 +19,26 @@
     },
     "Tennis": {
         "description": "A professional tennis player both playing nationals and teaching other players.",
-        "credits": 8.5,
+        "credits": 7.5,
         "unity": 3.35,
         "credit perk": 5
     },
     "Unifier": {
         "description": "Unifiers help unite everyone.",
-        "credits": 5,
+        "credits": 0,
         "unity": 10,
-        "credit perk": -2
+        "credit perk": 0
     },
     "Banker": {
         "description": "Bankers help regulate the bank economy and they also take extra for themselves!",
         "credits": 30,
-        "unity": 3,
-        "credit perk": -1
+        "unity": 2.5,
+        "credit perk": -7.5
     },
     "Police": {
         "description": "A policeman, catching thiefs. They have increased chances of robbers failing (`+3 Rob Defense Levels`).",
         "credits": 5,
-        "unity": 8,
+        "unity": 5,
         "credit perk": 2
     },
     "Robber": {
