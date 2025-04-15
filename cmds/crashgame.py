@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from games import CrashGame
 from scipy.interpolate import make_interp_spline
 import asyncio
+import numpy as np
 
 class CrashGameCog(commands.Cog):
     def __init__(self, bot):
