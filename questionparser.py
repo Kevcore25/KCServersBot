@@ -1,5 +1,5 @@
 
-import pandas as pd
+from csv import reader
 import json, threading, requests
 
 sheetsURL = "https://docs.google.com/spreadsheets/d/19nHv9ElrIgJgL23WzKzQ94nZGc172dOyWaEOLU16amc/export?format=csv"
@@ -20,23 +20,22 @@ def update():
     with open("questionBank.csv", "wb") as f:
         f.write(data)
 
-    csv = pd.read_csv("questionBank.csv")
-    df = pd.DataFrame(csv)
+    with open("questionBank.csv", 'r', encoding='utf-8') as f:
+        data = list(reader(f))
 
-    preload(df)
- 
+    preload(data)
     print("Refreshed Question Bank data")
 
-def preload(df: pd.DataFrame):
+def preload(data):
     """Converts the .csv file into a readable JSON file"""
     # PRELOAD
     questions = {}
-    valuesLen = len(df.values[2:])
    # for values in df.values[2:]:
-    for i in range(valuesLen):
-        values = df.values[i]
-        #Example: ['What is PUN CONNTATION DENOOTATION OXYMORON IMAGERY METAPHOR' 'English LA' 'you ' 'need' 'to' 'know' 'this' nan nan nan nan nan nan nannan]
+    for i, values in enumerate(data[1:]):
         try:
+            #Example
+            # ['End portal frames when activated output a redstone signal of?', 'Minecraft / KCMC', 'They cannot have a signal; this is a trick question!', '14', '16', '15', '0', 'C', '0.05', '20.00', '0', '60', '20', '0.05', '', '']
+            
             question = str(values[0]).replace("\\n", "\n")
 
             # Skip
@@ -98,7 +97,7 @@ def preload(df: pd.DataFrame):
         except Exception as e:
             print(f"Cannot do {', '.join(str(i) for i in values)}: {e}")
 
-        print(f"{round( (i+1) / valuesLen * 100 )}% Done", end='\r')
+        # print(f"{round( (i+1) / valuesLen * 100 )}% Done", end='\r')
 
     # Remove incorrects
 
@@ -146,7 +145,7 @@ def sortBySubject():
     
         
 if "__main__" in __name__:
-    preload()
+    update()
 
 
 with open("questionData.json", "r") as f:

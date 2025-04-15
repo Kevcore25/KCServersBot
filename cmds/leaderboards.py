@@ -103,3 +103,48 @@ class LeaderboardCog(commands.Cog):
 
         await message.send(embed=embed)
 
+
+    @commands.command(
+        help = "Display the people with the most Wealth (Credits + Stock + Unity)",
+        aliases = ["lbw", 'wlb', 'leaderboardwealth']
+    )
+    async def wealthleaderboard(self, message):
+        embed = discord.Embed(
+            title = "Top members with the most wealth",
+            color = 0xFF00FF
+        )
+
+        usersDir = os.listdir('balanceLogs')
+
+        users = {}
+        for file in usersDir:
+            if file == "main": continue
+
+            if botsettings.get('settings', {}).get("publicity", True): 
+                users[file.replace(".json", '')] = calcWealth(User(file.replace(".json", '')))
+
+        totalCredits = 0
+
+        sortedUsers = sorted(users.items(), key=lambda x:x[1], reverse=True)
+
+        for i in range(len(sortedUsers)):
+            try:
+                usr = sortedUsers[i]
+
+                user = self.bot.get_user(int(usr[0]))
+
+                totalCredits += usr[1]
+                try:
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Wealth: ≈{get_prefix(usr[1])}")
+                except AttributeError:
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Wealth: ≈{get_prefix(usr[1])}")
+            except Exception as e:
+                embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
+
+        # Average credits = total / number of users
+        avgcredits = totalCredits / (i+1)
+
+        embed.description = f"**Average Wealth**: `{numStr(avgcredits)}`"
+
+        await message.send(embed=embed)
+
