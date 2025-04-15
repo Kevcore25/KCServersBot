@@ -3,6 +3,7 @@ PIP REQUIREMENTS:
 pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
 print("Importing libraries")
+
 import discord, json, random, time, traceback
 from discord.ext import commands, tasks
 import time, os
