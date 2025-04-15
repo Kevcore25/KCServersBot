@@ -1,7 +1,7 @@
 """Calculation functions"""
 
 from users import User
-import discord, os, json, time
+import discord, os, json, time, random
 import discord.ext.commands
 
 with open("botsettings.json", 'r') as f:
