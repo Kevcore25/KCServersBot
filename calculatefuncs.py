@@ -112,7 +112,7 @@ def get_prefix(value: float, accuracy: int = 0, symbol: str = "") -> str:
     if accuracy == 0 and not val.isdigit():
         val = str(int(float(val[:-1]))) + val[-1]
 
-    return -(val + symbol) if value < 0 else (val + symbol)
+    return ("-" + val + symbol) if value < 0 else (val + symbol)
 
 def time_format(seconds: int) -> str:
     if str(seconds).isdigit():
