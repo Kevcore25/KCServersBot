@@ -31,7 +31,7 @@ with open("botsettings.json", 'r') as f:
     botAIChannel = botsettings['AI Channel']
     serverID = botsettings['Server ID']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.3)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.4)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
