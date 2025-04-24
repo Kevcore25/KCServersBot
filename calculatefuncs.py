@@ -82,7 +82,7 @@ def errorMsg(description = "Unknown error", cause = None, title = "An error occu
     c = '\n\n**Cause:** ' + str(cause) if cause is not None else ''
     return discord.Embed(title=title, description=f"{description}{c}", color=0xFF0000)
 
-def get_prefix(val: float, accuracy: int = 0, symbol: str = "") -> str:
+def get_prefix(value: float, accuracy: int = 0, symbol: str = "") -> str:
     """Returns a number with a shortened prefix, like 125356 into 125.3K"""
     # value = val
     # if round(value / 1000000000, accuracy) > 0:
@@ -95,6 +95,8 @@ def get_prefix(val: float, accuracy: int = 0, symbol: str = "") -> str:
     #     newValue = str(round(value, accuracy))
     
     # return newValue.replace('.0','') if accuracy == 0 else newValue
+
+    val = abs(value)
 
     if val >= 1_000_000_000_000:  # Really?
         val = str(int(val / 1000000000000 * (10 ** accuracy)) / (10 ** accuracy)) + "T"
@@ -110,7 +112,7 @@ def get_prefix(val: float, accuracy: int = 0, symbol: str = "") -> str:
     if accuracy == 0 and not val.isdigit():
         val = str(int(float(val[:-1]))) + val[-1]
 
-    return val + symbol
+    return ("-" + val + symbol) if value < 0 else (val + symbol)
 
 def time_format(seconds: int) -> str:
     if str(seconds).isdigit():
