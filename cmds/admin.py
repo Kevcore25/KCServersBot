@@ -224,7 +224,7 @@ Average Score: {avgscore}""")
             data['unity'] = 0
             data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
             data['job'] = 'Player'
-            data['bs%'] = 100
+            data['bs%'] = 0
             data['log'] = 0
             data['rob'] = {
                 "atk": 0,

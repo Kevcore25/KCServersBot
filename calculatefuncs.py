@@ -157,7 +157,7 @@ def calcInflation() -> float:
     return inflationLvl
 
 
-def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
+def calcWealthPower(u: User, decimal = False, noperks = False) -> int | float:
     """
     Calculates wealth power and returns a percentage.
     Wealth power is a measurement of wealth compared to other users.
@@ -199,6 +199,58 @@ def calcWealthPower(u: User, decimal = False, noperks = False) -> int:
 
     return round(1 + wealthpower/100, 2) if decimal else round(wealthpower) 
 
+def calcWPAmount(u: User, amount: float, generation: int = 2, acc: int = 3) -> float:
+    """
+    Calculates the amount a user earns based on their wealth power.
+
+    In gen 1, it is simply a division statement
+        `Amount / (1 + Wealth Power)`
+
+    In gen 2, it is gen 1 with wealth power being subtracted by 1, unless WP is under 1, in which WP is set to 1
+    It is useful to not have a lot of Credit difference (e.g. 10 credits turns into 5 for gen 1) and also helps prevent gaining a lot from 0 Credits
+        `Amount / (Wealth Power), Wealth Power > 1`
+
+    In gen 3, it uses Work command scaling, where WP does not affect a lot.
+    Every 20% WP after 100% causes earnings to reduce by 1%, up to -50% earnings
+    
+    In gen 4, WP is the reverse of gen 3. Instead of multiply, it divides 
+    This means up to 200% earnings can occur. Note that perks are not considered.
+
+    Which one to use?
+    Use gen 1 for high WP scaling.
+    Use gen 2 for high WP scaling but also preventing users with low balances to gain a lot.
+    Use gen 3 for low WP scaling.
+    Use gen 4 for WP scaling for use cases of WP giving more
+    """
+
+    match generation:
+        case 1:
+            return round(amount / (1 + calcWealthPower(u, decimal=True)), acc)
+        case 2:
+            wp = calcWealthPower(u, decimal=True)
+            if wp < 1: wp = 1
+            return round(amount / wp, acc)
+        case 3:
+            wealthPower = calcWealthPower(u)
+            if wealthPower > 100:
+                WPlost = 1 - ((wealthPower - 100) / 20 / 100)
+                if WPlost < 0.5: WPlost = 0.5
+            else:
+                WPlost = 1
+
+            return round(amount * WPlost, acc)
+        case 4:           
+            wealthPower = calcWealthPower(u, noperks=True)
+            if wealthPower > 100:
+                WPlost = 1 - ((wealthPower - 100) / 20 / 100)
+                if WPlost < 0.5: WPlost = 0.5
+            else:
+                WPlost = 1
+
+            return round(amount / WPlost, acc)
+
+        case _:
+            return round(amount, acc)
 
 def calcAvgCredits() -> int:
     """Calculates average credits"""
@@ -373,6 +425,9 @@ def calcWealth(u: User, botCred = None) -> float:
 
     Wealth is calculated using this formula:
     (Credits + BS% * Bot Credits) * (Unity + 150) / 250
+
+    If Credits is below 0, then the following formula will be used:
+    (Credits + BS% * Bot Credits) / (Unity + 150) / 250
     """
 
     if botCred is None: 
@@ -380,12 +435,19 @@ def calcWealth(u: User, botCred = None) -> float:
 
     userData = u.getData()
 
-    return (
-        userData['credits'] + 
-        userData['bs%'] * botCred / 100 +
-        (userData['unity'] + 150) / 250
-    )
-
+    if userData['credits'] >= 0:
+        return (
+            (userData['credits'] + 
+            userData['bs%'] * botCred / 100) *
+            ((userData['unity'] + 150) / 250)
+        )
+    else:
+        return (
+            (userData['credits'] + 
+            userData['bs%'] * botCred / 100) /
+            ((userData['unity'] + 150) / 250)
+        )
+    
 def calcTradeValue(u: User) -> float:
     """Calculates the trade value of a user"""
     bal = u.getData("credits")
@@ -440,6 +502,7 @@ def calcCredit(amount: int, user: User = None) -> float:
     if user is not None:
         unity = user.getData('unity')
         credits = user.getData('credits')
+        wealth = calcWealth(user)
         data = user.getData()
 
         """ POSITIVES """
@@ -481,20 +544,20 @@ def calcCredit(amount: int, user: User = None) -> float:
             amount *= unityFee
 
         # Rich I (-5% Credit gain)
-        if credits > 10000:
+        if wealth > 1000:
             amount *= 0.95
         
         # Rich II (-15% Credit gain)
-        if credits > 20000:
+        if wealth > 3000:
             amount *= 0.85
 
         # Rich III (-20% Credit gain)
-        if credits > 30000:
+        if wealth > 5000:
             amount *= 0.80
 
-        # Too Rich (-0.001% Credit gain for every Credit)
-        if credits > 50000:
-            amount *= 1 + round((50000 - credits) * 0.00001, 2)
+        # Too Rich (-0.001% Credit gain for every Wealth)
+        if wealth > 50000:
+            amount *= 1 + round((50000 - wealth) * 0.00001, 2)
 
         """ JOB """
         if data['job'] is not None:

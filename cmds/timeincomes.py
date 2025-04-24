@@ -38,7 +38,7 @@ class TimeIncomes(commands.Cog):
 
     @commands.command(
         help = f"Get daily reward",
-        description = """The daily reward gives an amount of Unity as well as Credits that scales with your wealth power.\nThe more wealth power you have, the less you earn.\nThe command be ran every 12 hours"""
+        description = """The daily reward gives an amount of Unity as well as Credits that scales with your wealth power (Gen 2).\nThe more wealth power you have, the less you earn.\nThe command be ran every 12 hours"""
     )
     async def daily(self, message):
         user = User(message.author.id)
@@ -49,7 +49,7 @@ class TimeIncomes(commands.Cog):
             return
 
 
-        amount = 20 / (calcWealthPower(user, True))
+        amount = calcWPAmount(user, 20, generation=2)
         unityAmt = 5
 
 
@@ -81,7 +81,7 @@ class TimeIncomes(commands.Cog):
         
     @commands.command(
         help = f"Work\nFormat: {prefix}work [apply <job>]",
-        description = f"""Apply for a job, then run {prefix}work to earn money. The job you apply for will give you a % increase in work output. The work output is the amount of money you earn from work. The job will also give you a % increase in credit earnings.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity` (scales with Wealth Power)""",
+        description = f"""Apply for a job, then run {prefix}work to earn money. The amount you earn is scaled with Credit Earnings and Wealth Power\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity`\n\nWork uses Gen 3 WP scaling (Every 20% Wealth Power after 100% results in -1% earnings, up to -50% earnings) for both earnings and unity losses.""",
         aliases = ['job'],
         hidden = True
     )
@@ -120,7 +120,7 @@ class TimeIncomes(commands.Cog):
                 for i in range(fireamt):
                     if random.randint(0, 19) == 0:
                         # Fired
-                        unityLost = 5 * calcWealthPower(user, decimal=True)
+                        unityLost = calcWPAmount(user, 5, generation=3)
 
                         user.addBalance(unity=-unityLost)
                         user.setValue('job', None)
@@ -135,9 +135,12 @@ class TimeIncomes(commands.Cog):
                         break
                 else:
                     # Work
-                    creditGain = calcCredit(jobs[currentJob]['credits'])
+                    creditGain = calcCredit(jobs[currentJob]['credits'], user)
                     unityGain = jobs[currentJob]['unity']
 
+                    # Wealth Power scaling
+                    creditGain = calcWPAmount(user, creditGain, generation=3)
+                        
                     user.addBalance(credits=creditGain, unity=unityGain)
 
                     embed = discord.Embed(
@@ -157,8 +160,8 @@ class TimeIncomes(commands.Cog):
 
             if value in jobs:
                 user.setValue('job', value)
-                user.addBalance(unity = -10)
-                embed = successMsg("Job applied", f"You applied for the job of {value}!\nYou lost 10 Unity during the process.")
+                user.addBalance(unity = -5)
+                embed = successMsg("Job applied", f"You applied for the job of {value}!\nYou lost 5 Unity during the process.")
 
         else: embed = errorMsg("Command is not vaild!")
 
