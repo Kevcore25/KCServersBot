@@ -116,7 +116,7 @@ class AdminCmds(commands.Cog):
             await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
             embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
             await ctx.send(embed=embed, delete_after=3.0)
-            os.execl(sys.executable, '"' + sys.executable + '"', *sys.argv)
+            os.execl(sys.executable, sys.executable, *sys.argv)
 
 
     @commands.command(hidden=True)
