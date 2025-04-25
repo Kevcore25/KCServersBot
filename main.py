@@ -277,39 +277,39 @@ async def on_message(message: discord.Message):
         if botactive > 20:
             botactive = 20
 
-# @bot.event 
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.CommandOnCooldown):
+@bot.event 
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
           
-#         embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-#         await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-#         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-#         (ctx.command).reset_cooldown(ctx)
-#         await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.BadArgument): #or if the command isnt found then:
-#         params = ctx.command.clean_params
-#         embed=discord.Embed(description=f"Invalid command arguments!\nCommand format:\n`{prefix}{ctx.command} {formatParamsOneLine(params)}`", color=0xff0000)
-#         (ctx.command).reset_cooldown(ctx)
-#         await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.CommandNotFound): #or if the command isnt found then:
-#         cmd = (ctx.message.content + " ")[len(prefix):].split(" ")[0]
-#         if cmd.replace("!", "") != "": 
-#             embed=discord.Embed(description=f"`{cmd}` is not a valid command!", color=0xff0000)
-#             await ctx.send(embed=embed)
-#     elif isinstance(error, commands.errors.ConversionError): #or if the command isnt found then:
-#         embed=discord.Embed(description=f"A conversion error occurred! Check to see if you have the correct format for arguments.", color=0xff0000)
-#         (ctx.command).reset_cooldown(ctx)
-#         await ctx.send(embed=embed)
-#     else:
-#         embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
-#         embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-#         if "KeyError" in str(error):
-#             if str(error).replace("Command raised an exception: ", '').replace("KeyError: ", "").replace("'", "") in usersFile.userTemplate:
-#                 embed.description = "*This is most likely due to account errors.*"
-#         print(traceback.format_exc())
-#         await ctx.send(embed=embed)
-#         (ctx.command).reset_cooldown(ctx)
+        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.BadArgument): #or if the command isnt found then:
+        params = ctx.command.clean_params
+        embed=discord.Embed(description=f"Invalid command arguments!\nCommand format:\n`{prefix}{ctx.command} {formatParamsOneLine(params)}`", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.CommandNotFound): #or if the command isnt found then:
+        cmd = (ctx.message.content + " ")[len(prefix):].split(" ")[0]
+        if cmd.replace("!", "") != "": 
+            embed=discord.Embed(description=f"`{cmd}` is not a valid command!", color=0xff0000)
+            await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.ConversionError): #or if the command isnt found then:
+        embed=discord.Embed(description=f"A conversion error occurred! Check to see if you have the correct format for arguments.", color=0xff0000)
+        (ctx.command).reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
+        embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
+        if "KeyError" in str(error):
+            if str(error).replace("Command raised an exception: ", '').replace("KeyError: ", "").replace("'", "") in usersFile.userTemplate:
+                embed.description = "*This is most likely due to account errors.*"
+        print(traceback.format_exc())
+        await ctx.send(embed=embed)
+        (ctx.command).reset_cooldown(ctx)
 
 # Run the bot based on the token in the .env file
 bot.run(os.getenv("DISCORD_TOKEN"))
