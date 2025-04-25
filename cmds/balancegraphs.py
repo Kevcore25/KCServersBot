@@ -449,3 +449,159 @@ class BalanceGraphs(commands.Cog):
 
         os.remove(f"temp/bal{userid}.png")
 
+
+    @commands.command(
+        help = f"Graph your score changes",
+        description = f"""This command approximates the score you had based on index location (instead of time)
+It is an approximation, so the actual value may be higher than expected. 
+This is due to the following score reasons being uncalculatable:
+1. Leaderboard ranking
+Unfortunately, this is hard to approximate. 
+Reading all the user's balance log is very resource intensive, so instead, the alghorithm will use a different method.
+This method compares the slope of the current average credits to the default (50) using your current credits to the oldest log as x values.
+Then for each log, if your credits is above the average credits by 20% at that point, then it assigns a LB score of 7.5, or else it will be 2.5 if it is below 15%, or else a LB score of 5 otherwise.
+You may notice jumps in the graph due to this calculation.
+
+2. KCash Exchanged
+The KCash Exchanged is almost impossible to detect. It is not stored into the balance logs of a user (as of V.5.4).
+Therefore, it can't give a good approximation on this score reason.
+For now, the KCash exchanged is completely ignored unless it is the last point.
+It may be possible to find the point where the difference is exactly the amount of KCash Exchanged, but once the user exchanges multiple times, then this method also will not work.
+Ultimately, it is impossible to detect KCash exchanged for this balance graph.
+""",
+        aliases = ['sgb', 'gbs', 'graphbalancescore', 'bgs', 'balancegraphscore', 'scorebalancegraph']
+    )
+    @commands.cooldown(3, 10, commands.BucketType.user) 
+    async def scoregraphbalance(self, message: discord.Message, user: discord.Member = None):
+        if user is None:
+            user = message.author
+            userid = message.author.id
+        else:
+            userid = user.id
+            if userid == self.bot.user.id:
+                userid = 'main'
+
+        # Blocked by user
+        if not User(userid).getData('settings').get("publicity", True): 
+            await message.send(embed=errorMsg("The specified user has chosen to hide their profile details!"))
+            return
+
+        # Requires Account Viewer for not self
+        if user.id != message.author.id:
+            authoruser = User(message.author.id)
+            if authoruser.item_exists("Account Viewer"):
+                authoruser.delete_item("Account Viewer")
+            else:
+                await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
+                return
+            
+        # Initialize a list to store the balances
+        balances = []
+        xstrs = []
+
+
+        totalCred = 0
+        totalUnity = 0
+        logs = 0
+
+        # Calculate slope of LB score approximation
+        # slope = y2 - y1 / (x2 - x1)
+        # where y = avg credits and x = index
+        
+        # Get number of lines
+        with open(os.path.join("balanceLogs", str(userid)), 'r') as f:
+            lines = len(f.readlines())
+
+        avgCredits = calcAvgCredits()
+
+        lbslope = (avgCredits - 50) / lines
+
+        try:
+            with open(os.path.join("balanceLogs", str(userid)), 'r') as f:
+                balanceLogs = f.readlines()                
+
+            # Start from the end of the file
+            for ln in balanceLogs:
+                ## SCORE CALC ##
+                cred = float(ln.split(" ")[1])
+                unity = float(ln.split(" ")[2])
+
+                # Add to total
+                totalCred += cred
+                totalUnity += unity
+                logs += 1
+
+
+                # Calculate score
+                # Avg credits
+                credScore = (1 / 20) * (totalCred / logs)
+                if credScore > 50: credScore = 50
+
+                # Avg unity 
+                unityScore = (1/10) * (totalUnity / logs)
+
+                # Log score
+                transScore = ((logs / 2) ** 0.5)
+                if transScore > 50: transScore = 50
+                
+                # Calculate leaderboard score 
+                avgLbCred = avgCredits * lbslope * logs + 50
+
+                if cred > avgLbCred * 1.20:
+                    lbScore = 7.5
+                elif cred < avgLbCred * 0.85:
+                    lbScore = 2.5
+                else:
+                    lbScore = 5
+
+                # Score
+                # It is credScore + unityScore + transactionsScore
+                score = credScore + unityScore + transScore + lbScore
+
+                ## END SCORE CALC ##
+
+                balances.append(score)
+
+
+        except FileNotFoundError:
+            await message.send(embed=errorMsg("No balance logs have been recorded!"))
+            return 
+        
+        balances.append(calcScore(User(userid)))
+
+        # If there is only 1 item in the list, nothing will be graphed, so add the same value to the balance.
+        xvalues = [i for i in range(len(balances))]
+
+        # If too much data then don't show on graph
+        if len(xstrs) < 30:
+            plt.xticks(xvalues, xstrs)
+        else:
+            tf = "Indexes"
+
+        # Create plot
+        plt.xlabel(f"Index")
+        plt.ylabel("Score")
+        plt.title(f"{user.display_name}'s approximate score changes")
+
+        # Slope color
+        try:
+            first, last = balances[0], balances[-1]
+            if first > last: color = 'red'
+            elif first < last: color = 'green'
+            else: color = 'gray'
+        except IndexError:
+            color = 'gray'
+
+        plt.plot(xvalues, balances, color=color)
+
+        plt.savefig(f"temp/bal{userid}.png")
+        plt.clf()
+
+        file = discord.File(f"temp/bal{userid}.png", filename=f"balanceGraph.png")
+        embed = discord.Embed(title="Score Graph", color=0xFF00FF)
+        embed.set_footer(text="Score graph is approximate and may differ significantly or slightly from the actual scores.")
+        embed.set_image(url=f"attachment://balanceGraph.png")
+
+        await message.send(file=file, embed=embed)
+
+        os.remove(f"temp/bal{userid}.png")

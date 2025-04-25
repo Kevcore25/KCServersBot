@@ -116,7 +116,7 @@ class AdminCmds(commands.Cog):
             await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
             embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
             await ctx.send(embed=embed, delete_after=3.0)
-            os.execl(sys.executable, sys.executable, *sys.argv)
+            os.execl(sys.executable, '"' + sys.executable + '"', *sys.argv)
 
 
     @commands.command(hidden=True)
@@ -221,7 +221,7 @@ Average Score: {avgscore}""")
                 data = json.load(f)
 
             data['credits'] = 100000
-            data['unity'] = 0
+            data['unity'] = 100
             data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
             data['job'] = 'Player'
             data['bs%'] = 0

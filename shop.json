@@ -65,7 +65,7 @@
     "Starter Crate": {
         "credits": -50,
         "unity": -15,
-        "gems": 5,
+        "gems": 3,
         "description": "Directly purchase a certain amount of Credits and Unity.\nLimited to 1 time per season (reset)",
         "limit": 1,
         "expiry": -1,
@@ -80,8 +80,17 @@
         "expiry": -1,
         "stock": 5
     },
+    "Completely New Identity": {
+        "credits": 0,
+        "unity": 0,
+        "gems": 50,
+        "description": "Your entire balance is reset: you will start with `50 Credits` and `20 Unity`.",
+        "limit": 1,
+        "expiry": -1,
+        "stock": 5
+    },
     "Gem Minerals": {
-        "credits": 100,
+        "credits": 50,
         "unity": 20,
         "gems": -1,
         "description": "Every season (reset), you can buy `Gems` up to a certain amount of times.\nGain bonus Gems by being top 5 in the score leaderboard.",
