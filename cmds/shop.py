@@ -108,14 +108,10 @@ class ShopCog(commands.Cog):
                 # Add item
                 u.setValue("items", items)
 
-                with open("shop.json", 'w') as f:
-                    json.dump(shopitems, f, indent=4)
-
                 # Set stock
                 stocks[itemID] += bought
                 with open('shopstock.json', 'w') as f:
                     stocks = json.dump(stocks, f, indent = 4)
-
 
                 await message.send(embed=successMsg(title="Item bought!", description=f"Successfully bought `{bought}` `{itemID}` for `{item['credits'] * bought} Credits`, `{item['unity'] * bought} Unity`, and `{item['gems'] * bought} Gems`"))
 
@@ -132,7 +128,6 @@ class ShopCog(commands.Cog):
             shopitems = json.load(f)
 
         for id in shopitems:
-
             costs = []
             item = shopitems[id]
             inflation = calcInflation()
@@ -158,4 +153,5 @@ class ShopCog(commands.Cog):
 
             embed.add_field(name=f"{id} ({costsTxt})", value=item['description'] + f"\n*{('Expires after `' + time_format(item['expiry']) + '`') if item['expiry'] != -1 else 'Never expires'} | Limit: `{item['limit']}` | Stock: `{get_prefix(stock, 0)}`*", inline=False)
 
+        embed.set_footer(text="All items expire after a reset, despite if it states \"Never expires\"")
         await message.send(embed=embed)

@@ -68,10 +68,16 @@ class AccountViewers(commands.Cog):
             name="KCMC Info", 
             value=f"**MC Username**: `{ign}`\n**KCash**: *`Obtaining data...`*"
         )
-        embed.add_field(
-            name="Rob Stats", 
-            value=f"**Rob Attack**: `{calculateRobAttack(account)} Lvls`\n**Rob Defense**: `{calculateRobDefense(account)} Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
-        )
+        if not isDM(message):
+            embed.add_field(
+                name="Rob Stats", 
+                value=f"**Rob Attack**: `{calculateRobAttack(account)} Lvls`\n**Rob Defense**: `{calculateRobDefense(account)} Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
+            )
+        else:
+            embed.add_field(
+                name="Rob Stats (Restricted in DM channel)", 
+                value=f"**Rob Attack**: `? Lvls`\n**Rob Defense**: `? Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
+            )
         embed.add_field(
             name=f"Credit Perks (~{calcCredit(100, user)}%)", 
             value=calcCreditTxt(user),

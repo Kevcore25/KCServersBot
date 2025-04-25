@@ -70,7 +70,11 @@ A successful rob increases Unity by 0.25
     async def rob(self, message, target: discord.Member, ignorewarn = None):
         # This code should be cleaned up later
         # It is much more effective to use a class instead of functions within functions
-
+        # Prevent execution if this is in a DM channel
+        if isDM(message):
+            await message.send(embed=errorMsg("This command cannot be ran in a DM channel!"))
+            return
+        
         user = User(message.author.id)
         targetUser = User(target.id)
 
@@ -279,7 +283,11 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
         u = Players(
             message.author.id
         )
-
+        # Prevent execution if this is in a DM channel
+        if isDM(message):
+            await message.send(embed=errorMsg("This command cannot be ran in a DM channel!"))
+            return
+        
         if cmd == '.':
             await message.send(embed=discord.Embed(title="Too long to be sent in chat", description="Read the description of the command [here](https://docs.google.com/document/d/1QILQMD5ZxcMeKPrvLbMYo9Yxxsg8DzU_l-IuuV8a4R4/edit?usp=sharing)"))
             return
@@ -469,6 +477,10 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
         hidden = True
     )
     async def players_redir_commands(self, message: discord.Message):
+        # Prevent execution if this is in a DM channel
+        if isDM(message):
+            await message.send(embed=errorMsg("This command cannot be ran in a DM channel!"))
+            return
 
         await message.send(embed = discord.Embed(
             title = "Unknown command",

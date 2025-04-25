@@ -6,7 +6,7 @@ print("Importing libraries")
 
 import discord, json, random, time, traceback
 from discord.ext import commands, tasks
-import time, os
+import time, os, datetime
 from users import User
 import users as usersFile
 from traceback import print_exc as printError
@@ -276,6 +276,9 @@ async def on_message(message: discord.Message):
         botactive += 5
         if botactive > 20:
             botactive = 20
+
+        with open("commandLogs.txt", "a") as f:
+            f.write(f"{datetime.datetime.now().strftime('%H:%M:%S')} {message.author.display_name}: {content}\n")
 
 @bot.event 
 async def on_command_error(ctx, error):

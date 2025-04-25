@@ -791,3 +791,6 @@ def formatParamsMulti(command: discord.ext.commands.Command, prefix="!") -> str:
 
     return f"```yml\n{prefix}{command} " + " ".join(paramText) + "```" + ("```properties\n" + "\n".join(paramDesc) + "```" if len(paramDesc) > 0 else "")
 
+def isDM(ctx: discord.ext.commands.Context):
+    return isinstance(ctx.channel, discord.channel.DMChannel)
+        

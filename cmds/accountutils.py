@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from calculatefuncs import *
-
 class AccountUtils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -210,15 +209,50 @@ class AccountUtils(commands.Cog):
         user.addBalance(
             credits=-amount,
         )
-        success = targetUser.addBalance(
+        targetUser.addBalance(
             credits=getAmount,
         )
 
-        if success:      
-            embed = successMsg("Successfully sent", f"Sent {target.mention} `{getAmount} Credits`")
-    
-        else:
-            embed = discord.Embed(title="An error occurred!",description=f"An unknown error occurred. Please try running the command again.", color=0xFF0000)
-
-
+        embed = successMsg("Successfully sent", f"Sent {target.mention} `{getAmount} Credits`")
         await message.send(embed=embed)
+
+        
+    @commands.command(
+        help = f"Send someone Gems",
+        description = """There is absoultely no fee for sending someone gems!\nBack and forth exchanges are prohibited at all costs.""",
+        aliases = ["sg"]
+    )
+    @commands.cooldown(1, 30, commands.BucketType.user) 
+    async def sendgems(self, message, target: discord.Member, amount: float):
+        user = User(message.author.id)
+        data = user.getData()
+
+        amount = int(amount)
+
+        if amount > data['gems']:
+            await message.send(embed=errorMsg("Amount is less than your balance!")); return
+        
+        if amount <= 0:
+            await message.send(embed=errorMsg("Amount cannot be 0 or under!")); return
+        
+        if target == message.author:
+            await message.send(embed=errorMsg("Cannot send yourself money!")); return
+
+        targetUser = User(target.id)
+        
+        user.addBalance(gems=-amount)
+        targetUser.addBalance(gems=amount)
+
+        embed = successMsg("Successfully sent", f"Sent {target.mention} `{amount} Gems`")
+        await message.send(embed=embed)
+         
+    @commands.command(
+        help = f"Create a DM",
+        description = """Creates a direct message where you are able to use some, but not all commands.\nIt is mainly for usecases such as `redeem` where things may want to be privated.\n`account` (or bal) command is slightly broken - it is unable to calculate the statuses properly.""",
+        aliases = ["dm"]
+    )
+    async def createdm(self, message):
+        user = message.author
+
+        await user.create_dm()
+        await user.send(embed=successMsg(title="Created a DM channel!", description="""This is a DM channel, mainly used for private commands such as `settings`, `redeem`, `account`.\nSome commands may not work properly and some commands are disabled."""))

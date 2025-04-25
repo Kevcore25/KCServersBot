@@ -80,14 +80,41 @@
         "expiry": -1,
         "stock": 5
     },
-    "Completely New Identity": {
+    "Credit Doubler": {
         "credits": 0,
         "unity": 0,
-        "gems": 50,
-        "description": "Your entire balance is reset: you will start with `50 Credits` and `20 Unity`.",
+        "gems": 5,
+        "description": "Gain a bonus `+100% Credit Earnings Perk`.",
         "limit": 1,
-        "expiry": -1,
-        "stock": 5
+        "expiry": 86400,
+        "stock": 1000000
+    },
+    "Enhanced Doubler": {
+        "credits": 0,
+        "unity": 0,
+        "gems": 20,
+        "description": "Gain a bonus `+100% Credit Earnings Perk`.",
+        "limit": 1,
+        "expiry": 604800,
+        "stock": 1000000
+    },
+    "Credit Booster": {
+        "credits": 0,
+        "unity": 0,
+        "gems": 1,
+        "description": "Gain a bonus `+15% Credit Earnings Perk`.",
+        "limit": 1,
+        "expiry": 86400,
+        "stock": 1000000
+    },
+    "Mini Credit Booster": {
+        "credits": 0,
+        "unity": 5,
+        "gems": 0,
+        "description": "Gain a bonus `+5% Credit Earnings Perk`.",
+        "limit": 1,
+        "expiry": 10800,
+        "stock": 1000000
     },
     "Gem Minerals": {
         "credits": 50,

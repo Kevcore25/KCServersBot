@@ -24,8 +24,6 @@ class CrashGameCog(commands.Cog):
             previousCgs = json.load(f)  
             
         if betAmount is None:
-    
-
             plt.xlabel("Game Number")
             plt.ylabel("Ended Multiplier")
             plt.plot(
@@ -45,21 +43,15 @@ class CrashGameCog(commands.Cog):
                 ) + \
                 f"\nTotal average: {round(sum(previousCgs) / len(previousCgs), 2)}x multiplier" + \
                 f"\nAverage of last 100: {round(sum(previousCgs[-100:]) / len(previousCgs[-100:]), 2)}x multiplier"
-
-
             )        
             embed.set_image(url=f"attachment://cgt.png")
 
             await message.send(file=file, embed=embed)
             self.crashgame.reset_cooldown(message)
             return
-            
-    # x = int(input("Enter a number: ")); print("Yay!" if x == 25 else ("NO!" if (str(x) in "".join("-" + str(i) for i in range(100))) else (print("Yes" if (x > 100 and (x > 1000 or x > 10000)) else "Yes...") if x > 10 else (print("No" if x > 5 else "... too small")))))
-
     
         betAmount = round(float(betAmount), 2)
         autoCash = float(autoCash)
-
         
         if betAmount < 0 or betAmount > user.getData('credits'):
             await message.send(embed=discord.Embed(description="Invalid bet amount!", color=0xFF0000))
@@ -80,16 +72,12 @@ class CrashGameCog(commands.Cog):
 
         cg = CrashGame()
 
-        # Due to credit perks, it should start at a LOWER amount
-        cg.multiplier = 0.85
-        cg.multipliers = [0.85]
-
         cashedOut = False
 
         #plot = cg.create_plot()
         
         xpoints = [0]
-        ypoints = [0.85]
+        ypoints = [1]
         await msg.add_reaction("💰")
         await msg.add_reaction("🛑")
 
@@ -152,8 +140,7 @@ class CrashGameCog(commands.Cog):
 
             if autoCash <= float(r['multiplier']) and not cashedOut and autoCash != 0:
                 won = cg.cash_out(betAmount)
-                actualwon = calcCredit(won, user)
-                user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
+                user.addBalance(credits=won) # it appears that calccredit is not considered during CG
                 cashedOut = True
 
                 await message.send(f"Won {won}! (Autocashed)")             
@@ -163,11 +150,10 @@ class CrashGameCog(commands.Cog):
                 # Precog
                 if user.get_item("Precognition") and not cashedOut:
                     won = cg.cash_out(betAmount)
-                    actualwon = calcCredit(won, user)
-                    user.addBalance(credits=actualwon) # it appears that calccredit is not considered during CG
+                    user.addBalance(credits=won) # it appears that calccredit is not considered during CG
                     cashedOut = True
 
-                    await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betAmount)} Credits`)")             
+                    await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")             
 
                     if user.ID != "main": 
                         user.delete_item("Precognition")
