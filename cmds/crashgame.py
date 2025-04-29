@@ -112,9 +112,13 @@ class CrashGameCog(commands.Cog):
             plt.savefig(f"temp/cg{randomNum}.png")
             plt.clf()
 
+        # If the user pressed the stop button, then the game should speed up to its final multiplier
+        stopped = False
+
         while True:
             try:
-                userMsg = await self.bot.wait_for('reaction_add', timeout=1.5, check=check)
+                if not stopped:
+                    userMsg = await self.bot.wait_for('reaction_add', timeout=1.5, check=check)
 
             except (TimeoutError, asyncio.exceptions.TimeoutError):
                 pass
@@ -122,25 +126,23 @@ class CrashGameCog(commands.Cog):
                 if not cashedOut:
                     
                     won = cg.cash_out(betAmount)
-                    actualwon = calcCredit(won, user)
-                    user.addBalance(credits=actualwon, unity=1)
+                    user.addBalance(credits=won, unity=1)
                     cashedOut = True
 
-                    await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(actualwon - betAmount)} Credits`)")
+                    await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")
 
-                    # APRIL FOOLS UPDATE LOL
-                    cg.jackpot = True
                 if str(userMsg[0].emoji) == "🛑":
-                    plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (Stopped by user)")
+                    # plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (Stopped by user)")
                     p()
-                    await cgupdate()
-                    break
+                    stopped = True
+                    # await cgupdate()
+            
             
             r = cg.next_round()
 
             if autoCash <= float(r['multiplier']) and not cashedOut and autoCash != 0:
                 won = cg.cash_out(betAmount)
-                user.addBalance(credits=won) # it appears that calccredit is not considered during CG
+                user.addBalance(credits=won)
                 cashedOut = True
 
                 await message.send(f"Won {won}! (Autocashed)")             
@@ -150,7 +152,7 @@ class CrashGameCog(commands.Cog):
                 # Precog
                 if user.get_item("Precognition") and not cashedOut:
                     won = cg.cash_out(betAmount)
-                    user.addBalance(credits=won) # it appears that calccredit is not considered during CG
+                    user.addBalance(credits=won)
                     cashedOut = True
 
                     await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")             
@@ -172,12 +174,15 @@ class CrashGameCog(commands.Cog):
 
             xpoints.append(cg.round)
             ypoints.append(r['multiplier'])
-            plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x")
 
-            p(xpoints, ypoints)
+            if not stopped:
+                plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x")
 
-            await cgupdate()
-            
+                p(xpoints, ypoints)
+
+                if not stopped:
+                    await cgupdate()
+                
         os.remove(f"temp/cg{randomNum}.png")
         self.crashgame.reset_cooldown(message)
 

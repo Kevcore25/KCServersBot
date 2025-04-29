@@ -94,6 +94,7 @@ def preload(data):
                 "unityLost": unityLost,
                 "hint": hint
             }
+        except ValueError: pass
         except Exception as e:
             print(f"Cannot do {', '.join(str(i) for i in values)}: {e}")
 

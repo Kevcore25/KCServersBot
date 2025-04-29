@@ -34,10 +34,8 @@ class CrashGame:
 
 
         if self.jackpot:
-            print("JP")
-            if (randint(0,30) == 0 or self.multiplier >= 100) and self.round > 50:
+            if (randint(0,30) == 0 or self.multiplier >= 100):
                 self.jackpot = False
-                print("jackpot expired")
                 return True # Crashes
             else:
                 return False
