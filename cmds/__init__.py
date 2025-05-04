@@ -13,3 +13,5 @@ from cmds.questionsquiz import QuestionsQuiz
 from cmds.mcguessinggames import MCGuessingGames
 from cmds.shop import ShopCog
 from cmds.cardgames import CardGames
+
+from cmds.games.numberguess import RNGNumberGuessCog   

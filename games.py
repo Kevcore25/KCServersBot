@@ -16,15 +16,13 @@ class CrashGame:
     def change_multiplier(self) -> float:
         """Change the multiplier and return the result"""
 
-        # 10% time, -.2
-        # if randint(0,9) == 0:
-        #     self.multiplier -= 0.2
-        # else:
-            # self.multiplier += randint(5,15) / 100
+        # Change the multiplier from a random value between 2 to 10, meaning approximate 0.03 acceleration on avg
         self.multiplier += randint(2,10) / 200 * self.round
 
+        # Round value
         self.multiplier = round(self.multiplier, 3)
         
+        # Append to the mutlipliers
         self.multipliers.append(self.multiplier)
 
         return self.multiplier
@@ -32,9 +30,10 @@ class CrashGame:
     def determine_crash(self) -> bool:
         """Determines if the round will crash"""
 
-
+        # If jackpot, then the chance of crashing is decreased
+        # Should only happen in certain events
         if self.jackpot:
-            if (randint(0,30) == 0 or self.multiplier >= 100):
+            if (randint(0,30) == 0 or self.multiplier >= 1000):
                 self.jackpot = False
                 return True # Crashes
             else:
