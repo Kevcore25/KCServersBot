@@ -79,7 +79,7 @@ class WordleGameCog(commands.Cog):
         help = "Wordle Game",
         description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.""",
     )
-    @commands.cooldown(1, 1 , commands.BucketType.user)
+    @commands.cooldown(1, 3600, commands.BucketType.user)
     async def wordle(self, message: discord.Message):
         u = User(message.author.id)
 
