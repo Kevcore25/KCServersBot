@@ -123,9 +123,9 @@ def time_format(seconds: int) -> str:
         s = seconds % 3600 % 60
         temp = []
         if d > 0:
-            temp.append(f'{d}D')
+            temp.append(f'{d}d')
         if h > 0:
-            temp.append(f'{h}H')
+            temp.append(f'{h}h')
         if m > 0:
             temp.append(f'{m}m')
         if s > 0:

@@ -32,7 +32,7 @@ with open("botsettings.json", 'r') as f:
     serverID = botsettings['Server ID']
     debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.6)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.7)")
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -164,6 +164,18 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
             if len(aliases) > 0: 
                 description += "\n\n**Aliases:**\n" + ", ".join(prefix+i for i in aliases)
 
+            # CD
+            if bot.all_commands[cmd].cooldown is not None:
+                rate = bot.all_commands[cmd].cooldown.rate
+                cd = bot.all_commands[cmd].cooldown.per
+
+                if rate == 1:
+                    description += f"\n\n**Cooldown:** `{time_format(round(cd))}`"
+                else:
+                    description += f"\n\n**Cooldown:** `{time_format(round(cd))} x{rate}`"
+            else:
+                description += f"\n\n**Cooldown:** `No cooldown`"
+
             # Format
             description += "\n\n**Detected Command Format:**" + formatParamsMulti(bot.all_commands[cmd]) 
 
@@ -189,8 +201,8 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
 
         await message.send(embed=embed)
         return
+    
     # Otherwise, it is probably a page number. Therefore...
-
     def get_help_commands(page: int = 1) -> discord.Embed:
         # Step 1: Obtain all commands and remove aliases and stuff
         cmds: dict[str: str] = {} 
@@ -260,6 +272,7 @@ async def on_ready():
     await bot.add_cog(cmds.QuestionsQuiz(bot))
     await bot.add_cog(cmds.MCGuessingGames(bot))
     await bot.add_cog(cmds.RNGNumberGuessCog(bot))
+    await bot.add_cog(cmds.WordleGameCog(bot))
 
     print("Done! Starting bot AI loop...")
 

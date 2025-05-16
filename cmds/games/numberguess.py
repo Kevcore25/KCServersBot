@@ -10,13 +10,13 @@ class RNGNumberGame:
     rewardMulitplier: float
     answer: int
     
-    baseReward: float = 3 # Base reward for guessing the number correctly
+    baseReward: float = 1 # Base reward for guessing the number correctly
 
     warmThreshold: float = 0.25 
     hotThreshold: float = 0.1
 
     def __init__(self, difficulty: str): 
-        match difficulty:
+        match difficulty.lower():
             case "easy":
                 self.min = 1
                 self.max = 10
@@ -32,11 +32,17 @@ class RNGNumberGame:
                 self.max = 30
                 self.attempts = 5
                 self.rewardMultiplier = 5
-            case "extreme":
+            case "extreme" | "insane":
                 self.min = 1
                 self.max = 40
                 self.attempts = 4
                 self.rewardMultiplier = 10
+            case "impossible":
+                self.min = -100
+                self.max = 100
+                self.attempts = 5
+                self.rewardMulitplier = 50
+
         self.generateNumber()
 
     def generateNumber(self):
@@ -79,11 +85,16 @@ class RNGNumberGuessCog(commands.Cog):
     )
     @commands.cooldown(1, 3600 , commands.BucketType.user)
     async def rngguessinggame(self, message: discord.Message, difficulty: str = "normal"):
+        u = User(message.author.id)
+
         # Create a new instance of the game
         game = RNGNumberGame(difficulty)
 
+        def getRwd():
+            return calcCredit(game.getReward(), u)
+
         # Send init message
-        desc = lambda text: f"Type a number! If it is correct, you will earn `{game.getReward()} Credits`.\nThe number I am thinking of is between `{game.min}` and `{game.max}`\nAttempts remaining: `{game.attempts}`\n\n{text}"
+        desc = lambda text: f"Type a number! If it is correct, you will earn `{getRwd()} Credits`.\nThe number I am thinking of is between `{game.min}` and `{game.max}`\nAttempts remaining: `{game.attempts}`\n\n{text}"
 
         msg = await message.send(embed = discord.Embed(
             title = "RNG Guessing Game",
@@ -119,9 +130,9 @@ class RNGNumberGuessCog(commands.Cog):
                 result = game.guess(userInput)
 
                 if result:
-                    credits = game.getReward()
+                    credits = getRwd()
                     await edit(f"You won! You gained `{numStr(credits)} Credits`")
-                    User(message.author.id).addBalance(credits=credits)
+                    u.addBalance(credits=credits)
                     break
 
                 else:
