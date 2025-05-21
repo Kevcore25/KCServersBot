@@ -157,7 +157,7 @@ Average Score: {avgscore}""")
 
             await asyncio.sleep(3)
             msgs = []
-            for i in range(5):
+            for i in range(3):
                 try:
                     usr = sortedScore[i]
                 except IndexError: 
@@ -168,7 +168,7 @@ Average Score: {avgscore}""")
                 with open("users/"+user+'.json', 'r') as f:
                     data = json.load(f)
 
-                gemsGained = (5 - i) * 10
+                gemsGained = 20 * (3 - i) - 10
 
                 msgs.append(basicMsg(
                     title=f"""Place #{i+1}""",
@@ -202,6 +202,7 @@ Average Score: {avgscore}""")
                 data['job'] = None
                 data['bs%'] = 0
                 data['log'] = 0
+                data['kcashExchanged'] = 0
                 data['rob'] = {
                     "atk": 5,
                     "def": 5, 
@@ -222,7 +223,7 @@ Average Score: {avgscore}""")
 
             data['credits'] = 100000
             data['unity'] = 100
-            data['items'] = {"Precognition": {"expires": [-1], "data": {}, "count": 1}, "Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
+            data['items'] = {"Lock": {"expires": [-1, -1, -1, -1, -1], "data": {}, "count": 5}}
             data['job'] = 'Player'
             data['bs%'] = 0
             data['log'] = 0

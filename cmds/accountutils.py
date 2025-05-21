@@ -103,11 +103,12 @@ class AccountUtils(commands.Cog):
     @commands.command(
         help = f"Get your current score",
         description = f"""Factors that affect score:
-    - Ranking on leaderboard ((11 - current) ^ 1.2. Cannot be under 0)
-    - Average Credits earned ((1/20) * (Avg. Credits). Cannot be over 50)
-    - Amount of transactions (sqrt(transactions/2). Cannot be over 50)
-    - Average Unity earned ((1/5) * (Avg. Unity))
-    - KCash Exchanged (1/500 * (KCash Exchanged). Cannot be over 20)"""
+    - Ranking on leaderboard ((6 - current). Cannot be under 0)
+    - Average Credits earned (2 * (Avg. Credits). Cannot be over 5K)
+    - Amount of transactions (sqrt(transactions/2) * 100. Cannot be over 5K)
+    - Average Unity earned (10 * (Avg. Unity))
+    - KCash Exchanged (1/5 * (KCash Exchanged). Cannot be over 2K)
+    - Current Unity (5 * Unity)"""
     )
     async def score(self, message, user: discord.Member = None):
         if user is None:
@@ -117,7 +118,7 @@ class AccountUtils(commands.Cog):
 
         totalscore, reason = calcScore(u, msg=True) 
 
-        embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 5 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, kcashExchanged, log, players""", color=0xFF00FF)
+        embed = discord.Embed(title="Score Calculation",description=f"""## Total Score: `{totalscore}`\n## Reasons:\n{reason}\n\nScore determines who wins before a reset.\nThe top 3 scores gain `Gems` which will be kept for the next reset.\nAfter a reset, the following keys will be resetted:\n credits, unity, items, job, rob, bs%, kcashExchanged, log, players""", color=0xFF00FF)
         await message.send(embed=embed)
 
 

@@ -319,7 +319,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     else:
         ranking = 11
 
-    scores['Leaderboard Ranking'] = (11 - ranking) * 100
+    scores['Leaderboard Ranking'] = (6 - ranking) * 200
     if scores['Leaderboard Ranking'] < 0:
         scores['Leaderboard Ranking'] = 0
 
@@ -619,17 +619,17 @@ def calcCreditTxt(user: User) -> int:
         amountTxt["Negative Unity fee"] = -round(1 - unityFee, 3) * 100
 
     # Rich I (-10% Credit gain)
-    if credits > 10000:
-        amountTxt["Rich I (>10k)"] = -5
+    if credits > 1000:
+        amountTxt["Rich I (>1K)"] = -5
 
     
     # Rich II (-15% Credit gain)
-    if credits > 20000:
-        amountTxt["Rich II (>20k)"] = -15
+    if credits > 3000:
+        amountTxt["Rich II (>3K)"] = -15
 
     # Rich III (-20% Credit gain)
-    if credits > 30000:
-        amountTxt["Rich III (>30k)"] = -20
+    if credits > 5000:
+        amountTxt["Rich III (>5K)"] = -20
 
     # Too rich!
     if credits > 50000:

@@ -123,7 +123,7 @@ class WordleGameCog(commands.Cog):
 
                 # Check for bounds
                 if userInput not in words:
-                    await edit("Your guess must be a valid 5-letter word!") 
+                    await edit(f"`{userInput}` is not a valid 5-letter word!") 
                     continue
 
                 # Guess
