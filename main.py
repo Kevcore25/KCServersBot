@@ -19,20 +19,19 @@ import cmds
 print("Finished importing")
 load_dotenv()
 
-
-
 with open("botsettings.json", 'r') as f:
     botsettings = json.load(f)
 
-    KMCExtractLocation = botsettings['KMCExtract']
-    prefix = botsettings['prefix']
-    inflationAmt = botsettings['inflation amount']
-    adminUsers = botsettings['admins']
-    botAIChannel = botsettings['AI Channel']
-    serverID = botsettings['Server ID']
-    debug = botsettings['Debug']
+KMCExtractLocation = botsettings['KMCExtract']
+prefix = botsettings['prefix']
+inflationAmt = botsettings['inflation amount']
+adminUsers = botsettings['admins']
+botAIChannel = botsettings['AI Channel']
+serverID = botsettings['Server ID']
+debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.7)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.8)")
+
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
@@ -241,7 +240,7 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
             desc = cmds[cmd]
             embed.add_field(name = prefix + cmd, value = desc, inline=False)
 
-        embed.set_footer(text=f"Use {prefix}help [command] to display detailed information about a command. \nThe first time you run a detailed help command about a command, you will gain 50 Credits.\nUse {prefix}help [page] to go to another page. Current page: {page}/{len(cmds) // commandsPerPage + 1}")
+        embed.set_footer(text=f"Use {prefix}help [command] to display detailed information about a command. \nThe first time you run a detailed help command about a command, you will gain 1 Gem.\nUse {prefix}help [page] to go to another page. Current page: {page}/{len(cmds) // commandsPerPage + 1}")
 
         return embed
 

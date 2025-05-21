@@ -42,9 +42,9 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Credits: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Credits: {get_prefix(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Credits: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Credits: {get_prefix(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 
@@ -55,7 +55,7 @@ class LeaderboardCog(commands.Cog):
         # Average credits = total / number of users
         avgcredits = totalCredits / (i+1)
 
-        embed.description = f"**Total Credits**: `{numStr(totalCredits)}`\n**Inflation**: `{round(calcInflation() * 100)}%`\n**Average Credits**: `{numStr(avgcredits)}`"
+        embed.description = f"**Total Credits**: `{get_prefix(totalCredits)}`\n**Inflation**: `{round(calcInflation() * 100)}%`\n**Average Credits**: `{get_prefix(avgcredits)}`"
 
         await message.send(embed=embed)
 
@@ -90,16 +90,16 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Score: {get_prefix(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Score: {get_prefix(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 
         # Average credits = total / number of users
         avgcredits = totalCredits / (i+1)
 
-        embed.description = f"**Average Score**: `{numStr(avgcredits)}`"
+        embed.description = f"**Average Score**: `{get_prefix(avgcredits)}`"
 
         await message.send(embed=embed)
 
@@ -135,16 +135,16 @@ class LeaderboardCog(commands.Cog):
 
                 totalCredits += usr[1]
                 try:
-                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Wealth: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. {user.display_name}", value=f"Wealth: {get_prefix(usr[1])}")
                 except AttributeError:
-                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Wealth: ≈{get_prefix(usr[1])}")
+                    embed.add_field(name=f"{i + 1}. Unknown", value=f"Wealth: {get_prefix(usr[1])}")
             except Exception as e:
                 embed.add_field(name=f"{i + 1}. Error", value=f"Reason: {e}")
 
         # Average credits = total / number of users
         avgcredits = totalCredits / (i+1)
 
-        embed.description = f"**Average Wealth**: `{numStr(avgcredits)}`"
+        embed.description = f"**Average Wealth**: `{get_prefix(avgcredits)}`"
 
         await message.send(embed=embed)
 

@@ -89,15 +89,6 @@
         "expiry": 86400,
         "stock": 1000000
     },
-    "Enhanced Doubler": {
-        "credits": 0,
-        "unity": 0,
-        "gems": 20,
-        "description": "Gain a bonus `+100% Credit Earnings Perk`.",
-        "limit": 1,
-        "expiry": 604800,
-        "stock": 1000000
-    },
     "Credit Booster": {
         "credits": 0,
         "unity": 0,

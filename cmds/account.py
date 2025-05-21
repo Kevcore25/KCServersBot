@@ -136,7 +136,7 @@ class AccountViewers(commands.Cog):
         embed.set_field_at(
             index = 5,
             name="Other Info", 
-            value=f"**Wealth**: `{numStr(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{numStr(calcScore(user))}`",
+            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{get_prefix(calcScore(user))}`",
             inline=False
         )
 

@@ -136,7 +136,6 @@ def time_format(seconds: int) -> str:
 
 
 def calcInflation() -> float:
-
     usersDir = os.listdir('users')
 
     totalCredits, amtOfUsers = 0 ,0
@@ -151,9 +150,7 @@ def calcInflation() -> float:
                     amtOfUsers += 1
             except: pass
 
-
     # Inflation % = Total Credits of Members / (Inflation amount * Amount of Members) x 100 (%)
-    print(totalCredits, inflationAmt, amtOfUsers)
     inflationLvl = totalCredits / (inflationAmt * amtOfUsers)
     if inflationLvl < 1: inflationLvl = 1
     return inflationLvl
@@ -287,6 +284,12 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     - Amount of transactions (Sqrt(x/2), cannot be over 50)
     - Average Unity earned (For up to 200 Unity, up to 20 can be obtained)
     - KCash Exchanged (For up to 10k exchanged, up to 20 can be obtained)
+
+    As of 2025-05-20 (V.5.8), score slightly changes:
+    - Score value is now scaled by 100x (50 >> 5000)
+    - Score is an integer value
+    - Adds Current Unity value
+        - Each 1 Unity gives 5 Score (200 = 1000)
     """
 
     scores = {}
@@ -316,7 +319,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     else:
         ranking = 11
 
-    scores['Leaderboard Ranking'] = (11 - ranking)
+    scores['Leaderboard Ranking'] = (11 - ranking) * 100
     if scores['Leaderboard Ranking'] < 0:
         scores['Leaderboard Ranking'] = 0
 
@@ -336,20 +339,24 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
             totalUnity += float(log.split(' ')[2])
         except IndexError: pass
 
-    credScore = (1 / 20) * (totalCred / len(ballogs))
-    if credScore > 50: credScore = 50
-    scores['Average Credits'] = credScore
-    scores['Average Unity'] = (1/10) * (totalUnity / len(ballogs))
+    credScore = 20 * (totalCred / len(ballogs))
+    if credScore > 5000: credScore = 5000
+    scores['Average Credits'] = round(credScore)
+    scores['Average Unity'] = round(10 * (totalUnity / len(ballogs)))
 
     # Amount of transactions
-    transScore = ((u.getData('log')) / 2) ** 0.5
-    if transScore > 50: transScore = 50
-    scores['Number of Transactions'] = transScore
+    transScore = ((u.getData('log')) / 2) ** 0.5 * 100
+    if transScore > 5000: transScore = 5000
+    scores['Number of Transactions'] = round(transScore)
 
     # KCash Exchanged
-    scores['KCash Exchanged'] = (1/500) * u.getData('kcashExchanged')
-    if scores['KCash Exchanged'] > 20:
-        scores['KCash Exchanged'] = 20
+    scores['KCash Exchanged'] = round((1/5) * u.getData('kcashExchanged'))
+    if scores['KCash Exchanged'] > 2000:
+        scores['KCash Exchanged'] = 2000
+    
+    # Current Unity
+    scores['Current Unity'] = round(5 * u.getData("unity"))
+
     
     # MSG or just send
     if msg:
@@ -426,10 +433,8 @@ def calcWealth(u: User, botCred = None) -> float:
     Mainly used for the calcWealthPower function. 
 
     Wealth is calculated using this formula:
-    (Credits + BS% * Bot Credits) * (Unity + 150) / 250
+    (Credits + BS% * Bot Credits)
 
-    If Credits is below 0, then the following formula will be used:
-    (Credits + BS% * Bot Credits) / (Unity + 150) / 250
     """
 
     if botCred is None: 
@@ -437,18 +442,11 @@ def calcWealth(u: User, botCred = None) -> float:
 
     userData = u.getData()
 
-    if userData['credits'] >= 0:
-        return (
-            (userData['credits'] + 
-            userData['bs%'] * botCred / 100) *
-            ((userData['unity'] + 150) / 250)
-        )
-    else:
-        return (
-            (userData['credits'] + 
-            userData['bs%'] * botCred / 100) /
-            ((userData['unity'] + 150) / 250)
-        )
+    return (
+        (userData['credits'] + 
+        userData['bs%'] * botCred / 100) 
+    )
+
     
 def calcTradeValue(u: User) -> float:
     """Calculates the trade value of a user"""
