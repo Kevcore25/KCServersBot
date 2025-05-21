@@ -339,7 +339,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
             totalUnity += float(log.split(' ')[2])
         except IndexError: pass
 
-    credScore = 20 * (totalCred / len(ballogs))
+    credScore = 2 * (totalCred / len(ballogs))
     if credScore > 5000: credScore = 5000
     scores['Average Credits'] = round(credScore)
     scores['Average Unity'] = round(10 * (totalUnity / len(ballogs)))
