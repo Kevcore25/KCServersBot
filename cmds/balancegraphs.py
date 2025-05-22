@@ -534,15 +534,15 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
 
                 # Calculate score
                 # Avg credits
-                credScore = (1 / 20) * (totalCred / logs)
-                if credScore > 50: credScore = 50
+                credScore = 2 * (totalCred / logs)
+                if credScore > 5000: credScore = 5000
 
                 # Avg unity 
-                unityScore = (1/10) * (totalUnity / logs)
+                unityScore = 15 * (totalUnity / logs)
 
                 # Log score
-                transScore = ((logs / 2) ** 0.5)
-                if transScore > 50: transScore = 50
+                transScore = ((logs / 2) ** 0.5) * 100
+                if transScore > 5000: transScore = 5000
                 
                 # Calculate leaderboard score 
                 avgLbCred = avgCredits * lbslope * logs + 50
@@ -553,6 +553,7 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
                     lbScore = 2.5
                 else:
                     lbScore = 5
+                lbScore *= 100
 
                 # Score
                 # It is credScore + unityScore + transactionsScore
