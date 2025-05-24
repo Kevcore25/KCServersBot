@@ -43,6 +43,10 @@ WAYS_TO_EARN = {
 """)
 }
 
+# Aliases
+false = False
+true = True
+
 # Source : chatgpt lol stackoverflow is UESLSES
 def tail(filename, lines=100) -> list[str]:
     with open(filename, 'rb') as f:

@@ -65,20 +65,7 @@ detail - Also shows the server's MOTD / description
 
         args = args.split(' ')
 
-        print(args)
-
-        
         embed = discord.Embed(title="Active Servers",description=f"List of servers online:", color=0x00FF00)
-
-        # Deprecated
-        # serversToPing = {
-        #     "RLWorld": ["192.168.1.71:25250"],
-        #     "LTS KCSMP": ["smp.kcservers.ca"],
-        #     "KCSkyblock": ["192.168.1.71:25000"],
-        #     "KevChall": ["192.168.1.71:38125"],
-        #     "TestServ": ["192.168.1.64:50000"]
-        # }
-
 
         kcmcnames = dns.resolver.resolve("kcmcnames.kcservers.ca", "TXT")[0].to_text()[1:-1]
         servers = kcmcnames.split(";")

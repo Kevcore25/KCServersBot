@@ -16,3 +16,5 @@ from cmds.cardgames import CardGames
 
 from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog
+
+from cmds.servermontior import ServerMontiorCog

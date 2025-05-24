@@ -30,7 +30,7 @@ botAIChannel = botsettings['AI Channel']
 serverID = botsettings['Server ID']
 debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.8)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.9)")
 
 bot = commands.Bot(
     command_prefix=[prefix], 
@@ -272,6 +272,7 @@ async def on_ready():
     await bot.add_cog(cmds.MCGuessingGames(bot))
     await bot.add_cog(cmds.RNGNumberGuessCog(bot))
     await bot.add_cog(cmds.WordleGameCog(bot))
+    await bot.add_cog(cmds.ServerMontiorCog(bot))
 
     print("Done! Starting bot AI loop...")
 

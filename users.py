@@ -21,7 +21,8 @@ userTemplate = {
     },
     "log": 0,
     "redeemedCodes": [],
-    "settings": {}
+    "settings": {},
+    "servers": []
 }
 
 botID = 0
@@ -185,7 +186,27 @@ class User:
         except KeyError:
             self.update()
             return self.addValue(key, amount)
-        
+
+    def appendValue(self, key: str, value) -> bool:
+        try:
+            self.data[key].append(value)
+            self.saveAccount()
+            return True
+        except KeyError:
+            if self.update():
+                return self.appendValue(key, value)
+        return False
+
+    def removeValue(self, key: str, value) -> bool:
+        try:
+            self.data[key].remove(value)
+            self.saveAccount()
+            return True
+        except KeyError:
+            if self.update():
+                return self.removeValue(key, value)
+        return False
+
     def changeMainBal(self, credits) -> bool:
         """Changes the balance of main."""
         return User("main").addBalance(-credits)
