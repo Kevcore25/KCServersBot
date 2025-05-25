@@ -1,6 +1,5 @@
 from discord.ext import commands, tasks
 from calculatefuncs import *
-from traceback import print_exc
 from mcstatus import JavaServer, status_response
 MONTIOR_CMDS_DESC = """
 
@@ -34,8 +33,10 @@ def SmartServName(status: status_response.JavaStatusResponse) -> str:
 
     else:
         return motd
+    
 def parse(player: str):
     return player.replace("_", "\\_")
+
 class ServerMontiorCog(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.bot = bot
@@ -49,6 +50,7 @@ class ServerMontiorCog(commands.Cog):
         # ASSUMES: Only one player can be in 1 server.
 
         storedServers: dict[str, status_response.JavaStatusResponse] = {}
+        errorServers: list[str] = [] # Servers that errored (e.g. connection error)
 
         for userfile in os.listdir('users'):
             userid = userfile.replace(".json", "")
@@ -98,6 +100,7 @@ class ServerMontiorCog(commands.Cog):
                                 currentPlayers.append((name, ""))
 
                         except Exception as e: 
+                            errorServers.append(server)
                             print(e)
                 
                 # Only send if it is not empty,
@@ -114,6 +117,14 @@ class ServerMontiorCog(commands.Cog):
                     lastServerPlayers = self.lastServerPlayers[userid]
                     # Determine joins
                     for server, players in serverPlayers.items():
+                        # Do not calc errored servers
+                        nocalc = false
+                        for s in errorServers:
+                            if s in server:
+                                nocalc = true
+                                break
+                        if nocalc: continue
+
                         tempPlayers = []
 
                         if server not in lastServerPlayers:
@@ -149,80 +160,10 @@ class ServerMontiorCog(commands.Cog):
             except Exception as e: 
                 print(e)
 
-
-    async def oldfetchServers(self):
-        serversToFetch = []
-        userPlayerMontiors = {}
-        for user in os.listdir('users'):
-            try:
-                with open(os.path.join("users", user), "r") as f:
-                    data = json.load(f)
-
-                if "servers" in data and "playerMontior" in data:
-                    for server in data['servers']:
-                        if server not in serversToFetch:
-                            serversToFetch.append(server)
-                    for player in data['playerMontior']:
-                        if player not in userPlayerMontiors:
-                            userPlayerMontiors[player] = []
-
-                        userPlayerMontiors[player].append(user.replace(".json", ""))
-            except Exception as e: 
-                print(e)
-
-        sendPlayers = {}
-        statusServer = {}
-        for server in serversToFetch:
-            try:
-                status = returnStatusObj(server).status()
-                statusServer[server] = status
-                for player in status.players.sample:
-                    if player.name in userPlayerMontiors:
-                        for userid in userPlayerMontiors[player.name]:
-                            if userid not in sendPlayers:
-                                sendPlayers[userid] = []
-                            
-                            sendPlayers[userid].append((server, player.name))
-            except Exception as e: 
-                print(e)
-
-        for userid, players in sendPlayers.items():
-            user = await self.bot.fetch_user(userid)
-
-            serverPlayers = {}
-
-            embed = discord.Embed(
-                title = "Player Notification",
-                color = 0xFF00FF
-            )
-
-            for server, player in players:
-                if server not in serverPlayers:
-                    serverPlayers[server] = []
-                
-                serverPlayers[server].append(player)
-
-
-
-            for server, players in serverPlayers.items():
-                name = SmartServName(statusServer[server])
-                if name == '':
-                    name = server
-                else:
-                    name += f" ({server})"
-
-                embed.add_field(name = name + ":", value = ", ".join(players))
-
-            await user.create_dm()
-            await user.send(embed=embed)
-           
-             
-           
-
     @commands.command(
         help = f"Status",
         description = GET_STATUS_DESC,
-        aliases = ['status', 'getstatus', 'get'],
+        aliases = ['status', 'getstatus', 'get', 'fetch'],
     )
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def statusof(self, message, addresses: str = None):
@@ -278,7 +219,7 @@ class ServerMontiorCog(commands.Cog):
     @commands.command(
         help = f"Server Montior",
         description = SERVER_MONTIOR_DESC,
-        aliases = ['servermontior', 'sm'],
+        aliases = ['servermontior', 'sm', 'addserver', 'addserv', 'track'],
     )
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def montior(self, message, address: str = None):
@@ -320,19 +261,17 @@ class ServerMontiorCog(commands.Cog):
     @commands.command(
         help = f"Player Montior",
         description = PLAYER_MONTIOR_DESC,
-        aliases = ['pm', "playermontior"],
+        aliases = ['pm', "playermontior", "removeplayer"], # Add remove player alias because it DOES remove the player
     )
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def addplayer(self, message, ign: str = None):
         user = User(message.author.id)
         
-        # Check for server argument
+        # Check for IGN argument
         if ign is None:
             return await message.send(embed=errorMsg("You must specify a valid Minecraft username!"))
 
-        # Determine if the server already is on the user list.
-        # If it is, instead of adding it, remove it.
-        # It also means the program does not need to fetch the server to see if it is valid or not.
+        # Determine if the IGN is already on the list
         if ign in user.getData("playerMontior"):
             if user.removeValue("playerMontior", ign):
                 return await message.send(embed=successMsg(description=f"Successfully removed `{ign}` from your players list!"))
@@ -342,7 +281,6 @@ class ServerMontiorCog(commands.Cog):
         # Max 100
         if len(user.getData("playerMontior")) >= 100:
             return await message.send(embed=errorMsg(f"You can only have a maximum of 100 players for your account!"))
-
 
         if user.appendValue("playerMontior", ign):
             return await message.send(embed=successMsg(description=f"Successfully added `{ign}` to your players watchlist!"))
