@@ -22,7 +22,9 @@ userTemplate = {
     "log": 0,
     "redeemedCodes": [],
     "settings": {},
-    "servers": []
+
+    "servers": [],
+    "playerMontior": []
 }
 
 botID = 0

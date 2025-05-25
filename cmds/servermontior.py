@@ -1,17 +1,17 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 from calculatefuncs import *
-
+from traceback import print_exc
 from mcstatus import JavaServer, status_response
 MONTIOR_CMDS_DESC = """
 
--# This command is part of the montioring commands (montior, statusof)"""
+-# This command is part of the montioring commands (montior, statusof, and addplayer)"""
 
-SERVER_MONTIOR_DESC = f"""Constantly montiors a server. If the bot detects a change in players, it will notify you about it.\n\nRunning the command again with the same server will remove it.""" + MONTIOR_CMDS_DESC
+SERVER_MONTIOR_DESC = f"""Adds a server to be montiored.\n\nRunning the command again with the same server will remove it.""" + MONTIOR_CMDS_DESC
+PLAYER_MONTIOR_DESC = f"""Constantly montiors the server that you have added to see if a specified player has joined/left.""" + MONTIOR_CMDS_DESC
 GET_STATUS_DESC = f"""Obtain the status of a server. If no arguments are specified, it will fetch the servers you specified in the `montior` command""" + MONTIOR_CMDS_DESC
 
 def returnStatusObj(address: str, timeout: int = 1) -> JavaServer:
     return JavaServer.lookup(address, timeout)
-
 
 def SmartServName(status: status_response.JavaStatusResponse) -> str:
     """
@@ -34,10 +34,184 @@ def SmartServName(status: status_response.JavaStatusResponse) -> str:
 
     else:
         return motd
-
+def parse(player: str):
+    return player.replace("_", "\\_")
 class ServerMontiorCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
+        self.fetchServers.start()
+
+        self.lastServerPlayers = {}
+
+    @tasks.loop(seconds=30)
+    async def fetchServers(self):
+        """Fetches servers from users. Uses a more optimized algorithm than the previous"""
+        # ASSUMES: Only one player can be in 1 server.
+
+        storedServers: dict[str, status_response.JavaStatusResponse] = {}
+
+        for userfile in os.listdir('users'):
+            userid = userfile.replace(".json", "")
+
+            embed = discord.Embed(
+                title = "Player Notification",
+                color = 0xFF00FF
+            )
+
+            currentPlayers = []
+
+            try:
+                with open(os.path.join("users", userfile), "r") as f:
+                    data = json.load(f)
+
+                # Add lastPlayers if empty
+                if userid not in self.lastServerPlayers:
+                    self.lastServerPlayers[userid] = {}
+
+                if "servers" in data and "playerMontior" in data: 
+                    for server in data['servers']:
+                        try:
+                            if server not in storedServers:
+                                storedServers[server] = returnStatusObj(server).status()
+
+                            # Get name of server
+                            name = SmartServName(storedServers[server])
+                            if name == '':
+                                name = server
+                            else:
+                                name += f" ({server})"
+
+                            # Get Players
+                            # EDGECASE: No players
+                            if not (storedServers[server].players.online == 0 or storedServers[server].players.sample is None):
+                                for player in storedServers[server].players.sample:
+                                    if player.name in data['playerMontior']:
+                                        # Add current players
+                                        if player.name not in currentPlayers:
+                                            currentPlayers.append((name, player.name))
+                            else:
+                                currentPlayers.append((name, ""))
+
+                        except Exception as e: 
+                            print(e)
+                
+                # Only send if it is not empty,
+                # AND if the players changed
+                if currentPlayers != self.lastServerPlayers[userid]:
+                    # Convert to dictionary
+                    serverPlayers: dict[str, list[str]] = {}
+                    for server, player in currentPlayers:
+                        if server not in serverPlayers:
+                            serverPlayers[server] = []
+                        if player != "":
+                            serverPlayers[server].append(player)
+
+                    lastServerPlayers = self.lastServerPlayers[userid]
+                    # Determine joins
+                    for server, players in serverPlayers.items():
+                        tempPlayers = []
+
+                        if server not in lastServerPlayers:
+                            lastServerPlayers[server] = []
+
+                        for player in players:
+                            # Player is not in the last fetch
+                            if player not in lastServerPlayers[server]:
+                                tempPlayers.append(parse(player) + " joined")
+
+                        # If last - current 
+                        # IN [abc, def], def leaves
+                        # [abc, def] - [abc] = [def]
+                        # leave =def
+                        for player in set(lastServerPlayers[server]) - set(players):
+                            tempPlayers.append(player + " left")
+
+                        if len(tempPlayers) > 0:
+                            embed.add_field(name = server + ":", value = "\n".join(tempPlayers), inline=False)
+
+                    # Update lastPlayers
+                    self.lastServerPlayers[userid] = serverPlayers
+
+                    # Don't send if empty
+                    if len(embed.fields) > 0:
+                        # Send message
+                        user = await self.bot.fetch_user(userid)
+
+                        await user.create_dm()
+                        await user.send(embed=embed)
+
+            except Exception as e: 
+                print(e)
+
+
+    async def oldfetchServers(self):
+        serversToFetch = []
+        userPlayerMontiors = {}
+        for user in os.listdir('users'):
+            try:
+                with open(os.path.join("users", user), "r") as f:
+                    data = json.load(f)
+
+                if "servers" in data and "playerMontior" in data:
+                    for server in data['servers']:
+                        if server not in serversToFetch:
+                            serversToFetch.append(server)
+                    for player in data['playerMontior']:
+                        if player not in userPlayerMontiors:
+                            userPlayerMontiors[player] = []
+
+                        userPlayerMontiors[player].append(user.replace(".json", ""))
+            except Exception as e: 
+                print(e)
+
+        sendPlayers = {}
+        statusServer = {}
+        for server in serversToFetch:
+            try:
+                status = returnStatusObj(server).status()
+                statusServer[server] = status
+                for player in status.players.sample:
+                    if player.name in userPlayerMontiors:
+                        for userid in userPlayerMontiors[player.name]:
+                            if userid not in sendPlayers:
+                                sendPlayers[userid] = []
+                            
+                            sendPlayers[userid].append((server, player.name))
+            except Exception as e: 
+                print(e)
+
+        for userid, players in sendPlayers.items():
+            user = await self.bot.fetch_user(userid)
+
+            serverPlayers = {}
+
+            embed = discord.Embed(
+                title = "Player Notification",
+                color = 0xFF00FF
+            )
+
+            for server, player in players:
+                if server not in serverPlayers:
+                    serverPlayers[server] = []
+                
+                serverPlayers[server].append(player)
+
+
+
+            for server, players in serverPlayers.items():
+                name = SmartServName(statusServer[server])
+                if name == '':
+                    name = server
+                else:
+                    name += f" ({server})"
+
+                embed.add_field(name = name + ":", value = ", ".join(players))
+
+            await user.create_dm()
+            await user.send(embed=embed)
+           
+             
+           
 
     @commands.command(
         help = f"Status",
@@ -113,7 +287,7 @@ class ServerMontiorCog(commands.Cog):
         # It also means the program does not need to fetch the server to see if it is valid or not.
         if address in user.getData("servers"):
             if user.removeValue("servers", address):
-                return await message.send(embed=successMsg(description=f"Successfully removed `{address}` to your servers list!"))
+                return await message.send(embed=successMsg(description=f"Successfully removed `{address}` from your servers list!"))
             else:
                 return await message.send(embed=errorMsg(f"Cannot remove the address from your account!"))
 
@@ -133,6 +307,39 @@ class ServerMontiorCog(commands.Cog):
                 return await message.send(embed=successMsg(description=f"Successfully added `{address}` to your servers list!"))
 
         except (ConnectionRefusedError, ConnectionError, TimeoutError):
-            await message.send(embed=errorMsg(f"The server address `{address}` cannot be fetched!"))
+            return await message.send(embed=errorMsg(f"The server address `{address}` cannot be fetched!"))
 
         return await message.send(embed=errorMsg(f"The command cannot be completed."))
+    
+    @commands.command(
+        help = f"Player Montior",
+        description = PLAYER_MONTIOR_DESC,
+        aliases = ['pm', "playermontior"],
+    )
+    @commands.cooldown(3, 10, commands.BucketType.user)
+    async def addplayer(self, message, ign: str = None):
+        user = User(message.author.id)
+        
+        # Check for server argument
+        if ign is None:
+            return await message.send(embed=errorMsg("You must specify a valid Minecraft username!"))
+
+        # Determine if the server already is on the user list.
+        # If it is, instead of adding it, remove it.
+        # It also means the program does not need to fetch the server to see if it is valid or not.
+        if ign in user.getData("playerMontior"):
+            if user.removeValue("playerMontior", ign):
+                return await message.send(embed=successMsg(description=f"Successfully removed `{ign}` from your players list!"))
+            else:
+                return await message.send(embed=errorMsg(f"Cannot remove that player from your account!"))
+
+        # Max 100
+        if len(user.getData("playerMontior")) >= 100:
+            return await message.send(embed=errorMsg(f"You can only have a maximum of 100 players for your account!"))
+
+
+        if user.appendValue("playerMontior", ign):
+            return await message.send(embed=successMsg(description=f"Successfully added `{ign}` to your players watchlist!"))
+
+        return await message.send(embed=errorMsg(f"The command cannot be completed."))
+    
