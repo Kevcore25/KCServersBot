@@ -43,7 +43,7 @@ class ServerMontiorCog(commands.Cog):
 
         self.lastServerPlayers = {}
 
-    @tasks.loop(seconds=30)
+    @tasks.loop(seconds=20)
     async def fetchServers(self):
         """Fetches servers from users. Uses a more optimized algorithm than the previous"""
         # ASSUMES: Only one player can be in 1 server.
@@ -69,6 +69,11 @@ class ServerMontiorCog(commands.Cog):
                     self.lastServerPlayers[userid] = {}
 
                 if "servers" in data and "playerMontior" in data: 
+                    if "*" in data["playerMontior"]:
+                        allPlayers = true
+                    else:
+                        allPlayers = false
+
                     for server in data['servers']:
                         try:
                             if server not in storedServers:
@@ -85,7 +90,7 @@ class ServerMontiorCog(commands.Cog):
                             # EDGECASE: No players
                             if not (storedServers[server].players.online == 0 or storedServers[server].players.sample is None):
                                 for player in storedServers[server].players.sample:
-                                    if player.name in data['playerMontior']:
+                                    if player.name in data['playerMontior'] or allPlayers:
                                         # Add current players
                                         if player.name not in currentPlayers:
                                             currentPlayers.append((name, player.name))
@@ -124,7 +129,8 @@ class ServerMontiorCog(commands.Cog):
                         # [abc, def] - [abc] = [def]
                         # leave =def
                         for player in set(lastServerPlayers[server]) - set(players):
-                            tempPlayers.append(player + " left")
+                            if player in data['playerMontior'] or allPlayers:
+                                tempPlayers.append(player + " left")
 
                         if len(tempPlayers) > 0:
                             embed.add_field(name = server + ":", value = "\n".join(tempPlayers), inline=False)
