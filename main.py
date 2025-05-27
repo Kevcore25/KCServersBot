@@ -30,7 +30,7 @@ botAIChannel = botsettings['AI Channel']
 serverID = botsettings['Server ID']
 debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.10)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.5.11)")
 
 bot = commands.Bot(
     command_prefix=[prefix], 
@@ -57,38 +57,6 @@ async def botAI():
     user = bot.user.id
 
     u = User(user)
-    data = u.getData()
-
-    credits, unity, gems = data['credits'], data['unity'], data['gems']
-
-    def get_user(user: str):
-        with open(f"users/{user}.json", "r") as f:
-            return json.load(f) 
-    
-        
-    channel = bot.get_channel(botAIChannel)
-
-    # Commands
-    async def run(command, **args):
-        try:
-
-            try:
-                message = await channel.send(f"""[[Main bot]](http://DEBUG/ActiveState:{botactive}/Chance:{round(1 / (106 - botactive * 5) * 100 if botactive > 0 else 0.2, 2)}%) {prefix}{command} {' '.join((f'"{i}"' if ' ' in str(i) else str(i)) for i in args.values())}""")
-            except:
-                printError()
-                message = await channel.send(f"[BOT] {prefix}{command}")
-
-            ctx = await bot.get_context(message)
-            return await ctx.invoke(bot.get_command(command), **args)
-        except:
-            printError()
-
-    # Daily
-    if (time.time() - data["dailyTime"] > 60*60*12) and (random.randint(0,99) == 0):
-        await run('daily')
-    # Hourly
-    if time.time() - data["hourlyTime"] > 60*60:
-        await run('hourly')
 
     # Determine the chance based on botactive
     if botactive > 0:
@@ -101,20 +69,13 @@ async def botAI():
     previousba = botactive
 
     match r:
-      #  case 0: await rob()
-        case 1: 
-            for i in range(2): 
-                if credits >= 0: await run('beg')
-        case 2: 
-            if round(credits / 100) > 0: 
-                await run('crashgame', betAmount = round(credits/100 if credits < 10000 else 100), autoCash = random.randint(11, 20) / 10)
-       # case 3: (await run('beg') for i in range(2))
+        case 1: # LOSE 
+            u.addBalance(credits = -random.randint(0, 100))
+        case 2: # GAIN
+            u.addBalance(credits = calcCredit(random.randint(0, 100), u))
         case _:
             pass
         
-    # When balance is negative, give the bot some starting money
-    if credits <= 0: await run('set', key="credits", value = 100)
-    
 
 # To create a help description, add help="help description" to bot.command()
 # If you do not want the command to be shown in help, add hidden = True
@@ -273,12 +234,17 @@ async def on_ready():
     await bot.add_cog(cmds.RNGNumberGuessCog(bot))
     await bot.add_cog(cmds.WordleGameCog(bot))
     await bot.add_cog(cmds.ServerMontiorCog(bot))
+    lotcog = cmds.LotteryCog(bot)
+    await bot.add_cog(lotcog)
+
+    await lotcog.announceWinningNumbers()
 
     print("Done! Starting bot AI loop...")
 
     # Start Loops
-    await botAI.start()
+    botAI.start()
 
+    print("Started loops!")
 
 @bot.event
 async def on_message(message: discord.Message):

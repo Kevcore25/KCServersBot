@@ -211,7 +211,10 @@ class ServerMontiorCog(commands.Cog):
                 addServer(addr)
 
         else:
-            for address in addresses.replace(" ", "").split(","):
+            if len(addresses.split(",")) > 5:
+                return await message.send(embed=errorMsg(f"You can only fetch up to a maximum of 5 servers at a time!"))
+
+            for address in addresses.split(","):
                 addServer(address)
 
         await message.send(embed=embed)
@@ -263,7 +266,6 @@ class ServerMontiorCog(commands.Cog):
         description = PLAYER_MONTIOR_DESC,
         aliases = ['pm', "playermontior", "removeplayer"], # Add remove player alias because it DOES remove the player
     )
-    @commands.cooldown(3, 10, commands.BucketType.user)
     async def addplayer(self, message, ign: str = None):
         user = User(message.author.id)
         

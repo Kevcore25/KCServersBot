@@ -13,6 +13,7 @@ from cmds.questionsquiz import QuestionsQuiz
 from cmds.mcguessinggames import MCGuessingGames
 from cmds.shop import ShopCog
 from cmds.cardgames import CardGames
+from cmds.lottery import LotteryCog
 
 from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog

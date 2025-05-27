@@ -24,3 +24,4 @@ cmds/__pycache__/*
 shopstock.json
 commandLogs.txt
 *.pyc
+lottery/

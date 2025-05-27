@@ -795,4 +795,88 @@ def formatParamsMulti(command: discord.ext.commands.Command, prefix="!") -> str:
 
 def isDM(ctx: discord.ext.commands.Context):
     return isinstance(ctx.channel, discord.channel.DMChannel)
+
+def mkDirNotExist(pathname: str, path = None) -> bool:
+    if path is None:
+        path = os.getcwd()
+
+    if pathname not in os.listdir(path):
+        os.mkdir(pathname)
+        return True
+    
+    return False
+
+class JSONIO:
+    """Custom class for JSON IO-related things"""
+    JSONCache: dict | list | None = None
+    refreshCache = False
+
+    def __init__(self, filename: str, cache: bool = False):
+        self.filename = filename
+        self.checkIfExists()
+
+        if cache:
+            self.__cacheJSON()
+
+    def checkIfExists(self):
+        if not os.path.isfile(self.filename):
+            print(f"WARNING: JSON file {self.filename} is not in path. A new file is created")
+
+            with open(self.filename, 'x') as f:
+                f.write("{}")
+
+            return True
+        else:
+            return False
+
+    def __cacheJSON(self, data: dict | list): 
+        # Cache
+        self.JSONCache = data
+        self.refreshCache = False
+
+    def writeJSON(self, data: dict | list, indent: int = None):
+        with open(self.filename, 'w') as f:
+            json.dump(data, f, indent=indent)
         
+        self.refreshCache = True
+    
+    def readJSON(self, cache: bool = False) -> dict | list:
+        with open(self.filename, 'r') as f:
+            data = json.load(f)
+        
+        if cache:
+            self.__cacheJSON(data)
+        
+        return data
+    
+    def readCache(self) -> dict | list:
+        """Reads the data in cache. If there is no cache, read it and cache it first before returning"""
+
+        if self.JSONCache is None or self.refreshCache:
+            return self.readJSON(cache=True)
+        else:
+            return self.JSONCache
+  
+    def returnData(self) -> dict | list:
+        if self.JSONCache:
+            return self.JSONCache
+        else:
+            return self.readJSON()       
+        
+    def writeKey(self, key: str, value, indent: int = None):
+        data = self.returnData()
+        data[key] = value
+        return self.writeJSON(data)
+        
+
+    def readKey(self, key: str):
+        return self.returnData().get(key)
+
+
+    def __str__(self):
+        return json.dumps(self.returnData())
+
+    def deleteKey(self, key: str):
+        data = self.returnData()
+        del data[key]
+        return self.writeJSON(data)
