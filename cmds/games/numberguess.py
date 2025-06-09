@@ -83,7 +83,7 @@ class RNGNumberGuessCog(commands.Cog):
         description = """Choose a difficulty! Options are easy, medium, hard, and extreme.\nYou will have certain attempts to guess the number. If you are correct, you will earn Credits based on the difficulty you selected\nEarn bonus Credits by having more attempts.\nPlaying this game is **free** but you can only play it once every hour.\n-# This game can either be played by starting off risky (being right = higher win chance) or safer (using a modified *binary search* method for most consistency)""",
         aliases = ["rnggg", "rng", "guessinggame", "gg"]
     )
-    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rngguessinggame(self, message: discord.Message, difficulty: str = "normal"):
         u = User(message.author.id)
 
