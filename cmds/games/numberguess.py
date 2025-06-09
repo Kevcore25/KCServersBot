@@ -139,10 +139,90 @@ class RNGNumberGuessCog(commands.Cog):
                     await edit(f"Your guess of `{userInput}` was `{game.hint(userInput)}`")
 
             except (TimeoutError, asyncio.exceptions.TimeoutError):
-                message.send(f"{message.author.mention}, your RNG Guessing Game expired after 5 minutes of inactivity!")
+                await message.send(f"{message.author.mention}, your RNG Guessing Game expired after 5 minutes of inactivity!")
                 return # Fix potential bug
             except ValueError:
                 await edit("Your guess must be an integer!")
 
         if game.determineLose():
             await edit(f"You lost! I was thinking of `{game.answer}`")
+
+    @commands.command(
+        help = "RNG Guessing Survery",
+        description = """Complete a survey pertaining to the RNG Guessing Game to earn Unity!\nReminder: Unity converts into Credits automatically when you hit maximum Unity!\n"""+ """
+Purpose: Ask the user for their opinion on whether a number is a warm, cold, or hot in different scenarios.
+After a bunch of data collection, this is then fed into an analysis for the actual RNG Guessing Game.
+
+The survey consists of 2 random values within the accepted ranges. One of which is the actual answer and the other is the guess.
+The user asks whether it is hot, warm, or cold. 
+
+Accepted ranges are either:
+1. 1-10
+2. 1-20
+3. 1-30
+4: 1-40
+In other definitions, it is (1 to (10 * randint(1, 4)))
+""",
+        aliases = ["rngsurvey", "rngs", "survey"]
+    )
+    @commands.cooldown(20, 3600, commands.BucketType.user)
+    @commands.cooldown(100, 3600, commands.BucketType.channel)
+    async def rnggamesurvey(self, message: discord.Message):
+        u = User(message.author.id)
+
+        for i in range(100):
+                # Get range
+                rmax = 10 * random.randint(1, 4)
+
+                # Guess number
+                guessNumber = random.randint(1, rmax)
+
+                # Answer
+                answer = random.randint(1, rmax)
+                
+                # Regenerate if it is too close
+                if abs(answer - guessNumber) > 1:
+                    break
+
+        # Ask user
+        await message.send(embed = basicMsg(
+            "RNG survey",
+            "Please determine your choice of a hint for the following RNG Game.\nReply with either `hot`, `warm`, or `cold`.\nPlease be sincere with your answer; your survey is collected to improve the RNG Guessing Game hints\nFor participating in this survey, you will gain `+0.5 Unity` and you can do this survey up to 20 times every hour.\n\n" + \
+                f"In a game with a range of `1 to {rmax}`, choose what hint to give if:\n" + \
+                f"The answer is `{answer}`,\nand the guess is `{guessNumber}`" 
+        ))
+        try:
+            msg = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
+
+            ui = msg.content.lower()
+
+            if ui == "exit":
+                await message.send("Survey Exited.") 
+            elif ui in ['hot', 'cold', 'warm']:
+                # Determine if file exists
+                if not os.path.exists("rngsurvey.json"):
+                    with open('rngsurvey.json', 'x') as f:
+                        f.write("[]")
+
+                with open('rngsurvey.json', 'r') as f:
+                    data: list = json.load(f)
+                
+                data.append(
+                    [rmax, guessNumber, answer, ui]
+                )
+                
+                with open('rngsurvey.json', 'w') as f:
+                    json.dump(data, f)
+
+                u.addBalance(unity = 0.5)
+
+                await message.send(embed= successMsg(
+                    description = "Thank you for participating in this survey!\nYou gained `+0.5 Unity`!\nDo more if interested!"
+                )) 
+            else:
+                await message.send(embed = errorMsg(
+                    "Not a valid hint!"
+                ))
+        except (TimeoutError, asyncio.exceptions.TimeoutError):
+            await message.send(f"{message.author.mention}, your survey expired after 5 minutes of inactivity!")
+            return # Fix potential bug
