@@ -87,23 +87,28 @@ class WordleGameCog(commands.Cog):
         game = WordleGame()
 
         def getRwd():
-            return calcCredit(10 + game.attempts, u)
+            return calcCredit((10 + game.attempts) * 0.85, u)
 
         # Send init message
         desc = lambda text: f"Type a word! If it is correct, you will earn `{getRwd()} Credits`.\nAttempts remaining: `{game.attempts}`\n\n{game.getAnswers()}\n\n{text}"
-
-        msg = await message.send(embed = discord.Embed(
+        
+        embed = discord.Embed(
             title = "Wordle",
             description = desc(""),
-            color=0xFF00FF
-        ))
+            color = 0xFF00FF
+        )
+        embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed")
+
+        msg = await message.send(embed = embed)
 
         async def edit(text: str): 
-            await msg.edit(embed = discord.Embed(
+            embed = discord.Embed(
                 title = "Wordle",
                 description = desc(text),
                 color = 0xFF00FF
-            ))
+            )
+            embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed")
+            await msg.edit(embed = embed)
 
         # Get words
         with open("5lwords.json", "r") as f:
@@ -139,7 +144,7 @@ class WordleGameCog(commands.Cog):
                     await edit(f"")
 
             except (TimeoutError, asyncio.exceptions.TimeoutError):
-                message.send(f"{message.author.mention}, your RNG Guessing Game expired after 5 minutes of inactivity!")
+                await message.send(f"{message.author.mention}, your Wordle Game expired after 5 minutes of inactivity!")
                 return # Fix potential bug
             except ValueError:
                 await edit("Your guess must be an integer!")
