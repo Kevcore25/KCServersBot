@@ -30,7 +30,7 @@ botAIChannel = botsettings['AI Channel']
 serverID = botsettings['Server ID']
 debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.6.0)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.7.0)")
 
 bot = commands.Bot(
     command_prefix=[prefix], 

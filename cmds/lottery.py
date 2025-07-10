@@ -124,9 +124,7 @@ class Lottery(LotteryIO):
         # Return ID but not the actual one
         return randomID
 
-
-
-        
+lotterySaleUsers = []
 
 class LotteryCog(commands.Cog):
     def __init__(self, bot: discord.Client):
@@ -163,11 +161,11 @@ class LotteryCog(commands.Cog):
 
 
     @commands.command(
-        help = f"Buy a lottery ticket!",
+        help = f"Buy a lottery ticket!\nSpecifying 'random' will generate random lottery numbers",
         aliases = ['buylottery']
     )
     @commands.cooldown(5, 10, commands.BucketType.user)
-    async def buyticket(self, message):
+    async def buyticket(self, message, arg: str = 'none'):
         u = User(message.author.id)
 
         msg = await message.send(embed=basicMsg(
@@ -176,26 +174,43 @@ class LotteryCog(commands.Cog):
         ))
 
         try:
-            ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
-            userInput = ui.content
+            if arg.lower() in ('r', 'random', 'ran', 'gen', 'generate', ' rng'):
+                digits = list(range(1, 40 + 1))
+                numbers = []
 
-            numbers = userInput.replace(", "," ").replace(","," ").split(" ")
-            
+                for i in range(7): # Choose 7 numbers
+                    num = random.choice(digits)
+                    numbers.append(num)
+                    digits.remove(num)
+
+            else:
+                ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
+                userInput = ui.content
+
+                numbers = userInput.replace(", "," ").replace(","," ").split(" ")
+                
             if len(numbers) == 7:
                 # Valid 
                 nums = []
                 for n in numbers:
                     nums.append(int(n))
 
+                cost = lotteryCost
+
+                # 50% less for FIRST lottery
+                if u.ID not in lotterySaleUsers:
+                    lotterySaleUsers.append(u.ID)
+                    cost /= 2
+
                 # Determine if the user can buy it anyway
-                if u.getData("credits") >= lotteryCost:
-                    u.addBalance(credits = -lotteryCost)
+                if u.getData("credits") >= cost:
+                    u.addBalance(credits = -cost)
                     
                     # Create
                     ticketID = self.lot.create_lottery_id(nums)
 
                     await msg.edit(embed=successMsg(
-                        description=f"Bought a lottery ticket for `{lotteryCost} Credits`\nTicket ID: `{ticketID}`"
+                        description=f"Bought a lottery ticket for `{cost} Credits`\nYour numbers are: `{', '.join(str(i) for i in numbers)}`\nTicket ID: `{ticketID}`"
                     ))
                 else:
                     await msg.edit(embed=errorMsg(
@@ -222,8 +237,6 @@ class LotteryCog(commands.Cog):
 
         actualID = str(ticketID) + "|" + str(self.lot.getDrawNum())
 
-        print(actualID)
-
         if self.lot.ID_exists(ticketID):
             numbers = self.lot.getLotteryID(actualID)
 
@@ -231,6 +244,9 @@ class LotteryCog(commands.Cog):
             self.lot.idsIO.deleteKey(actualID)
 
             credits = self.lot.get_credits_amount(numbers)
+
+            if u.getData('job') == "Gambler":
+                credits = round(credits * 1.05, 3)
 
             u.addBalance(credits)
 

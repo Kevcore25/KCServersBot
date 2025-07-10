@@ -26,7 +26,7 @@ class GambleGames(commands.Cog):
             with open('users/' + file, 'r') as f:
                 totalCredits += json.load(f)['credits']
 
-        winAmount = round((totalCredits/4000 + 1.5) * random.randint(5,15)/7 * calcInflation(), 2)
+        winAmount = round((totalCredits/1000 + 1.5) * random.randint(5,15)/7 * calcInflation(), 2)
 
         winAmount = calcWPAmount(user, winAmount, generation=1)
 
@@ -49,7 +49,7 @@ class GambleGames(commands.Cog):
                 embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nYou did not have anymore Credits, so you lost `5 Unity`.", color=0xFF0000)
 
             else:
-                loseAmount = round(winAmount * 1.75, 3)
+                loseAmount = round((totalCredits/1000 + 1.5) * 10/7 * calcInflation(), 2)
 
                 user.addBalance(credits = -loseAmount, unity=-0.1)
 

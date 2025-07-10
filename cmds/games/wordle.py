@@ -69,6 +69,8 @@ class WordleGame:
         for word in self.data:
             temp.append(" ".join(str(i) for i in word))
         return "\n".join(temp)
+    
+dim = DiminishRewards(5, 0.5, 3600)
 
 class WordleGameCog(commands.Cog):
     def __init__(self, bot):
@@ -77,20 +79,21 @@ class WordleGameCog(commands.Cog):
 
     @commands.command(
         help = "Wordle Game",
-        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.""",
+        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining""",
     )
-    @commands.cooldown(1, 3600, commands.BucketType.user)
     async def wordle(self, message: discord.Message):
         u = User(message.author.id)
+
+        dim.add_use(u)
 
         # Create a new instance of the game
         game = WordleGame()
 
         def getRwd():
-            return calcCredit((10 + game.attempts) * 0.35, u)
+            return round(dim.returnAmount() * (1 + game.attempts / 10), 3)
 
         # Send init message
-        desc = lambda text: f"Type a word! If it is correct, you will earn `{getRwd()} Credits`.\nAttempts remaining: `{game.attempts}`\n\n{game.getAnswers()}\n\n{text}"
+        desc = lambda text: f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\n\n{game.getAnswers()}\n\n{text}"
         
         embed = discord.Embed(
             title = "Wordle",

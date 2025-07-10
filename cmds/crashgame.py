@@ -51,6 +51,7 @@ class CrashGameCog(commands.Cog):
             return
     
         betAmount = round(float(betAmount), 2)
+
         autoCash = float(autoCash)
         
         if betAmount < 0 or betAmount > user.getData('credits'):
@@ -126,10 +127,20 @@ class CrashGameCog(commands.Cog):
                 if not cashedOut:
                     
                     won = cg.cash_out(betAmount)
-                    user.addBalance(credits=won, unity=1)
                     cashedOut = True
 
-                    await message.send(f"Won `{won} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")
+                    if user.getData('job') == "Gambler":
+                        if betAmount >= 10:
+                            user.setValue('lastCG', cg.multiplier)
+                        # Gambler bonus
+                        if cg.multiplier >= 3:
+                            won *= 1.1
+                        elif cg.multiplier >= 2:
+                            won *= 1.05
+
+                    user.addBalance(credits=won, unity=1)
+
+                    await message.send(f"Won `{numStr(won)} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")
 
                 if str(userMsg[0].emoji) == "🛑":
                     # plt.title(f"Round {cg.round} | Multiplier: {r['multiplier']}x (Stopped by user)")
@@ -142,8 +153,18 @@ class CrashGameCog(commands.Cog):
 
             if autoCash <= float(r['multiplier']) and not cashedOut and autoCash != 0:
                 won = cg.cash_out(betAmount)
-                user.addBalance(credits=won)
                 cashedOut = True
+
+                if user.getData('job') == "Gambler":
+                    if betAmount >= 10:
+                        user.setValue('lastCG', cg.multiplier)
+                    # Gambler bonus
+                    if cg.multiplier >= 3:
+                        won *= 1.1
+                    elif cg.multiplier >= 2:
+                        won *= 1.05
+
+                user.addBalance(credits=won)
 
                 await message.send(f"Won {won}! (Autocashed)")             
 
@@ -152,8 +173,18 @@ class CrashGameCog(commands.Cog):
                 # Precog
                 if user.get_item("Precognition") and not cashedOut:
                     won = cg.cash_out(betAmount)
-                    user.addBalance(credits=won)
                     cashedOut = True
+
+                    if user.getData('job') == "Gambler":
+                        if betAmount >= 10:
+                            user.setValue('lastCG', cg.multiplier)
+                        # Gambler bonus
+                        if cg.multiplier >= 3:
+                            won *= 1.1
+                        elif cg.multiplier >= 2:
+                            won *= 1.05
+                            
+                    user.addBalance(credits=won)
 
                     await message.send(f"**Precognition**: Won `{won} Credits`! (Actual gained: `{numStr(won - betAmount)} Credits`)")             
 

@@ -140,7 +140,17 @@ class TimeIncomes(commands.Cog):
 
                     # Wealth Power scaling
                     creditGain = calcWPAmount(user, creditGain, generation=3)
-                        
+                    
+                    # Bonus for gambler
+                    if currentJob == "Gambler":
+                        lastCG = user.getData("lastCG")
+
+                        if lastCG > 10:
+                            lastCG = 10
+
+                        creditGain = round(creditGain * lastCG, 3)
+                        user.setValue("lastCG", 1)
+
                     user.addBalance(credits=creditGain, unity=unityGain)
 
                     embed = discord.Embed(

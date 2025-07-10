@@ -880,3 +880,66 @@ class JSONIO:
         data = self.returnData()
         del data[key]
         return self.writeJSON(data)
+
+
+class DiminishRewards:
+    def __init__(self, initialReward: int, minimumReward: int, reset: int, gen: int = 1):
+        """
+        Create a diminishing reward object.
+
+        @param initialReward: The initial reward gained
+        @param minimumReward: The minimum reward gained
+        @param reset: Amount of seconds before the diminishing returns reset
+        @param gen: The generation to use. 1 is a 1/x graph. 
+        """
+
+        self.rewardAmount = initialReward
+        self.resetDuration = reset
+        self.minReward = minimumReward
+
+        self.users = {}
+
+    def add_user(self, user: User):
+        """
+        Adds a user. You may directly use the reward method instead.
+        This also resets the user's diminishing rewards.
+        """
+
+        self.users[user.ID] = [0, int(time.time())]
+
+    def returnAmount(self, user: User) -> float:
+        """
+        Returns the amount rewarded for the user.
+        It counts for credit earnings.
+        """
+
+        # Find if user exists
+        if user.ID not in self.users:
+            self.add_user(user)
+            self.users[user.ID][0] += 1 # Prevent /0
+
+        # Get duration
+        if time.time() - self.users[user.ID][1] > self.resetDuration:
+            self.add_user(user)
+
+        # Reward
+        amount = self.rewardAmount / self.users[user.ID][0]
+
+        return round(max(calcCredit(self.minReward, user), calcCredit(amount, user)), 3)
+    
+    def reward(self, user: User) -> float:
+        """
+        Rewards a user with diminishing returns and returns the amount rewarded.
+        """
+
+        amount = self.returnAmount(user)
+        user.addBalance(credits = amount)
+
+        return amount
+    
+    def add_use(self, user: User):
+        if user.ID not in self.users:
+            self.add_user(user)
+        
+        self.users[user.ID][0] += 1
+        print(self.users)

@@ -24,7 +24,9 @@ userTemplate = {
     "settings": {},
 
     "servers": [],
-    "playerMontior": []
+    "playerMontior": [],
+
+    "lastCG": 1
 }
 
 botID = 0

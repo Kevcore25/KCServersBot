@@ -7,7 +7,7 @@ class RNGNumberGame:
     min: int
     max: int
     attempts: int
-    rewardMulitplier: float
+    rewardMultiplier: float
     answer: int
     
     baseReward: float = 1 # Base reward for guessing the number correctly
@@ -15,30 +15,27 @@ class RNGNumberGame:
     warmThreshold: float = 0.25 
     hotThreshold: float = 0.1
 
-    def __init__(self, difficulty: str): 
+    def __init__(self, difficulty: str):
+        self.min = 1
+
         match difficulty.lower():
             case "easy":
-                self.min = 1
                 self.max = 10
                 self.attempts = 7
                 self.rewardMultiplier = 1
             case "medium" | "normal":
-                self.min = 1
                 self.max = 20
                 self.attempts = 5
                 self.rewardMultiplier = 2.5
             case "hard":
-                self.min = 1
                 self.max = 30
                 self.attempts = 5
                 self.rewardMultiplier = 5
             case "extreme" | "insane":
-                self.min = 1
                 self.max = 40
                 self.attempts = 4
                 self.rewardMultiplier = 10
             case "impossible":
-                self.min = 0
                 self.max = 10000
                 self.attempts = 1
                 self.rewardMultiplier = 1000
@@ -72,29 +69,29 @@ class RNGNumberGame:
         else:
             return "Cold"
         
+dim = DiminishRewards(1, 0.1, 7200)
 
 class RNGNumberGuessCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-
     @commands.command(
         help = "RNG Guessing Game",
-        description = """Choose a difficulty! Options are easy, medium, hard, and extreme.\nYou will have certain attempts to guess the number. If you are correct, you will earn Credits based on the difficulty you selected\nEarn bonus Credits by having more attempts.\nPlaying this game is **free** but you can only play it once every hour.\n-# This game can either be played by starting off risky (being right = higher win chance) or safer (using a modified *binary search* method for most consistency)""",
+        description = """Choose a difficulty! Options are easy, medium, hard, and extreme.\nYou will have certain attempts to guess the number. If you are correct, you will earn Credits based on the difficulty you selected\nEarn bonus Credits by having more attempts.\nPlaying this game is **free** but you can only play it once every hour.\n-# This game can either be played by starting off risky (being right = higher win chance) or safer (using a modified *binary search* method for most consistency)\nRewards give diminishing returns which reset every 2h""",
         aliases = ["rnggg", "rng", "guessinggame", "gg"]
     )
-    @commands.cooldown(1, 3600, commands.BucketType.user)
     async def rngguessinggame(self, message: discord.Message, difficulty: str = "normal"):
         u = User(message.author.id)
+        dim.add_use(u)
 
         # Create a new instance of the game
         game = RNGNumberGame(difficulty)
 
         def getRwd():
-            return calcCredit(game.getReward(), u)
+            return round(dim.returnAmount(u) * game.rewardMultiplier * (1 + game.attempts / 10), 3)
 
         # Send init message
-        desc = lambda text: f"Type a number! If it is correct, you will earn `{getRwd()} Credits`.\nThe number I am thinking of is between `{game.min}` and `{game.max}`\nAttempts remaining: `{game.attempts}`\n\n{text}"
+        desc = lambda text: f"Type a number! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nThe number I am thinking of is between `{game.min}` and `{game.max}`\nAttempts remaining: `{game.attempts}`\n\n{text}"
 
         msg = await message.send(embed = discord.Embed(
             title = "RNG Guessing Game",
@@ -148,7 +145,7 @@ class RNGNumberGuessCog(commands.Cog):
             await edit(f"You lost! I was thinking of `{game.answer}`")
 
     @commands.command(
-        help = "RNG Guessing Survery",
+        help = "RNG Guessing Survey",
         description = """Complete a survey pertaining to the RNG Guessing Game to earn Unity!\nReminder: Unity converts into Credits automatically when you hit maximum Unity!\n"""+ """
 Purpose: Ask the user for their opinion on whether a number is a warm, cold, or hot in different scenarios.
 After a bunch of data collection, this is then fed into an analysis for the actual RNG Guessing Game.
@@ -186,7 +183,7 @@ In other definitions, it is (1 to (10 * randint(1, 4)))
 
         # Ask user
         await message.send(embed = basicMsg(
-            "RNG survey",
+            "RNG Survey",
             "Please determine your choice of a hint for the following RNG Game.\nReply with either `hot`, `warm`, or `cold`.\nPlease be sincere with your answer; your survey is collected to improve the RNG Guessing Game hints\nFor participating in this survey, you will gain `+0.5 Unity` and you can do this survey up to 20 times every hour.\n\n" + \
                 f"In a game with a range of `1 to {rmax}`, choose what hint to give if:\n" + \
                 f"The answer is `{answer}`,\nand the guess is `{guessNumber}`" 
@@ -220,9 +217,7 @@ In other definitions, it is (1 to (10 * randint(1, 4)))
                     description = "Thank you for participating in this survey!\nYou gained `+0.5 Unity`!\nDo more if interested!"
                 )) 
             else:
-                await message.send(embed = errorMsg(
-                    "Not a valid hint!"
-                ))
+                await message.send(embed = errorMsg("Not a valid hint!"))
+
         except (TimeoutError, asyncio.exceptions.TimeoutError):
             await message.send(f"{message.author.mention}, your survey expired after 5 minutes of inactivity!")
-            return # Fix potential bug
