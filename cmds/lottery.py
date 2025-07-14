@@ -23,13 +23,16 @@ The ticket ID is only valid for the draw number it is registered to, so you cann
 
 **Please redeem the ticket the next day or you will lose all potential rewards!**
 Depending on how many numbers you got right, you will gain `Credits`:
-1 correct: `{lotteryCost * 0.75} Credits`
-2 correct: `{lotteryCost * 2} Credits`
-3 correct: `{lotteryCost * 5} Credits`
-4 correct: `{lotteryCost * 10} Credits`
-5 correct: `{lotteryCost * 50} Credits`
+1 correct: `{lotteryCost * 0.5} Credits`
+2 correct: `{lotteryCost} Credits`
+3 correct: `{lotteryCost * 2} Credits`
+4 correct: `{lotteryCost * 5} Credits`
+5 correct: `{lotteryCost * 10} Credits`
 6 correct: `{lotteryCost * 100} Credits`
 7 correct: `{lotteryCost * 1000} Credits`
+-# Estimated profit*: 37% with 5 Credits, -31% with 10 Credits
+-# Or for Gambler job*: 44% with 5, -28% with 10
+-# *From a simulation of >10M attempts. Expected value is ~6.8 or ~7.2 for Gambler job
 """
 def fname(filename: str) -> str:
     return os.path.join("lottery", filename)
@@ -104,11 +107,11 @@ class Lottery(LotteryIO):
         # Grant Credits
         match matches:
             case 0: return 0
-            case 1: return lotteryCost * 0.75
-            case 2: return lotteryCost * 2
-            case 3: return lotteryCost * 5 
-            case 4: return lotteryCost * 10
-            case 5: return lotteryCost * 50
+            case 1: return lotteryCost * 0.5
+            case 2: return lotteryCost 
+            case 3: return lotteryCost * 2 
+            case 4: return lotteryCost * 5
+            case 5: return lotteryCost * 10
             case 6: return lotteryCost * 100
             case 7: return lotteryCost * 1000
             case _: return lotteryCost

@@ -23,13 +23,6 @@ If you rolled the same as your target, a reroll is done.
 By default with no upgrades or whatsoever, your Rob Attack has a level of 5, and your Rob Defense has a level of 5. This means that while robbing someone, you can roll up to a number of 5.
 Certain actions and job professions can increase your Rob Attack and Rob Defense levels.
 
-While robbing, the difference between the amount of money you have increases the target's Rob Defenses by a certain amount. 
-The equation of this additional Defense gain is modelled by the equations: 
-- _`(Target's RDL) * ((Target Balance) / (User Balance) / 1.5))`_
-- _`(Target's RDL) * ((User Balance) / (Target Balance) / 1.75)`_
-The highest value of the two equations will be used as the additional Defense gain.
-The additional Defense gain cannot be below 1 and the final Defense Level will be rounded to the nearest integer.
-
 Also when failing a rob, you gain an *Insight*, increasing your chances of suceeding at the cost of your rob defenses decreasing.
 Insights can stack up to 3 times and reset when succeeding a rob or being successfully robbed by another.
 
@@ -105,22 +98,6 @@ A successful rob increases Unity by 0.25
         userRAL = calculateRobAttack(message.author)
         targetRDL = calculateRobDefense(target)
 
-        # Additional target RDL
-        try:
-            diff = ((targetBal / userBal) / 1.5) ** 2
-        except ZeroDivisionError:
-            diff = 10001
-        try:
-            diff2 = ((userBal / targetBal) / 1.75) ** 2
-        except ZeroDivisionError:
-            diff2 = 10001
-
-        # if higher, use diff2
-        if diff2 > diff: diff = diff2
-
-        if diff < 1: diff = 1
-
-        targetRDL *= diff
         targetRDL = round(targetRDL)
 
         # Warn
@@ -257,8 +234,6 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
 **{winTxt}**""",
                 color = 0xFF00FF,
             )
-            if diff > 1:
-                em.set_footer(text = f"Target obtained a +{round((diff-1) * 100)}% in Rob Defense due to differences in Credit balance")
 
             await msg.edit(embed=em)
 

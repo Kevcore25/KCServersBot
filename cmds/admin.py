@@ -229,7 +229,7 @@ Average Score: {avgscore}""")
             data['log'] = 0
             data['rob'] = {
                 "atk": 0,
-                "def": 10, 
+                "def": 100, 
                 "insights": 0,
                 "won/lost": [0, 0],
                 "attackedTime": 0,
