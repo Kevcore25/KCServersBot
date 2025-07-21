@@ -38,7 +38,7 @@ class TimeIncomes(commands.Cog):
 
     @commands.command(
         help = f"Get daily reward",
-        description = """The daily reward gives an amount of Unity as well as Credits that scales with your wealth power (Gen 2).\nThe more wealth power you have, the less you earn.\nThe command be ran every 12 hours"""
+        description = """The daily reward gives 5 Unity as well as 10 Credits that scales with your wealth power (Gen 2).\nThe more wealth power you have, the less you earn.\nThe command be ran every 12 hours\nThere is a chance of failing a daily reward, which will result in a loss of 10 Credits (gen 4 WP scaling) but gaining 5 Unity"""
     )
     async def daily(self, message):
         user = User(message.author.id)
@@ -49,7 +49,7 @@ class TimeIncomes(commands.Cog):
             return
 
 
-        amount = calcWPAmount(user, 20, generation=2)
+        amount = calcWPAmount(user, 10, generation=2)
         unityAmt = 5
 
 
@@ -68,8 +68,8 @@ class TimeIncomes(commands.Cog):
         else:
             user.setValue('dailyTime', int(time.time()) + 3720)
             user.saveAccount()
-            credLost = calcWealthPower(user) / 20
-            embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(credLost)} Credits` but gain `{numStr(unityAmt * 3 + 1)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
+            credLost = calcWPAmount(user, 10, generation=4)
+            embed = discord.Embed(title="Daily failure",description=f"Where does the daily money come from?\nWhen you run the daily command, you actually take money away from the bot. Credits do not get created typically unless it is from the bot itself; you take the bot's money instead\nToday, the bot has decided to **rob** you instead of letting you steal it, making you lose `{numStr(credLost)} Credits` but gain `{numStr(unityAmt)} Unity`.\nThe daily CD is also increased by 10%", color=0xFF0000)
             user.addBalance(
                 credits=-credLost,
                 unity=unityAmt*3 + 1
@@ -118,7 +118,7 @@ class TimeIncomes(commands.Cog):
                 fireamt = int(-user.getData('unity')/5)
                 if fireamt < 0: fireamt = 1
                 for i in range(fireamt):
-                    if random.randint(0, 19) == 0:
+                    if random.randint(0, 19) == 0 and currentJob != "Pacifist":
                         # Fired
                         unityLost = calcWPAmount(user, 5, generation=3)
 

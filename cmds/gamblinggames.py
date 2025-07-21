@@ -10,12 +10,11 @@ class GambleGames(commands.Cog):
 
     @commands.command(
         help = f"Beg for money",
-        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/4000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power (Gen 1), where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks)\nIf you got caught while in debt, you will have to pay an additional `5 Unity` as a fine.\nIf you get caught while not in debt, you lose `0.1 Unity`\nHowever, if someone donated money to you, you gain `0.05 Unity`"""
+        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/1000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power (Gen 3), where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks or Wealth Power)\nIf you got caught while in debt, you will have to pay an additional `5 Unity` as a fine.\nIf you get caught while not in debt, you lose `0.1 Unity`\nHowever, if someone donated money to you, you gain `0.05 Unity`"""
     )
     @commands.cooldown(3, 30, commands.BucketType.user) 
     async def beg(self, message, arg=None):
         user = User(message.author.id)
-        
 
         usersDir = os.listdir('users')
 
@@ -28,7 +27,7 @@ class GambleGames(commands.Cog):
 
         winAmount = round((totalCredits/1000 + 1.5) * random.randint(5,15)/7 * calcInflation(), 2)
 
-        winAmount = calcWPAmount(user, winAmount, generation=1)
+        winAmount = calcWPAmount(user, winAmount, generation=2)
 
         # Popularity item
         if user.item_exists("Popularity"):

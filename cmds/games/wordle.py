@@ -90,7 +90,7 @@ class WordleGameCog(commands.Cog):
         game = WordleGame()
 
         def getRwd():
-            return round(dim.returnAmount() * (1 + game.attempts / 10), 3)
+            return round(dim.returnAmount(u) * (1 + game.attempts / 10), 3)
 
         # Send init message
         desc = lambda text: f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\n\n{game.getAnswers()}\n\n{text}"

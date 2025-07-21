@@ -88,7 +88,7 @@ class CrashGameCog(commands.Cog):
             file = discord.File(f"temp/cg{randomNum}.png", filename=f"cg{randomNum}.png")
             embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description="""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.""")        
             embed.set_image(url=f"attachment://cg{randomNum}.png")
-            embed.set_footer(text="The only game you can earn so much?!")
+            embed.set_footer(text=f"The chance of getting to this round is {round(0.9 ** cg.round * 100, 1)}%")
 
             await msg.edit(attachments=[file], embed=embed)
 

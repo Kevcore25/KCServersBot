@@ -137,7 +137,7 @@ class User:
         """Adds an item"""
         items: dict = self.getData('items')
 
-        exp = int(time.time() + expiry) if item['expires'] != -1 else -1,
+        exp = int(time.time() + expiry) if expiry != -1 else -1,
 
         if item in items:
             items[item] = {

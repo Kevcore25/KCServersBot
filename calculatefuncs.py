@@ -228,9 +228,9 @@ def calcWPAmount(u: User, amount: float, generation: int = 2, acc: int = 3) -> f
 
     match generation:
         case 1:
-            return round(amount / (1 + calcWealthPower(u, decimal=True)), acc)
+            return round(amount / calcWealthPower(u, decimal=True), acc)
         case 2:
-            wp = calcWealthPower(u, decimal=True)
+            wp = calcWealthPower(u, decimal=True) - 1
             if wp < 1: wp = 1
             return round(amount / wp, acc)
         case 3:
@@ -662,7 +662,7 @@ def calculateRobDefense(member: discord.Member) -> int:
     * Already robbed that target within 5 minutes: Target Defense Rob +1
     * Target has `Lock`: Target Defense Rob +2
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
-    * Police job: Rob Defense +3
+    * Police / Pacifist job: Rob Defense +3
     """
     # Create user obj
     user = User(member.id)
@@ -687,12 +687,8 @@ def calculateRobDefense(member: discord.Member) -> int:
     
     # Job roles
     match user.getData('job'):
-        case "Police":
+        case "Police" | "Pacifist":
             rdl += 3
-        case "Terrorist":
-            rdl -= 3
-    
-
 
     # Insights
     rdl -= rob['insights']
@@ -707,6 +703,7 @@ def calculateRobAttack(member: discord.Member) -> int:
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
     * You have `Rob Stealth`: Rob Attack +2
     * Robber job: Rob Attack +2
+    * Pacifist job: Rob Attack -2
     """
 
     # Create user obj
@@ -725,10 +722,8 @@ def calculateRobAttack(member: discord.Member) -> int:
     match user.getData('job'):
         case "Robber":
             ral += 2
-        case "Terrorist":
-            ral += 8
-    
-
+        case "Pacifist":
+            ral -= 2
 
     # Insights
     ral += rob['insights']
@@ -914,13 +909,9 @@ class DiminishRewards:
         """
 
         # Find if user exists
-        if user.ID not in self.users:
+        if user.ID not in self.users or time.time() - self.users[user.ID][1] > self.resetDuration:
             self.add_user(user)
             self.users[user.ID][0] += 1 # Prevent /0
-
-        # Get duration
-        if time.time() - self.users[user.ID][1] > self.resetDuration:
-            self.add_user(user)
 
         # Reward
         amount = self.rewardAmount / self.users[user.ID][0]

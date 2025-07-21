@@ -19,3 +19,5 @@ from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog
 
 from cmds.servermontior import ServerMontiorCog
+
+from cmds.events import EventsCog

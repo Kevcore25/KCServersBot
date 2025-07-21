@@ -30,7 +30,7 @@ botAIChannel = botsettings['AI Channel']
 serverID = botsettings['Server ID']
 debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.7.0)")
+activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.7.2)")
 
 bot = commands.Bot(
     command_prefix=[prefix], 
@@ -47,12 +47,11 @@ if "shopstock.json" not in os.listdir():
 # Remomve help command
 bot.remove_command('help')
 
-previousba = 0
 botactive = 0
 
 @tasks.loop(seconds = 3)
 async def botAI():
-    global botactive, previousba
+    global botactive
 
     user = bot.user.id
 
@@ -66,15 +65,11 @@ async def botAI():
 
     if botactive >= 1: botactive -= 1
 
-    previousba = botactive
-
     match r:
         case 1: # LOSE 
             u.addBalance(credits = -random.randint(0, 100))
         case 2: # GAIN
             u.addBalance(credits = calcCredit(random.randint(0, 100), u))
-        case _:
-            pass
         
 
 # To create a help description, add help="help description" to bot.command()
@@ -234,6 +229,7 @@ async def on_ready():
     await bot.add_cog(cmds.RNGNumberGuessCog(bot))
     await bot.add_cog(cmds.WordleGameCog(bot))
     await bot.add_cog(cmds.ServerMontiorCog(bot))
+    await bot.add_cog(cmds.EventsCog(bot))
     lotcog = cmds.LotteryCog(bot)
     await bot.add_cog(lotcog)
 
