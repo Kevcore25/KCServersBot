@@ -3,11 +3,11 @@ from calculatefuncs import *
 from mcstatus import JavaServer, status_response
 MONTIOR_CMDS_DESC = """
 
--# This command is part of the montioring commands (montior, statusof, and addplayer)"""
+-# This command is part of the monitoring commands (monitor, statusof, and addplayer)"""
 
-SERVER_MONTIOR_DESC = f"""Adds a server to be montiored.\n\nRunning the command again with the same server will remove it.""" + MONTIOR_CMDS_DESC
-PLAYER_MONTIOR_DESC = f"""Constantly montiors the server that you have added to see if a specified player has joined/left.""" + MONTIOR_CMDS_DESC
-GET_STATUS_DESC = f"""Obtain the status of a server. If no arguments are specified, it will fetch the servers you specified in the `montior` command""" + MONTIOR_CMDS_DESC
+SERVER_MONTIOR_DESC = f"""Adds a server to be monitored.\n\nRunning the command again with the same server will remove it.""" + MONTIOR_CMDS_DESC
+PLAYER_MONTIOR_DESC = f"""Constantly monitors the server that you have added to see if a specified player has joined/left.""" + MONTIOR_CMDS_DESC
+GET_STATUS_DESC = f"""Obtain the status of a server. If no arguments are specified, it will fetch the servers you specified in the `monitor` command""" + MONTIOR_CMDS_DESC
 
 def returnStatusObj(address: str, timeout: int = 1) -> JavaServer:
     return JavaServer.lookup(address, timeout)
@@ -37,7 +37,7 @@ def SmartServName(status: status_response.JavaStatusResponse) -> str:
 def parse(player: str):
     return player.replace("_", "\\_")
 
-class ServerMontiorCog(commands.Cog):
+class ServerMonitorCog(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.fetchServers.start()
@@ -70,8 +70,8 @@ class ServerMontiorCog(commands.Cog):
                 if userid not in self.lastServerPlayers:
                     self.lastServerPlayers[userid] = {}
 
-                if "servers" in data and "playerMontior" in data: 
-                    if "*" in data["playerMontior"]:
+                if "servers" in data and "playerMonitor" in data: 
+                    if "*" in data["playerMonitor"]:
                         allPlayers = true
                     else:
                         allPlayers = false
@@ -92,7 +92,7 @@ class ServerMontiorCog(commands.Cog):
                             # EDGECASE: No players
                             if not (storedServers[server].players.online == 0 or storedServers[server].players.sample is None):
                                 for player in storedServers[server].players.sample:
-                                    if player.name in data['playerMontior'] or allPlayers:
+                                    if player.name in data['playerMonitor'] or allPlayers:
                                         # Add current players
                                         if player.name not in currentPlayers:
                                             currentPlayers.append((name, player.name))
@@ -140,7 +140,7 @@ class ServerMontiorCog(commands.Cog):
                         # [abc, def] - [abc] = [def]
                         # leave =def
                         for player in set(lastServerPlayers[server]) - set(players):
-                            if player in data['playerMontior'] or allPlayers:
+                            if player in data['playerMonitor'] or allPlayers:
                                 tempPlayers.append(player + " left")
 
                         if len(tempPlayers) > 0:
@@ -220,12 +220,12 @@ class ServerMontiorCog(commands.Cog):
         await message.send(embed=embed)
 
     @commands.command(
-        help = f"Server Montior",
+        help = f"Server Monitor",
         description = SERVER_MONTIOR_DESC,
-        aliases = ['servermontior', 'sm', 'addserver', 'addserv', 'track'],
+        aliases = ['servermonitor', 'sm', 'addserver', 'addserv', 'track'],
     )
     @commands.cooldown(3, 10, commands.BucketType.user)
-    async def montior(self, message, address: str = None):
+    async def monitor(self, message, address: str = None):
         user = User(message.author.id)
         
         # Check for server argument
@@ -262,9 +262,9 @@ class ServerMontiorCog(commands.Cog):
         return await message.send(embed=errorMsg(f"The command cannot be completed."))
     
     @commands.command(
-        help = f"Player Montior",
+        help = f"Player Monitor",
         description = PLAYER_MONTIOR_DESC,
-        aliases = ['pm', "playermontior", "removeplayer"], # Add remove player alias because it DOES remove the player
+        aliases = ['pm', "playermonitor", "removeplayer"], # Add remove player alias because it DOES remove the player
     )
     async def addplayer(self, message, ign: str = None):
         user = User(message.author.id)
@@ -274,17 +274,17 @@ class ServerMontiorCog(commands.Cog):
             return await message.send(embed=errorMsg("You must specify a valid Minecraft username!"))
 
         # Determine if the IGN is already on the list
-        if ign in user.getData("playerMontior"):
-            if user.removeValue("playerMontior", ign):
+        if ign in user.getData("playerMonitor"):
+            if user.removeValue("playerMonitor", ign):
                 return await message.send(embed=successMsg(description=f"Successfully removed `{ign}` from your players list!"))
             else:
                 return await message.send(embed=errorMsg(f"Cannot remove that player from your account!"))
 
         # Max 100
-        if len(user.getData("playerMontior")) >= 100:
+        if len(user.getData("playerMonitor")) >= 100:
             return await message.send(embed=errorMsg(f"You can only have a maximum of 100 players for your account!"))
 
-        if user.appendValue("playerMontior", ign):
+        if user.appendValue("playerMonitor", ign):
             return await message.send(embed=successMsg(description=f"Successfully added `{ign}` to your players watchlist!"))
 
         return await message.send(embed=errorMsg(f"The command cannot be completed."))

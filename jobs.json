@@ -7,7 +7,7 @@
     },
     "Developer": {
         "description": "A developer working in KCServers.",
-        "credits": 12.5,
+        "credits": 15,
         "unity": 5,
         "credit perk": -7.5
     },
@@ -20,7 +20,7 @@
     "Tennis": {
         "description": "A professional tennis player both playing nationals and teaching other players.",
         "credits": 7.5,
-        "unity": 7,
+        "unity": 6,
         "credit perk": 0
     },
     "Unifier": {
