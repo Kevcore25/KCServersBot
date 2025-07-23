@@ -18,6 +18,6 @@ from cmds.lottery import LotteryCog
 from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog
 
-from cmds.servermontior import ServerMontiorCog
+from cmds.servermontior import ServerMonitorCog
 
 from cmds.events import EventsCog

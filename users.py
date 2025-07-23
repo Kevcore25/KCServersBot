@@ -114,7 +114,7 @@ class User:
         else:
             return False
         
-    def get_item(self, item: str, onlydetermine: bool = True) -> None | dict:
+    def get_item(self, item: str, onlydetermine: bool = True) -> None | dict | bool:
         """
         Gets an item. If the item does not exist, then None will be returned
         """
@@ -188,8 +188,8 @@ class User:
             self.saveAccount()
             return True
         except KeyError:
-            self.update()
-            return self.addValue(key, amount)
+            if self.update():
+                return self.addValue(key, amount)
 
     def appendValue(self, key: str, value) -> bool:
         try:
@@ -228,7 +228,6 @@ class User:
         log = f"{timeStr} {data['credits']} {data['unity']} {data['gems']} {msg}"
 
         # Add to user logs
-
         try:
             if user not in os.listdir('balanceLogs'):
                 with open(os.path.join("balanceLogs", user), 'w') as f:

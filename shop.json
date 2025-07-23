@@ -109,7 +109,7 @@
     },
     "Gem Minerals": {
         "credits": 50,
-        "unity": 20,
+        "unity": 10,
         "gems": -1,
         "description": "Every season (reset), you can buy `Gems` up to a certain amount of times.\nGain bonus Gems by being top 5 in the score leaderboard.",
         "limit": 10,

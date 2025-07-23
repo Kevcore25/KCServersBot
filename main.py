@@ -13,6 +13,11 @@ from traceback import print_exc as printError
 from dotenv import load_dotenv
 from calculatefuncs import *
 
+folders = ('users', 'balanceLogs', 'lottery', 'temp')
+for folder in folders:
+    if folder not in os.listdir(): # When you're too lazy to make a proper alghorithm
+        os.mkdir(folder)
+
 print("Importing commands...")
 import cmds
 
@@ -228,7 +233,7 @@ async def on_ready():
     await bot.add_cog(cmds.MCGuessingGames(bot))
     await bot.add_cog(cmds.RNGNumberGuessCog(bot))
     await bot.add_cog(cmds.WordleGameCog(bot))
-    await bot.add_cog(cmds.ServerMontiorCog(bot))
+    await bot.add_cog(cmds.ServerMonitorCog(bot))
     await bot.add_cog(cmds.EventsCog(bot))
     lotcog = cmds.LotteryCog(bot)
     await bot.add_cog(lotcog)
