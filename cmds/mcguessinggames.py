@@ -39,7 +39,7 @@ class MCGuessingGames(commands.Cog):
 
     @commands.command(
         help = f"Play a simliar version of Hangman",
-        description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2.5 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
+        description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
         aliases = ['mch', 'minecrafthangman']
     )
     @commands.cooldown(1, 30, commands.BucketType.user)
@@ -90,8 +90,8 @@ class MCGuessingGames(commands.Cog):
             ),
         u), 2)
         
-        # Subtract 2.5 credits from user
-        u.addBalance(credits=-2.5)
+        # Subtract 2 credits from user
+        u.addBalance(credits=-2)
 
         # Send MSG
         msg = await message.send(embed=discord.Embed(
@@ -163,7 +163,7 @@ Guessed: `{', '.join(guessed)}`
                         
 
                         u.addBalance(c)
-                        await edit(f"*You won! You gained `{c} Credits`!*") # Makes it BOLD, not italtic
+                        await edit(f"*You won! You gained `{c} Credits` (Net total of `{numStr(c - 2)} Credits`)!*") # Makes it BOLD, not italtic
                         return
                         
                 else:
@@ -179,7 +179,7 @@ Guessed: `{', '.join(guessed)}`
 
                 u.addBalance(c)
             
-                await edit(f"*You won! You gained `{c} Credits`!*") # Makes it BOLD, not italtic
+                await edit(f"*You won! You gained `{c} Credits` (Net total of `{numStr(c - 2)} Credits`)!*") # Makes it BOLD, not italtic
                 self.mchangman.reset_cooldown(message)
                 return
             # Guess wrong

@@ -22,7 +22,7 @@ class Exchanges(commands.Cog):
         }
 
         if currency is None:
-            exchangeRateTxt = "\n".join(f"1 {f} > {exchangeRates[(f,t)]} {t}" for f, t in exchangeRates)
+            exchangeRateTxt = "\n".join(f"1 gem > {exchangeRates[(f,t)]} {t}" for f, t in exchangeRates)
             embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}gemexchange [to currency] <amount of gems to exchange>`\n\n**Exchange rates**:\n{exchangeRateTxt}""", color=0xFF00FF)
 
         elif currency not in ['credits','unity']:

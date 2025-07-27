@@ -1,15 +1,16 @@
+VERSION = 7.3
+
 """
 PIP REQUIREMENTS:
 pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
-print("Importing libraries")
+print("Importing libraries...")
 
 import discord, json, random, time, traceback
 from discord.ext import commands, tasks
 import time, os, datetime
 from users import User
 import users as usersFile
-from traceback import print_exc as printError
 from dotenv import load_dotenv
 from calculatefuncs import *
 
@@ -21,7 +22,7 @@ for folder in folders:
 print("Importing commands...")
 import cmds
 
-print("Finished importing")
+print("Finished importing!")
 load_dotenv()
 
 with open("botsettings.json", 'r') as f:
@@ -35,13 +36,13 @@ botAIChannel = botsettings['AI Channel']
 serverID = botsettings['Server ID']
 debug = botsettings['Debug']
 
-activity = discord.Activity(type=discord.ActivityType.watching, name=f"KCMC Servers (V.7.2)")
+activity = discord.Activity(type=discord.ActivityType.custom, name="custom", state="Initializing bot...")
 
 bot = commands.Bot(
     command_prefix=[prefix], 
     case_insensitive=True, 
     activity=activity, 
-    status=discord.Status.online,
+    status=discord.Status.idle,
     intents=discord.Intents().all()
 )
 
@@ -211,9 +212,7 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
 @bot.event
 async def on_ready():    
     usersFile.botID = str(bot.user.id)
-    print("Bot online!")
-
-    print("Registering commands...")
+    print("Bot online! Registering commands...")
 
     # ADD CMDS
     await bot.add_cog(cmds.AccountViewers(bot))
@@ -238,14 +237,13 @@ async def on_ready():
     lotcog = cmds.LotteryCog(bot)
     await bot.add_cog(lotcog)
 
+    print("Commands registered! Starting post-ready commands...")
     await lotcog.announceWinningNumbers()
-
-    print("Done! Starting bot AI loop...")
 
     # Start Loops
     botAI.start()
-
-    print("Started loops!")
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
+    print("Done! The bot should be fully operational!")
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -255,9 +253,7 @@ async def on_message(message: discord.Message):
     content = message.content
 
     if content.startswith(prefix):
-        botactive += 5
-        if botactive > 20:
-            botactive = 20
+        botactive = min(20, botactive + 5)
 
         with open("commandLogs.txt", "a") as f:
             f.write(f"{datetime.datetime.now().strftime('%H:%M:%S')} {message.author.display_name}: {content}\n")
@@ -266,7 +262,6 @@ if not debug:
     @bot.event 
     async def on_command_error(ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            
             embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
             await ctx.send(embed=embed)
         elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
@@ -298,4 +293,5 @@ if not debug:
             (ctx.command).reset_cooldown(ctx)
 
 # Run the bot based on the token in the .env file
+print("Starting the bot...")
 bot.run(os.getenv("DISCORD_TOKEN"))

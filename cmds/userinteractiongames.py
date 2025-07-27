@@ -71,11 +71,6 @@ A successful rob increases Unity by 0.25
         user = User(message.author.id)
         targetUser = User(target.id)
 
-        if user.getData()['credits'] < 0:
-            embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when your balance is under 0!", color=0xFF0000)
-            await message.send(embed=embed)
-            self.rob.reset_cooldown(message)
-            return
         if targetUser.getData()['credits'] < 0:
             embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when the target's balance is under 0!", color=0xFF0000)
             await message.send(embed=embed)
@@ -129,10 +124,14 @@ A successful rob increases Unity by 0.25
 
         def lose():
             # Lose money
-            user.addBalance(credits = -loseAmount)
-            targetUser.addBalance(credits = loseAmount)
-            user.addBalance(unity = -2)
-
+            if user.getData('credits') >= 0:
+                user.addBalance(credits = -loseAmount)
+                targetUser.addBalance(credits = loseAmount)
+                user.addBalance(unity = -2)
+            else:
+                user.addBalance(unity = -10)
+                targetUser.addBalance(unity = 10)
+                
             # Rob stats
             if robGet(user, 'insights') < 3:
                 robAdd(user, "insights", 1)
@@ -217,11 +216,17 @@ You were fined `{loseAmount} Credits` to {target.mention} after the police caugh
                 robSet(user, "won/lost", [wl[0]+1, wl[1]])
 
             elif targetRoll > userRoll:
-                match random.randint(1,3):
-                    case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
-                    case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
-                    case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
-
+                # Lose Unity if negative
+                if user.getData('credits') >= 0:
+                    match random.randint(1,3):
+                        case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
+                        case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
+                        case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
+                else:
+                    match random.randint(1,3):
+                        case 1: winTxt = f"Unfortunately, {target.mention} caught you and you lost `10 Unity` out of embarrassment"
+                        case 2: winTxt = f"Unfortunately, the Police caught you and you were shamed and lost `10 Unity`"
+                        case 3: winTxt = f"You slipped and fell, causing `10 Unity` to be lost after being embarrassed by {target.mention}"
                 lose()
 
             em = discord.Embed(

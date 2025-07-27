@@ -36,7 +36,7 @@ class GoFish:
         if len(self.totalCards) > 0:
             self.totalCards.remove(randomCard)
             self.players[user].append(randomCard)
-            return True
+            return randomCard
         else:
             return False
 
@@ -66,18 +66,20 @@ class GoFish:
         self.players[user].remove(card)
         self.players[otherUser].append(card)
 
-    def ask_user(self, userAsking: User, card: int) -> int:
+    def ask_user(self, userAsking: User, card: int) -> tuple[int, int]:
         otherUser = self.get_other_user(userAsking)
 
         count = self.card_in_cards(otherUser, card)
-        
+
+        got = 0
+
         if count > 0:
             for i in range(count):
                 self.give_card_to_other(otherUser, card)
         else:
             # Pick up one card
-            self.get_from_deck(userAsking, random.choice(self.totalCards))
-        return count
+            got = self.get_from_deck(userAsking, random.choice(self.totalCards))
+        return count, got
 
     def determine_full_card(self, user: User):
 

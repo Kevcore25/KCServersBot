@@ -12,7 +12,7 @@
         "credit perk": -7.5
     },
     "Pacifist": {
-        "description": "A pacifist role. They gain a bonus `-50% Wealth Power` perk.",
+        "description": "A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.",
         "credits": 10.5,
         "unity": 4,
         "credit perk": -7.5
@@ -36,13 +36,13 @@
         "credit perk": -7.5
     },
     "Police": {
-        "description": "A policeman, catching thiefs. They have increased chances of robbers failing (`+3 Rob Defense Levels`).",
+        "description": "A policeman, catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`).",
         "credits": 5,
         "unity": 5,
         "credit perk": 2
     },
     "Robber": {
-        "description": "A thief. They have increased chances of successful robs (`+2 Rob Attack Levels`).",
+        "description": "A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`).",
         "credits": 35,
         "unity": -0.05,
         "credit perk": -7.5
@@ -51,12 +51,12 @@
         "description": "A student. Gain access to the `questions` command.",
         "credits": 0,
         "unity": 0,
-        "credit perk": -10
+        "credit perk": 5
     },
     "Gambler": {
         "description": "Gamblers gamble all their money to lose... but it seems like they are cheating sometimes!\nGamblers get the following perks:\n* In CG, gain 5% more for >2x multiplier and 10% more for >3x\n* Lotteries give 5% more\n* Last CG multiplier influences next work gained (up to 10x multiplier). Minimum 10 Credit bet.",
         "credits": 15,
         "unity": 3,
-        "credit perk": 5
+        "credit perk": 0
     }
 }
