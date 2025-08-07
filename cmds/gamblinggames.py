@@ -27,7 +27,9 @@ class GambleGames(commands.Cog):
 
         winAmount = round((totalCredits/1000 + 1.5) * random.randint(5,15)/7 * calcInflation(), 2)
 
-        winAmount = calcWPAmount(user, winAmount, generation=2)
+        # Beggars have 0% WP so only calculate
+        if not user.getData('job') == "Beggar":
+            winAmount = calcWPAmount(user, winAmount, generation=2)
 
         # Popularity item
         if user.item_exists("Popularity"):
@@ -55,6 +57,10 @@ class GambleGames(commands.Cog):
                 embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nAs a result, you paid the police `{numStr(loseAmount)} Credits`.\n-# You also lost 0.1 Unity!", color=0xFF0000)
 
         else:
+            # Sometimes gain 200% more
+            if user.getData('job') == "Beggar" and random.randint(0, 4) == 0:
+                winAmount *= 3
+
             winAmount = calcCredit(winAmount, user)
             user.addBalance(credits = winAmount, unity = 0.05)
 

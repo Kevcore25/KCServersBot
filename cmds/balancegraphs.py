@@ -101,7 +101,11 @@ class BalanceGraphs(commands.Cog):
         # Requires Account Viewer for not self
         if user.id != message.author.id:
             authoruser = User(message.author.id)
-            if authoruser.item_exists("Account Viewer"):
+
+            # Developers get free access
+            if authoruser.getData('job') == "Developer":
+                pass
+            elif authoruser.item_exists("Account Viewer"):
                 authoruser.delete_item("Account Viewer")
             else:
                 await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
@@ -308,7 +312,10 @@ class BalanceGraphs(commands.Cog):
         # Requires Account Viewer for not self
         if user.id != message.author.id:
             authoruser = User(message.author.id)
-            if authoruser.item_exists("Account Viewer"):
+            # Developers get free access
+            if authoruser.getData('job') == "Developer":
+                pass
+            elif authoruser.item_exists("Account Viewer"):
                 authoruser.delete_item("Account Viewer")
             else:
                 await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
@@ -489,7 +496,10 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
         # Requires Account Viewer for not self
         if user.id != message.author.id:
             authoruser = User(message.author.id)
-            if authoruser.item_exists("Account Viewer"):
+            # Developers get free access
+            if authoruser.getData('job') == "Developer":
+                pass
+            elif authoruser.item_exists("Account Viewer"):
                 authoruser.delete_item("Account Viewer")
             else:
                 await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))

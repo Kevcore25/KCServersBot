@@ -191,9 +191,9 @@ def calcWealthPower(u: User, decimal = False, noperks = False) -> int | float:
         wealthpower = 100
 
     if not noperks:
-        # Pacifist job
+        # Pacifist job (50% less multiplative)
         if u.getData('job') == "Pacifist":
-            wealthpower -= 50
+            wealthpower /= 2
 
     # Credit power should be at a minimum of 0% (Updated from -50%)
     # Otherwise, a bug would occur where users get negative credits due to commands having a (1 + Wealth Power%) multiplication. 

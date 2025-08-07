@@ -83,7 +83,6 @@ class TimeIncomes(commands.Cog):
         help = f"Work\nFormat: {prefix}work [apply <job>]",
         description = f"""Apply for a job, then run {prefix}work to earn money. The amount you earn is scaled with Credit Earnings and Wealth Power\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity`\n\nWork uses Gen 3 WP scaling (Every 20% Wealth Power after 100% results in -1% earnings, up to -50% earnings) for both earnings and unity losses.""",
         aliases = ['job'],
-        hidden = True
     )
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def work(self, message, cmd = None, value = None):
@@ -177,4 +176,3 @@ class TimeIncomes(commands.Cog):
 
         await message.send(embed=embed)
         self.work.reset_cooldown(message)
-

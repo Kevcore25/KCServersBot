@@ -3,13 +3,13 @@
         "description": "A KCMC player. Standard work job with no downsides. **Recommended for new players.**",
         "credits": 10,
         "unity": 5,
-        "credit perk": 0
+        "credit perk": 5
     },
     "Developer": {
         "description": "A developer working in KCServers.",
         "credits": 15,
         "unity": 5,
-        "credit perk": -7.5
+        "credit perk": -5
     },
     "Pacifist": {
         "description": "A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.",
@@ -17,10 +17,10 @@
         "unity": 4,
         "credit perk": -7.5
     },
-    "Tennis": {
-        "description": "A professional tennis player both playing nationals and teaching other players.",
-        "credits": 7.5,
-        "unity": 6,
+    "Beggar": {
+        "description": "Beggars make themselves look poor, which allow them to earn more from begs! While begging, Wealth Power is set to 0%, and you sometimes get 200% more from begs (20%)",
+        "credits": 15,
+        "unity": 3,
         "credit perk": 0
     },
     "Unifier": {
