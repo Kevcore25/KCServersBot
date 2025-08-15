@@ -801,6 +801,17 @@ def mkDirNotExist(pathname: str, path = None) -> bool:
     
     return False
 
+def standardIncome(credits: int, user: User):
+    """
+    Standard income formula. 
+    It is `Base Income * Credit perks * Inflation` with Gen 3 WP scaling.
+
+    @param credits: Base Credits to give
+    @param user: The user object
+    """
+
+    return calcCredit(calcWPAmount(user, credits, generation=3) * calcInflation(), user) 
+
 class JSONIO:
     """Custom class for JSON IO-related things"""
     JSONCache: dict | list | None = None

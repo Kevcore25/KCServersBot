@@ -8,8 +8,8 @@ GoFish is a unique card game where you attempt to get more books (4 of the same 
 If the bot has the number you guessed, you gain the bot's cards of that number and you get to guess again.
 Otherwise, you gain a card and it is the bot's turn, and it tries to guess your deck as well.
 
-Payout: `{numStr(40 * calcInflation())} Credits`
-Cost: `{numStr(15 * calcInflation())} Credits` (You can play even with negative balances)
+Base Payout: `{numStr(40)} Credits`
+Base Cost: `{numStr(15)} Credits` (You can play even with negative balances)
 
 The bot's algorithm is very simple and easy to predict, making this game easy to win if you know the right strategy.
 Essentially, the bot saves the numbers you guess and prioritizes on guessing them when possible, otherwise it will simply guess a random number from its deck.

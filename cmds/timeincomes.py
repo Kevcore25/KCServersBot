@@ -134,12 +134,9 @@ class TimeIncomes(commands.Cog):
                         break
                 else:
                     # Work
-                    creditGain = calcCredit(jobs[currentJob]['credits'], user)
+                    creditGain = standardIncome(jobs[currentJob]['credits'], user)
                     unityGain = jobs[currentJob]['unity']
 
-                    # Wealth Power scaling
-                    creditGain = calcWPAmount(user, creditGain, generation=3)
-                    
                     # Bonus for gambler
                     if currentJob == "Gambler":
                         lastCG = user.getData("lastCG")

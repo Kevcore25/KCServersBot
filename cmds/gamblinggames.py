@@ -44,7 +44,15 @@ class GambleGames(commands.Cog):
             return
 
         if r == 0:
-            if user.getData('credits') < 0:
+            # Sometimes gain 50% more
+            if user.getData('job') == "Beggar" and random.randint(0, 4) == 0:
+                loseAmount = round((totalCredits/1000 + 1.5) * 30/7 * calcInflation(), 2)
+
+                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police! This time however, the police caught your deceiveful actions!!\nYou lost `3 Unity` and `{loseAmount} Credits` in the process!", color=0xFF0000)
+                user.addBalance(credits = -loseAmount, unity=-3)
+
+
+            elif user.getData('credits') < 0:
                 user.addBalance(unity = -5)
 
                 embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nYou did not have anymore Credits, so you lost `5 Unity`.", color=0xFF0000)
@@ -57,9 +65,9 @@ class GambleGames(commands.Cog):
                 embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nAs a result, you paid the police `{numStr(loseAmount)} Credits`.\n-# You also lost 0.1 Unity!", color=0xFF0000)
 
         else:
-            # Sometimes gain 200% more
+            # Sometimes gain 50% more
             if user.getData('job') == "Beggar" and random.randint(0, 4) == 0:
-                winAmount *= 3
+                winAmount *= 1.5
 
             winAmount = calcCredit(winAmount, user)
             user.addBalance(credits = winAmount, unity = 0.05)
@@ -73,8 +81,7 @@ class GambleGames(commands.Cog):
 
     @commands.command(
         help = f"Invest money!",
-        description = f"""
-Invest a portion of your money to the KCServers bot.
+        description = f"""Invest a portion of your money to the KCServers bot.
 The amount you invest cannot exceed 30% of the current bot's balance.
 
 There are 2 formats for this command:

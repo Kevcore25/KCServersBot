@@ -46,6 +46,31 @@ If you are a new KCMC player, you may ask to claim a **free 10,000 KCash reward.
     
         await message.send(embed=embed)
 
+    @commands.command(
+        name = "terms",
+        help = "Useful definitions for dedicated users",
+        aliases = ["definitions", "defs"]
+    )
+    async def terms(self, message):
+        embed = discord.Embed(
+            title = "",
+            description = f"""
+__Wealth Power (WP)__
+Wealth power is an important feature of KCServers Bot that measures how rich you are.
+It is calculated using: `Wealth / ((Total Wealth of all Members - Wealth) / Number of Users)`
+-# Remember, wealth is simply `Credits + BS% * Bot's Credits`
+When used in calculations, there are 3 main generations which affect WP:
+* Gen 2: `Amount / (Wealth Power), Wealth Power > 1`
+* Gen 3: Every 20% WP after 100% causes earnings to reduce by 1%, up to -50% earnings
+* Gen 4: A 1/Gen 3, making higher WP giving more, up to 2x more
+
+
+""",
+            color = 0xFF00FF
+        )
+    
+        await message.send(embed=embed)
+
         
     @commands.command(
         help = f"Get all server statuses",

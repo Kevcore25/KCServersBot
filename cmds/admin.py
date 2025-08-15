@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from calculatefuncs import *
-import asyncio, sys
+import asyncio
 class AdminCmds(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -108,17 +108,7 @@ class AdminCmds(commands.Cog):
         else:
             await message.send(embed=errorMsg(f"You do not have permission to use this command!"))
 
-                
-
-    @commands.command(aliases=['reload'], hidden=True)
-    async def restart(self, ctx):
-        if ctx.author.id in adminUsers:
-            await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
-            embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
-            await ctx.send(embed=embed, delete_after=3.0)
-            os.execl(sys.executable, sys.executable, *sys.argv)
-
-
+            
     @commands.command(hidden=True)
     async def reset(self, message):
         if message.author.id in adminUsers:

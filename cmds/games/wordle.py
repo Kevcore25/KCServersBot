@@ -18,10 +18,11 @@ class WordleChar:
     def __str__(self):
         match self.position:
             case 1:
-                return f"*`{self.letter}`*"
+                return f"[2;33m[1;33m{self.letter}"
             case 2:
-                return f"**`{self.letter}`**"
-        return f"`{self.letter}`"
+                return f"[2;33m[1;32m{self.letter}"
+
+        return f"[0m{self.letter}"
     
 
 class WordleGame:
@@ -41,19 +42,25 @@ class WordleGame:
         self.data = []
 
     def guess(self, word: str) -> bool:
-        temp = []
-        for i in range(5):
-            t = word[i]
-            a = self.answer[i]
+        feedback = [WordleChar(t, 0) for t in word]
+        answer_used = [False] * len(self.answer)
+        
+        # Correct pos
+        for i in range(len(word)):
+            if word[i] == self.answer[i]:
+                feedback[i] = WordleChar(word[i], 2)
+                answer_used[i] = True
 
-            if t == a:
-                temp.append(WordleChar(t, 2))
-            elif t in self.answer:
-                temp.append(WordleChar(t, 1))
-            else:
-                temp.append(WordleChar(t, 0))
+        # In word but not correct
+        for i in range(len(word)):
+            if feedback[i].position == 0: 
+                for j in range(len(self.answer)):
+                    if not answer_used[j] and word[i] == self.answer[j]:
+                        feedback[i] = WordleChar(word[i], 1)
+                        answer_used[j] = True 
+                        break
 
-        self.data.append(temp)
+        self.data.append(feedback)
 
         if word == self.answer:
             return True
@@ -68,9 +75,14 @@ class WordleGame:
         temp = []
         for word in self.data:
             temp.append(" ".join(str(i) for i in word))
-        return "\n".join(temp)
+
+        # Don't display ANSI if none
+        if len(temp) == 0:
+            return "``` ```"
+        else:
+            return "```ansi\n" + "\n".join(temp) + "```"
     
-dim = DiminishRewards(7.5, 0.75, 3600)
+dim = DiminishRewards(10, 1, 3600)
 
 class WordleGameCog(commands.Cog):
     def __init__(self, bot):
@@ -79,7 +91,7 @@ class WordleGameCog(commands.Cog):
 
     @commands.command(
         help = "Wordle Game",
-        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining""",
+        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
     )
     async def wordle(self, message: discord.Message):
         u = User(message.author.id)
@@ -89,12 +101,19 @@ class WordleGameCog(commands.Cog):
         # Create a new instance of the game
         game = WordleGame()
 
+        # New Hint mode
+        hint = ''
+
         def getRwd():
             return round(dim.returnAmount(u) * (1 + game.attempts / 10), 3)
 
+        def desc(text: str):
+            if hint != '':
+                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}{text}"
+            else:
+                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}` {game.getAnswers()}{text}"
+            
         # Send init message
-        desc = lambda text: f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\n\n{game.getAnswers()}\n\n{text}"
-        
         embed = discord.Embed(
             title = "Wordle",
             description = desc(""),
@@ -122,12 +141,22 @@ class WordleGameCog(commands.Cog):
             # Get user input
             try:
                 ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
+                userInput = ui.content.lower()
 
-                if ui.content.lower() == "exit":
-                    await edit("Game exited. Your CD is not reset.") 
+                if userInput == "exit":
+                    await edit(f"Game exited. Your CD is not reset.\nThe word was `{game.answer}`") 
                     break
 
-                userInput = ui.content.lower()
+                if userInput == "hint":
+                    if hint != '':
+                        await edit(f'You already used a hint!')
+                    elif game.attempts == 1:
+                        await edit(f"You can't use the hint in your last attempt")
+                    else:
+                        hint = random.choice(game.answer)
+                        game.attempts -= 1
+                        await edit(f"Hint used. A random letter in the word is now shown.")
+                    continue
 
                 # Check for bounds
                 if userInput not in words:

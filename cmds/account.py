@@ -130,6 +130,8 @@ class AccountViewers(commands.Cog):
             kcash = kmceusers[ign]['KCash']
         except KeyError:
             kcash = "Not registered"
+        except FileNotFoundError:
+            kcash = "Not set up"
         except:
             kcash = "Error"
 

@@ -6,7 +6,7 @@ pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
 print("Importing libraries...")
 
-import time, os, datetime
+import time, os, datetime, sys
 
 # Check if necessary files exist
 for file in ('botsettings.json', '.env'):
@@ -28,9 +28,6 @@ for folder in folders:
         os.mkdir(folder)
 
 
-print("Importing commands...")
-import cmds
-
 print("Finished importing!")
 
 
@@ -40,7 +37,15 @@ with open("botsettings.json", 'r') as f:
     botsettings = json.load(f)
 
 KMCExtractLocation = botsettings['KMCExtract']
-prefix = botsettings['prefix']
+# New changes to prefix: multiple prefixes.
+# However, to ensure compatabiliy with previous installs, a str form will still be accepted
+if isinstance(botsettings['prefix'], str):
+    prefix = botsettings['prefix']
+    prefixes = [prefix]
+else:
+    prefix = botsettings['prefix'][0]
+    prefixes = botsettings['prefix']
+
 inflationAmt = botsettings['inflation amount']
 adminUsers = botsettings['admins']
 botAIChannel = botsettings['AI Channel']
@@ -50,7 +55,7 @@ debug = botsettings['Debug']
 activity = discord.Activity(type=discord.ActivityType.custom, name="custom", state="Initializing bot...")
 
 bot = commands.Bot(
-    command_prefix=[prefix], 
+    command_prefix=prefixes, 
     case_insensitive=True, 
     activity=activity, 
     status=discord.Status.idle,
@@ -88,6 +93,16 @@ async def botAI():
         case 2: # GAIN
             u.addBalance(credits = calcCredit(random.randint(0, 100), u))
         
+# Some commands can be used without initializing the CMDS import.
+@commands.command(aliases=['reload'], hidden=True)
+async def restart(self, ctx):
+    if ctx.author.id in adminUsers:
+        await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))
+        embed=discord.Embed(title=f"Restarting the program...", description=f"... is it working?", color=0x00CCFF)
+        await ctx.send(embed=embed, delete_after=3.0)
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+
 
 # To create a help description, add help="help description" to bot.command()
 # If you do not want the command to be shown in help, add hidden = True
@@ -224,37 +239,45 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
 async def on_ready():    
     usersFile.botID = str(bot.user.id)
     print("Bot online! Registering commands...")
+    # Import here instead of the start
+    # This is an experimental feature that should speed up the status process
+    # If it fails, it should also allow the bot to be in a debug-state where some cmds can still be used
+    try:
+        import cmds
 
-    # ADD CMDS
-    await bot.add_cog(cmds.AccountViewers(bot))
-    await bot.add_cog(cmds.AccountUtils(bot))
-    await bot.add_cog(cmds.AdminCmds(bot))
-    await bot.add_cog(cmds.BalanceGraphs(bot))
-    await bot.add_cog(cmds.Exchanges(bot))
-    await bot.add_cog(cmds.GambleGames(bot))
-    await bot.add_cog(cmds.Informations(bot))
-    await bot.add_cog(cmds.LeaderboardCog(bot))
-    await bot.add_cog(cmds.TimeIncomes(bot))
-    await bot.add_cog(cmds.InteractionGames(bot))
-    await bot.add_cog(cmds.CrashGameCog(bot))
-    await bot.add_cog(cmds.GoFishCog(bot))
-    await bot.add_cog(cmds.ShopCog(bot))
-    await bot.add_cog(cmds.QuestionsQuiz(bot))
-    await bot.add_cog(cmds.MCGuessingGames(bot))
-    await bot.add_cog(cmds.RNGNumberGuessCog(bot))
-    await bot.add_cog(cmds.WordleGameCog(bot))
-    await bot.add_cog(cmds.ServerMonitorCog(bot))
-    await bot.add_cog(cmds.EventsCog(bot))
-    lotcog = cmds.LotteryCog(bot)
-    await bot.add_cog(lotcog)
+        # ADD CMDS
+        await bot.add_cog(cmds.AccountViewers(bot))
+        await bot.add_cog(cmds.AccountUtils(bot))
+        await bot.add_cog(cmds.AdminCmds(bot))
+        await bot.add_cog(cmds.BalanceGraphs(bot))
+        await bot.add_cog(cmds.Exchanges(bot))
+        await bot.add_cog(cmds.GambleGames(bot))
+        await bot.add_cog(cmds.Informations(bot))
+        await bot.add_cog(cmds.LeaderboardCog(bot))
+        await bot.add_cog(cmds.TimeIncomes(bot))
+        await bot.add_cog(cmds.InteractionGames(bot))
+        await bot.add_cog(cmds.CrashGameCog(bot))
+        await bot.add_cog(cmds.GoFishCog(bot))
+        await bot.add_cog(cmds.ShopCog(bot))
+        await bot.add_cog(cmds.QuestionsQuiz(bot))
+        await bot.add_cog(cmds.MCGuessingGames(bot))
+        await bot.add_cog(cmds.RNGNumberGuessCog(bot))
+        await bot.add_cog(cmds.WordleGameCog(bot))
+        await bot.add_cog(cmds.ServerMonitorCog(bot))
+        await bot.add_cog(cmds.EventsCog(bot))
+        lotcog = cmds.LotteryCog(bot)
+        await bot.add_cog(lotcog)
 
-    print("Commands registered! Starting post-ready commands...")
-    await lotcog.announceWinningNumbers()
+        print("Commands registered! Starting post-ready commands...")
+        await lotcog.announceWinningNumbers()
 
-    # Start Loops
-    botAI.start()
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
-    print("Done! The bot should be fully operational!")
+        # Start Loops
+        botAI.start()
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
+        print("Done! The bot should be fully operational!")
+    except Exception as e:
+        traceback.print_exc()
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Bot Error: {e}"))
 
 @bot.event
 async def on_message(message: discord.Message):
@@ -295,10 +318,7 @@ if not debug:
             await ctx.send(embed=embed)
         else:
             embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
-            embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", '')) 
-            if "KeyError" in str(error):
-                if str(error).replace("Command raised an exception: ", '').replace("KeyError: ", "").replace("'", "") in usersFile.userTemplate:
-                    embed.description = "*This is most likely due to account errors.*"
+            embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", ''))
             print(traceback.format_exc())
             await ctx.send(embed=embed)
             (ctx.command).reset_cooldown(ctx)
