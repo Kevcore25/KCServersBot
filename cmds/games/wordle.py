@@ -70,7 +70,7 @@ class WordleGame:
             temp.append(" ".join(str(i) for i in word))
         return "\n".join(temp)
     
-dim = DiminishRewards(5, 0.5, 3600)
+dim = DiminishRewards(7.5, 0.75, 3600)
 
 class WordleGameCog(commands.Cog):
     def __init__(self, bot):

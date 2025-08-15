@@ -23,22 +23,27 @@ class RNGNumberGame:
                 self.max = 10
                 self.attempts = 7
                 self.rewardMultiplier = 1
+                self.threshold = 1
             case "medium" | "normal":
                 self.max = 20
                 self.attempts = 5
                 self.rewardMultiplier = 2.5
+                self.threshold = 2
             case "hard":
                 self.max = 30
                 self.attempts = 5
                 self.rewardMultiplier = 5
+                self.threshold = 3
             case "extreme" | "insane":
                 self.max = 40
                 self.attempts = 4
                 self.rewardMultiplier = 10
+                self.threshold = 4
             case "impossible":
                 self.max = 10000
                 self.attempts = 1
-                self.rewardMultiplier = 1000
+                self.rewardMultiplier = 10000
+                self.threshold = 100
 
         self.generateNumber()
 
@@ -61,15 +66,14 @@ class RNGNumberGame:
     
     def hint(self, number: int) -> str:
         # Check if the number is warm or hot
-
-        if number > self.answer * (1 - self.hotThreshold) - 1 and number < self.answer / (1 - self.hotThreshold) + 1:
+        if number > self.answer - self.threshold and number < self.answer + self.threshold:
             return "Hot"        
-        elif number > self.answer * (1 - self.warmThreshold) - 2 and number < self.answer / (1 - self.warmThreshold) + 2:
+        if number > self.answer - self.threshold * 2 and number < self.answer + self.threshold * 2:
             return "Warm"
         else:
             return "Cold"
         
-dim = DiminishRewards(1, 0.1, 7200)
+dim = DiminishRewards(1, 0.01, 7200)
 
 class RNGNumberGuessCog(commands.Cog):
     def __init__(self, bot):
@@ -77,7 +81,7 @@ class RNGNumberGuessCog(commands.Cog):
     
     @commands.command(
         help = "RNG Guessing Game",
-        description = """Choose a difficulty! Options are easy, medium, hard, and extreme.\nYou will have certain attempts to guess the number. If you are correct, you will earn Credits based on the difficulty you selected\nEarn bonus Credits by having more attempts.\nPlaying this game is **free** but you can only play it once every hour.\n-# This game can either be played by starting off risky (being right = higher win chance) or safer (using a modified *binary search* method for most consistency)\nRewards give diminishing returns which reset every 2h""",
+        description = """Choose a difficulty! Options are easy (1x reward), medium (2.5x reward), hard (5x reward), and extreme (10x reward).\nYou will have certain attempts to guess the number. If you are correct, you will earn Credits based on the difficulty you selected\nEarn bonus Credits by having more attempts.\nPlaying this game is **free** but you can only play it once every hour.\n-# This game can either be played by starting off risky (being right = higher win chance) or safer (using a modified *binary search* method for most consistency)\nReward: 1 Credit (diminishes over 1h)""",
         aliases = ["rnggg", "rng", "guessinggame", "gg"]
     )
     async def rngguessinggame(self, message: discord.Message, difficulty: str = "normal"):

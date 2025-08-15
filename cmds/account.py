@@ -31,8 +31,13 @@ class AccountViewers(commands.Cog):
         # Requires Account Viewer for not self
         if account != message.author:
             authoruser = User(message.author.id)
-            if authoruser.item_exists("Account Viewer"):
+            # Developers get free access
+            if authoruser.getData('job') == "Developer":
+                pass
+            
+            elif authoruser.item_exists("Account Viewer"):
                 authoruser.delete_item("Account Viewer")
+
             else:
                 await message.send(embed=errorMsg("You need the Account Viewer item to view other people's balances!"))
                 return

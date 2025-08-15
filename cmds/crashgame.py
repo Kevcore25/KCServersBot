@@ -7,13 +7,34 @@ from scipy.interpolate import make_interp_spline
 import asyncio
 import numpy as np
 
+CRASHGAME_DESC = """Play a modified version of the crash game!
+Running the command with no arguments shows the crash game history.
+
+__How it works__
+To play the game, you must spend an amount of Credits, known as the bet amount.
+Each game is seperated by rounds, which increase by 1 approximately every 1.5s.
+In each round, the multiplier increases based on a formula, but has a 10% of crashing, where you can no longer cash out.
+At any point (unless it has crashed), you can cash out, winning the original bet amount multiplied by the current multiplier.
+
+Multiplier formula: each round, increase the current multiplier by `randint(2,10) / 200 * Round`
+
+__Notes__
+* Multiplier starts at 1x
+* Crash game relies on images for best quality
+* There is a footnote depicting the chance of getting to your current round
+  * This is purely visual and does not affect the crash game in any way
+* The expected return is negative
+* Cash out / Stop button is buggy - press it before it updates (1.5s duration)
+  * If you aren't sure, just spam it!!
+"""
+
 class CrashGameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
     @commands.command(
         help = f"Play the crash game!",
-        description = """This version is modified and split into "rounds" which take about 1 second to update. Each turn has a chance of crashing.\nYou lose `1 Unity` for playing but gain `1 Unity` for cashing out.""",
+        description = CRASHGAME_DESC,
         aliases = ['cg', 'crash']
     )
     @commands.cooldown(1, 300, commands.BucketType.user) 
@@ -86,7 +107,7 @@ class CrashGameCog(commands.Cog):
             return user == message.author and (str(reaction.emoji) == '💰' or str(reaction.emoji) == '🛑')
         async def cgupdate():
             file = discord.File(f"temp/cg{randomNum}.png", filename=f"cg{randomNum}.png")
-            embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description="""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.""")        
+            embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description=f"""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.\n\nMultiplier: **{round(cg.multiplier, 3)}x**""")        
             embed.set_image(url=f"attachment://cg{randomNum}.png")
             embed.set_footer(text=f"The chance of getting to this round is {round(0.9 ** cg.round * 100, 1)}%")
 
