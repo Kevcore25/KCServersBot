@@ -12,7 +12,7 @@ from cmds.crashgame import CrashGameCog
 from cmds.questionsquiz import QuestionsQuiz
 from cmds.mcguessinggames import MCGuessingGames
 from cmds.shop import ShopCog
-from cmds.cardgames import CardGames
+from cmds.gofish import GoFishCog
 from cmds.lottery import LotteryCog
 
 from cmds.games.numberguess import RNGNumberGuessCog

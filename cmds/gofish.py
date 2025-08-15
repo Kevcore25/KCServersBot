@@ -16,7 +16,7 @@ Essentially, the bot saves the numbers you guess and prioritizes on guessing the
 """
 
 
-class CardGames(commands.Cog):
+class GoFishCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
@@ -181,4 +181,3 @@ class CardGames(commands.Cog):
                 await edit(f"An error occurred! This shouldn't happen!\n{e}")
 
         await edit('\n'.join(txt))
-

@@ -6,9 +6,17 @@ pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
 """
 print("Importing libraries...")
 
+import time, os, datetime
+
+# Check if necessary files exist
+for file in ('botsettings.json', '.env'):
+    if file not in os.listdir():
+        # Run setup.py by importing it
+        print("It looks like you are missing required files. Running the setup script now...")
+        import setup
+        
 import discord, json, random, time, traceback
 from discord.ext import commands, tasks
-import time, os, datetime
 from users import User
 import users as usersFile
 from dotenv import load_dotenv
@@ -19,10 +27,13 @@ for folder in folders:
     if folder not in os.listdir(): # When you're too lazy to make a proper alghorithm
         os.mkdir(folder)
 
+
 print("Importing commands...")
 import cmds
 
 print("Finished importing!")
+
+
 load_dotenv()
 
 with open("botsettings.json", 'r') as f:
@@ -226,7 +237,7 @@ async def on_ready():
     await bot.add_cog(cmds.TimeIncomes(bot))
     await bot.add_cog(cmds.InteractionGames(bot))
     await bot.add_cog(cmds.CrashGameCog(bot))
-    await bot.add_cog(cmds.CardGames(bot))
+    await bot.add_cog(cmds.GoFishCog(bot))
     await bot.add_cog(cmds.ShopCog(bot))
     await bot.add_cog(cmds.QuestionsQuiz(bot))
     await bot.add_cog(cmds.MCGuessingGames(bot))
