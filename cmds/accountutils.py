@@ -1,15 +1,17 @@
 import discord
 from discord.ext import commands
 from calculatefuncs import *
+
+import yaml
 class AccountUtils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
     @commands.command(
         help = f"Change your account settings",
-        aliases = ['setting', 'options']
+        aliases = ['oldsetting', 'oldoptions']
     )
-    async def settings(self, message, option: str = None, *, value: str | int | bool = None):
+    async def oldsettings(self, message, option: str = None, *, value: str | int | bool = None):
         user = User(message.author.id)
 
         options: dict[str, bool | int | str] = user.getData("settings")
@@ -19,7 +21,7 @@ class AccountUtils(commands.Cog):
         if option is None:
             embed = discord.Embed(
                 title = "Account settings",
-                description = f"These are your account settings. You can change them by: running `{prefix}settings [(ID of option) <value>]`",
+                description = f"These are your account settings. You can change them by: running `{prefix}oldsettings [(ID of option) <value>]`",
                 color = 0x00AAFF
             )
             
@@ -34,13 +36,6 @@ class AccountUtils(commands.Cog):
             embed.add_field(
                 name=f"Minecraft Username (ID: `IGN`): {options.get('IGN', None)}", 
                 value=f"Your Minecraft username. This is required in order to exchange into KCash.\nThe username must be registered on KMCExtract!",
-                inline=False
-            )
-            
-            # Automation
-            embed.add_field(
-                name=f"Account Automation (ID: `AI`): {options.get('AI', False)}", 
-                value=f"Whether your account will periodically run the following commands on its own: `daily`, `work`.\nThe automation is not a set period and can run at anytime.\nAutomated commands will appear in the <#{botsettings['AI Channel']}> channel.\nDefaults to False (Off).\n**This feature will not be available until V.5.0!**",
                 inline=False
             )
                 
@@ -75,6 +70,126 @@ class AccountUtils(commands.Cog):
         await message.send(embed=embed)
 
     @commands.command(
+        help = f"Change account settings",
+        description = f"""This command allows you to change certain values of your account.
+It behaves identically to the old command (oldsettings) but with a more robust system.
+
+__How to use__
+Run the command without any arguments (`{prefix}settings`) to see a list of settings
+
+Modify a setting by typing `{prefix}setting <option> <value>`, where 
+* option: The ID of the setting (e.g. ign)
+* value: The new value to be set to
+
+Ensure that the value is valid! Incorrect values may sometimes pass the verification test and give account errors!
+""",
+        aliases = ['options', 'setting', 'option']            
+    )
+    @commands.cooldown(10, 3, commands.BucketType.user) 
+    async def settings(self, message, option: str = None, *, value: str | int | bool = None):
+        u = User(message.author.id)
+
+        # Get all values
+        with open('usersettings.yml', 'r') as f:
+            settings = yaml.safe_load(f)
+
+        data = u.getData().get('settings', {})
+
+        # Show a list of all commands
+        if option is None:
+            embed = discord.Embed(
+                title = "Account settings",
+                description = f"These are your account settings. You can change them by: running `{prefix}settings [(ID of option) <value>]`",
+                color = 0x00AAFF
+            )
+
+            for id in settings:
+                setting = settings[id]
+
+                default = setting['Default']
+                values = setting['Values']
+                valtype = setting['Type']
+                
+                if values is None:
+                    if valtype == "str": values = "Any text"
+                    if valtype == "bool": values = "true, false"
+                    if valtype == "int": values = "Any integer"
+                    if valtype == "float": values = "Any integer or decimal"
+                else:
+                    values = ', '.join(str(i) for i in values)
+
+                # Add field
+                embed.add_field(
+                    name=f"{setting['Name']} (ID: `{id}`): {data.get(id, default)}", 
+                    value=f"{setting['Description']}-# Type: {valtype} | Values: {values} | Default: {default}",
+                    inline=False
+                )
+
+            # Send embed
+            await message.send(embed=embed)
+
+        else:
+            # This means to modify data
+
+            # Check if option exists
+            option = option.lower().strip()
+
+            if option not in settings:
+                await message.send(embed=errorMsg(f"The specified option (`{option}`) is not valid!\nEnsure you are using the ID instead of the full name of the option."))
+                return
+        
+            setting = settings[option]
+
+            # Check if value exists
+            # Only for BOOL type, this flips the option
+            if value is None:
+                if setting['Type'] == "bool":
+                    data[option] = not data.get(option, setting['Default'])
+                    # Save
+                    u.setValue('settings', data)
+                    await message.send(embed=successMsg(description = f"Changed the value of {setting['Name']} ({option}) to `{data[option]}`"))
+
+                else:
+                    await message.send(embed=errorMsg("You must specify a value!\nOnly bool type settings do not require a value."))
+
+            else:
+                # Ensure it is typed correctly
+                # This only applies if the VALUES is NOT null
+                if setting['Values'] is not None:
+                    value = value.lower()
+                    if value not in setting['Values']:
+                        await message.send(embed=errorMsg(f"You must specify a valid value!\nPossible values are: {', '.join('`' + str(i) + '`' for i in setting['Values'])}"))
+                        return
+                    # Otherwise, just continue
+
+                # Check if it is valid
+                match setting['Type']:
+                    case "bool":
+                        if value.lower() in ('on', 'true', 'yes', 'enable'):
+                            value = True
+                        elif value.lower() in ('off', 'false', 'no', 'disable'):
+                            value = False
+                        else:
+                            await message.send(embed=errorMsg("The value must be a valid boolean expression!\nFor example, typing `yes`, `on`, or `true` will enable the setting while something such as `false` will disable it."))
+                            return
+                        
+                    case "int":
+                        if not value.lstrip('-').isdigit():
+                            await message.send(embed=errorMsg("The value must be a valid integer expression!\nFor example, you can use values such as `1` but not `abc`"))
+                            return
+                        
+                    case "float":
+                        if not value.lstrip('-').replace('.', '').isdigit() or value.count('.') > 1:
+                            await message.send(embed=errorMsg("The value must be a valid decimal expression!\nFor example, you can use values such as `-1.2` or `1` but not `abc`"))
+                            return
+                    # Do nothing for STR
+
+                # Save
+                data[option] = value
+                u.setValue('settings', data)
+                await message.send(embed=successMsg(description = f"Changed the value of {setting['Name']} ({option}) to `{data[option]}`"))
+
+    @commands.command(
         help = f"Force an account update",
         description = """Sometimes your account may be missing some valves. This command will make sure to find missing values and fix them. Corruptted values may not be fixed.""",
         aliases = ['fixaccount']
@@ -83,10 +198,9 @@ class AccountUtils(commands.Cog):
         user = User(message.author.id)
         result = user.update()
         await message.send(
-                f"Your account data has been updated to the newest version!" if result else (
-                f"The account updater did not make any changes to your account data. If you believe your account has an error, please contact the owner."
-            )
-        )
+            f"Your account data has been updated to the newest version!" if result else (
+            f"The account updater did not make any changes to your account data. If you believe your account has an error, please contact an administator."
+        ))
 
         
     @commands.command(
@@ -139,6 +253,9 @@ class AccountUtils(commands.Cog):
             with open('giftcodes.json', 'w') as f:
                 f.write("{}")
             codes = {}
+
+        # Delete user message
+        await message.delete()
 
         try: # You can also use if code in list
             # Reset CD. CD is for failure attempts

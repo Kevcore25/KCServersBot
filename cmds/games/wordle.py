@@ -83,6 +83,8 @@ class WordleGame:
             return "```ansi\n" + "\n".join(temp) + "```"
     
 dim = DiminishRewards(10, 1, 3600)
+firstWordles = []
+
 
 class WordleGameCog(commands.Cog):
     def __init__(self, bot):
@@ -91,9 +93,11 @@ class WordleGameCog(commands.Cog):
 
     @commands.command(
         help = "Wordle Game",
-        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
+        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\nThe first wordle each day will grant 2x more Credit rewards.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
     )
     async def wordle(self, message: discord.Message):
+        global firstWordles
+
         u = User(message.author.id)
 
         dim.add_use(u)
@@ -105,8 +109,11 @@ class WordleGameCog(commands.Cog):
         hint = ''
 
         def getRwd():
-            return round(dim.returnAmount(u) * (1 + game.attempts / 10), 3)
-
+            credits = round(dim.returnAmount(u) * (1 + game.attempts / 10), 3)
+            if message.author.id not in firstWordles:
+                credits *= 2
+            return credits
+        
         def desc(text: str):
             if hint != '':
                 return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}{text}"
@@ -183,3 +190,5 @@ class WordleGameCog(commands.Cog):
 
         if game.determineLose():
             await edit(f"You lost! I was thinking of `{game.answer}`")
+
+        firstWordles.append(message.author.id)

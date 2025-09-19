@@ -1,4 +1,4 @@
-VERSION = 7.4
+VERSION = 7.6
 
 """
 PIP REQUIREMENTS:
@@ -94,7 +94,7 @@ async def botAI():
             u.addBalance(credits = calcCredit(random.randint(0, 100), u))
         
 # Some commands can be used without initializing the CMDS import.
-@commands.command(aliases=['reload'], hidden=True)
+@bot.command(aliases=['reload'], hidden=True)
 async def restart(self, ctx):
     if ctx.author.id in adminUsers:
         await self.bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Activity(type=discord.ActivityType.watching, name="me get updated"))

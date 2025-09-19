@@ -1,0 +1,53 @@
+# This is NOT a configuration file.
+# Rather, this is a list of avaliable settings that can be changed.
+# It uses a file to make it easier to develop.
+
+# As an example usage, the publicity keys will be covered:
+
+# ID of the setting. This should ideally be in lowercase.
+publicity:
+    # Name of the setting
+    Name: Public Account
+    # Quick description of the setting
+    Description: |
+        Whether your account can be viewed when another user passes an argument for the following commands: `account`, `graphbalance`, `baljson`.
+    # The type of input it accepts. E.g. str, int, bool
+    Type: bool
+    # Set values that the input accepts. If null, this will be set to no specific limits (but things such as bool still must be TRUE, FALSE, etc)
+    Values: null
+    # Default value of the setting
+    Default: true
+
+ign:
+    Name: Minecraft Username
+    Description: | 
+        Your Minecraft username. This is required in order to exchange into KCash.
+        The username must be registered on KMCExtract!
+    Type: str
+    Values: null
+    Default: None
+
+phone:
+    Name: Phone Mode
+    Description: |
+        In Phone mode, the bot attempts to optimize the usage for phones. This is only supported by some commands/features of the bot.
+        For example, wordle will use italicized and bolded letters to indicate hints, and graph-like features will use text-based displays instead.
+        This setting has an "auto" value which automatically detects if you are on your phone.
+        It is intended for those who are on phones or have trouble with text formatting.
+    Type: str
+    Values: 
+        - 'false'
+        - 'true'
+        - on
+        - off
+        - auto
+    Default: auto
+
+datacollection:
+    Name: Data Collection
+    Description: | 
+        Participate in data collection usages. Necessary data (e.g. command logs, account data) will still be collected.
+        This feature is currently not in use right now.
+    Type: bool
+    Values: null
+    Default: true

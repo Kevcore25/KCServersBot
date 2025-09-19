@@ -188,7 +188,7 @@ class ServerMonitorCog(commands.Cog):
                     name += f" ({addr})"
 
                 if status.players.online > 0:
-                    players = ", ".join(player.name for player in status.players.sample)
+                    players = ", ".join(player.name.replace('_', '\\_') for player in status.players.sample)
                 else:
                     players = "No players online"
 

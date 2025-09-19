@@ -24,7 +24,7 @@ userTemplate = {
     "settings": {},
 
     "servers": [],
-    "playerMontior": [],
+    "playerMonitor": [],
 
     "lastCG": 1
 }

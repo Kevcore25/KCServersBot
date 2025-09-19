@@ -113,7 +113,7 @@ class Exchanges(commands.Cog):
                     with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as file:
                         kmceusers = json.load(file)
 
-                    ign = user.getData('settings').get("IGN", None)
+                    ign = user.getData('settings').get("ign", None)
 
                     getAmount = round(amount * kcashrate)
 

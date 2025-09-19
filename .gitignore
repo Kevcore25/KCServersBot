@@ -25,3 +25,4 @@ shopstock.json
 commandLogs.txt
 *.pyc
 lottery/
+.venv/
