@@ -14,14 +14,18 @@ def returnStatusObj(address: str, timeout: int = 1) -> JavaServer:
 
 def SmartServName(status: status_response.JavaStatusResponse) -> str:
     """
-    Attempts to get the server's name based on the MOTD using an alghorithm
+    Attempts to get the server's name based on the MOTD using a simple algorithm.
+
+    This effortlessly works on MOST servers, except those who use rainbow-styled server names, 
+    or those who do not include the server name in the first line of the MOTD.
+
+    All KCMC servers follow a styling format which perfectly matches this algorithm.
     """
 
     motd = status.motd.to_minecraft()
     sym = r"§"
 
-    motd = motd.strip()
-    motd = motd.replace("\n", sym)
+    motd = motd.strip().replace("\n", sym)
 
     if motd.startswith(sym):
         for i in range(len(motd)):
@@ -141,7 +145,7 @@ class ServerMonitorCog(commands.Cog):
                         # leave =def
                         for player in set(lastServerPlayers[server]) - set(players):
                             if player in data['playerMonitor'] or allPlayers:
-                                tempPlayers.append(player + " left")
+                                tempPlayers.append(parse(player) + " left")
 
                         if len(tempPlayers) > 0:
                             embed.add_field(name = server + ":", value = "\n".join(tempPlayers), inline=False)
@@ -188,7 +192,7 @@ class ServerMonitorCog(commands.Cog):
                     name += f" ({addr})"
 
                 if status.players.online > 0:
-                    players = ", ".join(player.name.replace('_', '\\_') for player in status.players.sample)
+                    players = ", ".join(parse(player.name) for player in status.players.sample)
                 else:
                     players = "No players online"
 

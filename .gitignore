@@ -26,3 +26,4 @@ commandLogs.txt
 *.pyc
 lottery/
 .venv/
+chatcommunicator.yml

@@ -1,0 +1,1 @@
+from kcmc.chat import ChatCommunicator

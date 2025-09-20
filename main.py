@@ -1,4 +1,4 @@
-VERSION = 7.6
+VERSION = 7.7
 
 """
 PIP REQUIREMENTS:
@@ -267,6 +267,9 @@ async def on_ready():
         await bot.add_cog(cmds.EventsCog(bot))
         lotcog = cmds.LotteryCog(bot)
         await bot.add_cog(lotcog)
+
+        import kcmc
+        await bot.add_cog(kcmc.ChatCommunicator(bot))
 
         print("Commands registered! Starting post-ready commands...")
         await lotcog.announceWinningNumbers()
