@@ -55,9 +55,6 @@ class ChatCommunicator(commands.Cog):
                 self.servers: dict[str, str] = yaml.safe_load(f)
 
             for channelID, server in self.servers.items():
-                embed = discord.Embed(title = f"{server['Name']}", color=0xFF00FF)
-                embed.set_footer(text="Automatically fetched. May be inaccurate.")
-
                 descriptions = []
 
                 # Get the LOG file
@@ -98,8 +95,7 @@ class ChatCommunicator(commands.Cog):
 
                 if len(descriptions) > 0:
                     channel = self.bot.get_channel(channelID)
-                    embed.description = '\n'.join(descriptions)
-                    await channel.send(embed=embed)
+                    await channel.send('\n'.join(descriptions))
         except:
             traceback.print_exc()
 
