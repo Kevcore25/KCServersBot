@@ -47,7 +47,7 @@ class ChatCommunicator(commands.Cog):
         
         return password, port
     
-    @tasks.loop(seconds = 1)
+    @tasks.loop(seconds = 0.2)
     async def loop(self):
         try:
             # Get servers
@@ -96,7 +96,7 @@ class ChatCommunicator(commands.Cog):
                     elif 'lost connection' in ln or 'joined the game' in ln:
                         descriptions.append('**' + parse(ln.split(': ', 1)[1]) + '**')
 
-                if len(descriptions) > 1:
+                if len(descriptions) > 0:
                     channel = self.bot.get_channel(channelID)
                     embed.description = '\n'.join(descriptions)
                     await channel.send(embed=embed)
