@@ -7,7 +7,7 @@ Essentially, it is a glorified KMCExtract-like function.
 No mods required.
 """
 
-RCON_IP = '192.168.1.100'
+RCON_IP = '127.0.0.1'
 
 from os import path
 import discord
