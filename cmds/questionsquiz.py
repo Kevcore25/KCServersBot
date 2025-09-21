@@ -4,7 +4,9 @@ from calculatefuncs import *
 import threading, asyncio, re
 import questionparser
 
-threading.Thread(target=questionparser.updateTimer).start()
+t = threading.Thread(target=questionparser.updateTimer)
+t.daemon = True
+t.start()
 
 class QuestionsQuiz(commands.Cog):
     def __init__(self, bot):

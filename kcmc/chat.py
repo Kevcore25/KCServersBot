@@ -6,6 +6,9 @@ Requires a setup in a YAML file with a valid RCON Port/Password as well as the L
 Essentially, it is a glorified KMCExtract-like function.
 No mods required.
 """
+
+RCON_IP = '192.168.1.100'
+
 from os import path
 import discord
 import yaml
@@ -13,6 +16,7 @@ from discord.ext import commands, tasks
 from calculatefuncs import *
 from mcrcon import MCRcon
 import traceback
+from PIL import Image
 
 if not path.exists('chatcommunicator.yml'):
     with open('chatcommunicator.yml', 'x') as f:
@@ -119,9 +123,81 @@ class ChatCommunicator(commands.Cog):
                 # Get text
                 text = message.clean_content[:100]
 
-                with MCRcon('127.0.0.1', password, port, timeout=1) as rcon:
+                with MCRcon(RCON_IP, password, port, timeout=1) as rcon:
                     rcon.command(f'tellraw @a ' + json.dumps(
                         {"text": f"<{username}> {text}", "color": "gray"}
                     ))
+
+                # Attachments?
+                if len(message.attachments) > 0 and message.attachments[0].content_type.startswith('image'):
+                    try:
+                        await self.send_attachment(message, password, port)
+                    except: 
+                        traceback.print_exc()
+
+                # Possible Bot phrases
+                await self.bot_phrases(message,  password, port)    
             except:
                 traceback.print_exc()
+
+    async def bot_phrases(self, message: discord.Message,  password, port):
+        # Get text
+        text = message.clean_content[:100].lower().strip()
+
+        # Show list of players
+        if (
+            ("anyone on" in text) or
+            ('player list' in text) or
+            text.startswith('/list') or
+            ('who' in text and ' on' in text) or
+            ('anyone here' in text) or 
+            ('anyone around' in text) or
+            ('anyone' in text and ' active' in text)
+        ):
+            with MCRcon(RCON_IP, password, port, timeout=1) as rcon:
+                players = rcon.command('list')
+
+            await message.channel.send(f'{message.author.mention}: {players}')
+
+    async def send_attachment(self, message: discord.Message, password, port):
+        # Get attachment (image) and save it
+        p = path.join('temp', 'attachment')
+        await message.attachments[0].save(p)
+
+        img = Image.open(p)
+
+        # 41 is the max for this algorithm to work with RCON
+        output_width = 41
+
+        # Resize image
+        width, height = img.size
+        aspect_ratio = height / width
+        new_height = int(output_width * aspect_ratio * 0.55) 
+        img = img.resize((output_width, new_height))
+
+        # conver to grayscale for brightness
+        gray_img = img.convert('L')
+
+        char_set = " -=+#%@ "
+
+        lines = []
+
+        for y in range(new_height):
+            result = []
+            for x in range(output_width):
+                pixel_color = img.getpixel((x, y))
+                pixel_intensity = gray_img.getpixel((x, y))
+
+                char_index = int((pixel_intensity / 255) * (len(char_set) - 1))
+                char = char_set[char_index]
+
+                r, g, b = pixel_color
+                color_code = f"#{r:02X}{g:02X}{b:02X}"
+
+                result.append({"text": char, "color": color_code})
+                
+            lines.append(json.dumps(result))
+
+        with MCRcon(RCON_IP, password, port, timeout=1) as mcr:
+            for line in lines:
+                mcr.command("tellraw @a " + line)
