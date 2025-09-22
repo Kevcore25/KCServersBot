@@ -25,7 +25,7 @@ if not path.exists('chatcommunicator.yml'):
 seekinfo = {}
 
 def parse(text: str):
-    return text.replace('\\','\\\\').replace('*', '\\*').replace('_','\\_').replace('~', '\\~').replace('#', '\#')
+    return text.replace('\\','\\\\').replace('*', '\\*').replace('_','\\_').replace('~', '\\~').replace('#', '\\#')
 
 class ChatCommunicator(commands.Cog):
     def __init__(self, bot):
@@ -88,7 +88,7 @@ class ChatCommunicator(commands.Cog):
                     lastLogs = f.read()
                 
                 # Add seek for next time
-                seekinfo[channelID] += len(lastLogs)
+                seekinfo[channelID][0] += len(lastLogs)
 
                 lastLogs = lastLogs.decode()
 
