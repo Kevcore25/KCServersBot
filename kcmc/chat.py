@@ -82,7 +82,7 @@ class ChatCommunicator(commands.Cog):
 
                 with open(logFile, 'rb') as f:
                     # Seek to prevent unnecessary reading
-                    f.seek(seekinfo[channelID])
+                    f.seek(seekinfo[channelID][0])
 
                     # Load file
                     lastLogs = f.read()
