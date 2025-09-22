@@ -22,7 +22,7 @@ if not path.exists('chatcommunicator.yml'):
     with open('chatcommunicator.yml', 'x') as f:
         f.write('')
 
-seeks = {}
+seekinfo = {}
 
 def parse(text: str):
     return text.replace('\\','\\\\').replace('*', '\\*').replace('_','\\_').replace('~', '\\~').replace('#', '\#')
@@ -64,18 +64,31 @@ class ChatCommunicator(commands.Cog):
                 # Get the LOG file
                 logFile = path.join(server['Folder'], 'logs', 'latest.log')
                 
-                if channelID not in seeks:
-                    seeks[channelID] = 0
+                # Register if not already
+                if channelID not in seekinfo:
+                    seekinfo[channelID] = [0, path.getmtime(logFile)]
 
-                with open(logFile, 'rb', buffering=0) as f:
+                # Check if modified date is newer than the old one
+                size = path.getsize(logFile)
+                if size > seekinfo[channelID][1]:
+                    seekinfo[channelID][1] = size
+                elif size < seekinfo[channelID][1]:
+                    # Set seek to 0 in case log is rewritten.
+                    # Prevents an edge case
+                    seekinfo[channelID] = [0, size]
+                else:
+                    # Otherwise, to conserve resources, do not run
+                    continue
+
+                with open(logFile, 'rb') as f:
                     # Seek to prevent unnecessary reading
-                    f.seek(seeks[channelID])
+                    f.seek(seekinfo[channelID])
 
                     # Load file
                     lastLogs = f.read()
                 
                 # Add seek for next time
-                seeks[channelID] += len(lastLogs)
+                seekinfo[channelID] += len(lastLogs)
 
                 lastLogs = lastLogs.decode()
 

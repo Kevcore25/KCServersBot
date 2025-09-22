@@ -162,7 +162,7 @@ class ServerMonitorCog(commands.Cog):
                         await user.send(embed=embed)
 
             except Exception as e: 
-                print(e)
+                pass
 
     @commands.command(
         help = f"Status",
