@@ -19,6 +19,7 @@ class Exchanges(commands.Cog):
         exchangeRates = {
             ("gems", "unity"): 1,
             ("gems", "credits"): round(5 * calcInflation()),
+            ("gems", "kcash"): 250,
         }
 
         if currency is None:
@@ -36,11 +37,26 @@ class Exchanges(commands.Cog):
                     exchangeRate = exchangeRates[(f,t)]
                     if data[f] < amount:
                         embed = discord.Embed(title="Not enough currency!",description=f"Your {f.capitalize()} amount is less than the requested exchange amount which requires {amount}!", color=0xFF0000)
+                    elif data['loan']['amount'] > 0:
+                        embed = errorMsg("You cannot use the KCash exchange service while you have a loan active!\nPlease repay your loan in order to exchange your Credits into KCash.")
                     else:
                         getAmount = round(amount * exchangeRate, 5)
 
                         if t == "credits":
                             user.addBalance(credits = getAmount, gems = -amount)
+                        elif t == "kcash":
+                            with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as file:
+                                kmceusers = json.load(file)
+
+                            ign = user.getData('settings').get("ign", None)
+
+                            # Round Value
+                            kmceusers[ign]['KCash'] = round(kmceusers[ign]['KCash'] + getAmount)
+
+                            with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
+                                kmceusers = json.dump(kmceusers, file)
+                            
+                            user.addBalance(gems = -amount)
                         else:
                             user.addBalance(unity = getAmount, gems = -amount)
 
@@ -67,7 +83,7 @@ class Exchanges(commands.Cog):
         with open("botsettings.json", 'r') as f:
             botsettings: dict = json.load(f)
         
-        kcashrate = botsettings.get('KCash rate', 0.1)
+        kcashrate = round(botsettings.get('KCash rate', 0.1) / inflation, 5)
         exchangeFee = botsettings.get('Exchange fee', [500, 5])
 
         # Lower exchange rate based on Wealth Power
@@ -85,7 +101,7 @@ class Exchanges(commands.Cog):
 
 
         if amount is None:
-            embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange <credits>`\n\nCurrently, it would be `1 Credit` → `{round(kcashrate / inflation, 4)} KCash`\n\n**Exchange fee**: `{exchangeFee[0]} Credits` and `{exchangeFee[1]} Unity` per exchange.""", color=0xFF00FF)
+            embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}exchange <credits>`\n\nCurrently, it would be `1 Credit` → `{kcashrate} KCash`\n\n**Exchange fee**: `{exchangeFee[0]} Credits` and `{exchangeFee[1]} Unity` per exchange.""", color=0xFF00FF)
             embed.set_footer(text="Credit exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken into account.")
 
         elif amount <= 0:

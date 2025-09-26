@@ -2,7 +2,7 @@ import json, time, threading, os
 
 userTemplate = {
     "credits": 0,
-    "unity": 50,
+    "unity": 20,
     "gems": 0,
     "kcashExchanged": 0,
     "tags": [],
@@ -10,6 +10,7 @@ userTemplate = {
     "job": None,
     "dailyTime": 0,
     "hourlyTime": 0,
+    "workTime": 0,
     "bs%": 0,
     "rob": {
         "atk": 5,
@@ -22,6 +23,11 @@ userTemplate = {
     "log": 0,
     "redeemedCodes": [],
     "settings": {},
+    "loan": {
+        "amount": 0,
+        "interest": 0,
+        "expires": 0
+    },
 
     "servers": [],
     "playerMonitor": [],
@@ -272,15 +278,15 @@ class User:
 
         self.data["gems"] = round(self.data["gems"] + gems)
 
-        if self.data["unity"] > 200:
+        if self.data["unity"] > 100:
             # Unity Increase item                
             if self.item_exists("Unity Increase"):
-                if self.data['unity'] > 300:
-                    self.data['credits'] += (self.data["unity"] - 300) # Convert excess Unity into Credits
-                    self.data["unity"] = 300
+                if self.data['unity'] > 200:
+                    self.data['credits'] += (self.data["unity"] - 200) # Convert excess Unity into Credits
+                    self.data["unity"] = 200
             else:
-                self.data['credits'] += (self.data["unity"] - 200) # Convert excess Unity into Credits
-                self.data["unity"] = 200
+                self.data['credits'] += (self.data["unity"] - 100) # Convert excess Unity into Credits
+                self.data["unity"] = 100
 
         elif self.data["unity"] < -100:
             self.data["unity"] = -100

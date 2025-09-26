@@ -67,7 +67,7 @@ class AccountViewers(commands.Cog):
 
         embed.add_field(
             name="Balances", 
-            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/{300 if user.item_exists('Unity Increase') else 200}`\n**Gems**: `{int(userData['gems']):>,}`"
+            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/{200 if user.item_exists('Unity Increase') else 100}`\n**Gems**: `{int(userData['gems']):>,}`"
         )
         embed.add_field(
             name="KCMC Info", 
@@ -84,7 +84,7 @@ class AccountViewers(commands.Cog):
                 value=f"**Rob Attack**: `? Lvls`\n**Rob Defense**: `? Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
             )
         embed.add_field(
-            name=f"Credit Perks (~{calcCredit(100, user)}%)", 
+            name=f"Credit Efficiency (~{calcCredit(100, user)}%)", 
             value=calcCreditTxt(user),
             inline=False
         )

@@ -1,4 +1,4 @@
-VERSION = 7.7
+VERSION = 8.0
 
 """
 PIP REQUIREMENTS:
@@ -265,6 +265,7 @@ async def on_ready():
         await bot.add_cog(cmds.WordleGameCog(bot))
         await bot.add_cog(cmds.ServerMonitorCog(bot))
         await bot.add_cog(cmds.EventsCog(bot))
+        await bot.add_cog(cmds.LoanCog(bot))
         lotcog = cmds.LotteryCog(bot)
         await bot.add_cog(lotcog)
 
@@ -290,41 +291,75 @@ async def on_message(message: discord.Message):
     content = message.content
 
     if content.startswith(prefix):
-        botactive = min(20, botactive + 5)
+        botactive = min(30, botactive + 5)
 
         with open("commandLogs.txt", "a") as f:
             f.write(f"{datetime.datetime.now().strftime('%H:%M:%S')} {message.author.display_name}: {content}\n")
 
-if not debug:
-    @bot.event 
-    async def on_command_error(ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+        # Get user loan
+        u = User(message.author.id)
+        data = u.getData()
+
+        loan = data.get('loan', {'amount': 0})
+
+        if loan['amount'] > 0 and time.time() > loan['expires']:
+            # Subtract Unity
+            if loan['amount'] >= 1000:
+                u.addBalance(unity = -100)
+            else:
+                u.addBalance(unity = -50)
+
+            u.setValue('loan', {
+                'amount': 0,
+                'expires': 0,
+                'interet': 0
+            })
+
+            await message.channel.send(embed = discord.Embed(
+                title = "Uh oh!",
+                description = f"{message.author.mention}, it looks like your loan has expired!\nYou lost `{1000 if loan['amount'] >= 1000 else 500} Unity` and likely won't be able to loan for a while again!",
+                color = 0xFF0000
+            ))
+
+@bot.event 
+async def on_command_error(ctx: Context, error: discord.DiscordException):
+    if isinstance(error, commands.CommandOnCooldown):
+        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
+        embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
+        ctx.command.reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.BadArgument): #or if the command isnt found then:
+        params = ctx.command.clean_params
+        embed=discord.Embed(description=f"Invalid command arguments!\nCommand format:\n`{prefix}{ctx.command} {formatParamsOneLine(params)}`", color=0xff0000)
+        ctx.command.reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.CommandNotFound): #or if the command isnt found then:
+        cmd = (ctx.message.content + " ")[len(prefix):].split(" ")[0]
+        if cmd.replace("!", "") != "": 
+            embed=discord.Embed(description=f"`{cmd}` is not a valid command!", color=0xff0000)
             await ctx.send(embed=embed)
-        elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
-            embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
-            (ctx.command).reset_cooldown(ctx)
-            await ctx.send(embed=embed)
-        elif isinstance(error, commands.errors.BadArgument): #or if the command isnt found then:
-            params = ctx.command.clean_params
-            embed=discord.Embed(description=f"Invalid command arguments!\nCommand format:\n`{prefix}{ctx.command} {formatParamsOneLine(params)}`", color=0xff0000)
-            (ctx.command).reset_cooldown(ctx)
-            await ctx.send(embed=embed)
-        elif isinstance(error, commands.errors.CommandNotFound): #or if the command isnt found then:
-            cmd = (ctx.message.content + " ")[len(prefix):].split(" ")[0]
-            if cmd.replace("!", "") != "": 
-                embed=discord.Embed(description=f"`{cmd}` is not a valid command!", color=0xff0000)
-                await ctx.send(embed=embed)
-        elif isinstance(error, commands.errors.ConversionError): #or if the command isnt found then:
-            embed=discord.Embed(description=f"A conversion error occurred! Check to see if you have the correct format for arguments.", color=0xff0000)
-            (ctx.command).reset_cooldown(ctx)
-            await ctx.send(embed=embed)
+    elif isinstance(error, commands.errors.ConversionError): #or if the command isnt found then:
+        embed=discord.Embed(description=f"A conversion error occurred! Check to see if you have the correct format for arguments.", color=0xff0000)
+        ctx.command.reset_cooldown(ctx)
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
+
+        fullreason = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+
+
+        if debug:
+            await ctx.send(f"```ansi\n[0;2m[0;31m{fullreason}```")
+
         else:
-            embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
             embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", ''))
-            print(traceback.format_exc())
             await ctx.send(embed=embed)
-            (ctx.command).reset_cooldown(ctx)
+
+        print(f"\nError occurred by {ctx.author.display_name} ({ctx.author.id}) on {ctx.command}:\n{fullreason}\n")
+
+        ctx.command.reset_cooldown(ctx)
 
 # Run the bot based on the token in the .env file
 print("Starting the bot...")

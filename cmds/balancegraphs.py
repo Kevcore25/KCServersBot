@@ -465,7 +465,7 @@ This is due to the following score reasons being uncalculatable:
 1. Leaderboard ranking
 Unfortunately, this is hard to approximate. 
 Reading all the user's balance log is very resource intensive, so instead, the alghorithm will use a different method.
-This method compares the slope of the current average credits to the default (50) using your current credits to the oldest log as x values.
+This method compares the slope of the current average credits to the default (0) using your current credits to the oldest log as x values.
 Then for each log, if your credits is above the average credits by 20% at that point, then it assigns a LB score of 7.5, or else it will be 2.5 if it is below 15%, or else a LB score of 5 otherwise.
 You may notice jumps in the graph due to this calculation.
 
@@ -524,7 +524,7 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
 
         avgCredits = calcAvgCredits()
 
-        lbslope = (avgCredits - 50) / lines
+        lbslope = (avgCredits) / lines
 
         try:
             with open(os.path.join("balanceLogs", str(userid)), 'r') as f:
@@ -591,8 +591,8 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
 
         # Create plot
         plt.xlabel(f"Index")
-        plt.ylabel("Score")
-        plt.title(f"{user.display_name}'s approximate score changes")
+        plt.ylabel("Approximated Score")
+        plt.title(f"{user.display_name}'s approximated score changes")
 
         # Slope color
         try:
@@ -610,7 +610,7 @@ Ultimately, it is impossible to detect KCash exchanged for this balance graph.
 
         file = discord.File(f"temp/bal{userid}.png", filename=f"balanceGraph.png")
         embed = discord.Embed(title="Score Graph", color=0xFF00FF)
-        embed.set_footer(text="Score graph is approximate and may differ significantly or slightly from the actual scores.")
+        embed.set_footer(text="Score graph is a very general approximation and should only be used as a reference for relative performance.")
         embed.set_image(url=f"attachment://balanceGraph.png")
 
         await message.send(file=file, embed=embed)

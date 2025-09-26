@@ -10,7 +10,7 @@ class GambleGames(commands.Cog):
 
     @commands.command(
         help = f"Beg for money",
-        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `(Total Credits/1000 + 20) * randint(5,15)/10 * inflation%` and Wealth Power (Gen 3), where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose 1.75x the win amount (does not get affected by Credit Perks or Wealth Power)\nIf you got caught while in debt, you will have to pay an additional `5 Unity` as a fine.\nIf you get caught while not in debt, you lose `0.1 Unity`\nHowever, if someone donated money to you, you gain `0.05 Unity`"""
+        description = """There is a 1/3 Chance of getting caught, resulting in paying 2x of the original win amount.\nThe amount you win is determined by: `Average Credits * randint(3,5)/100 * inflation% + 5` and Wealth Power (Gen 3), where Total Credits is the total amount of credits every user has.\nYou can run this command 3 times in 30 seconds.\nIf you got caught, you will lose a bit less than 2x of the win amount (`Average Credits * / 13 * inflation% + 5`)\nIf you got caught while in debt, you will have to pay an additional `5 Unity` as a fine.\nIf you get caught while not in debt, you lose `0.1 Unity`\nHowever, if someone donated money to you, you gain `0.05 Unity`"""
     )
     @commands.cooldown(3, 30, commands.BucketType.user) 
     async def beg(self, message, arg=None):
@@ -25,10 +25,13 @@ class GambleGames(commands.Cog):
             with open('users/' + file, 'r') as f:
                 totalCredits += json.load(f)['credits']
 
-        winAmount = round((totalCredits/1000 + 1.5) * random.randint(5,15)/7 * calcInflation(), 2)
+        winAmount = round(calcAvgCredits() * random.randint(3, 5) / 100 * calcInflation() + 5, 2)
 
-        # Beggars have 0% WP so only calculate
-        if not user.getData('job') == "Beggar":
+        # Beggars have half beg WP calc
+        if user.getData('job') == "Beggar":
+            winAmount /= max(1, calcWealthPower(user, decimal=True) / 2 - 1)
+            winAmount = round(winAmount, 3)
+        else:
             winAmount = calcWPAmount(user, winAmount, generation=2)
 
         # Popularity item
@@ -44,21 +47,13 @@ class GambleGames(commands.Cog):
             return
 
         if r == 0:
-            # Sometimes gain 50% more
-            if user.getData('job') == "Beggar" and random.randint(0, 4) == 0:
-                loseAmount = round((totalCredits/1000 + 1.5) * 30/7 * calcInflation(), 2)
-
-                embed = discord.Embed(title="You got caught!",description=f"You got caught by the police! This time however, the police caught your deceiveful actions!!\nYou lost `3 Unity` and `{loseAmount} Credits` in the process!", color=0xFF0000)
-                user.addBalance(credits = -loseAmount, unity=-3)
-
-
-            elif user.getData('credits') < 0:
+            if user.getData('credits') < 0:
                 user.addBalance(unity = -5)
 
                 embed = discord.Embed(title="You got caught!",description=f"You got caught by the police!\nYou did not have anymore Credits, so you lost `5 Unity`.", color=0xFF0000)
 
             else:
-                loseAmount = round((totalCredits/1000 + 1.5) * 10/7 * calcInflation(), 2)
+                loseAmount = round(calcAvgCredits() / 13 * calcInflation() + 5, 2) # +5 is normal - it makes begging a positive gain on avg
 
                 user.addBalance(credits = -loseAmount, unity=-0.1)
 

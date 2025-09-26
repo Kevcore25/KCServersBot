@@ -58,6 +58,9 @@ class ChatCommunicator(commands.Cog):
             with open('chatcommunicator.yml', 'r') as f:
                 self.servers: dict[str, str] = yaml.safe_load(f)
 
+            if self.servers is None:
+                return
+
             for channelID, server in self.servers.items():
                 descriptions = []
 
@@ -73,9 +76,9 @@ class ChatCommunicator(commands.Cog):
                 if size > seekinfo[channelID][1]:
                     seekinfo[channelID][1] = size
                 elif size < seekinfo[channelID][1]:
-                    # Set seek to 0 in case log is rewritten.
+                    # Set seek to file size in case log is rewritten.
                     # Prevents an edge case
-                    seekinfo[channelID] = [0, size]
+                    seekinfo[channelID] = [size, size]
                 else:
                     # Otherwise, to conserve resources, do not run
                     continue
@@ -120,7 +123,7 @@ class ChatCommunicator(commands.Cog):
     async def getmsg(self, message: discord.Message):
         channelID = message.channel.id
 
-        if channelID in self.servers and message.author.id != self.bot.user.id:
+        if self.servers is not None and channelID in self.servers and message.author.id != self.bot.user.id:
             try:
                 u = User(message.author.id)
 
@@ -155,22 +158,24 @@ class ChatCommunicator(commands.Cog):
 
     async def bot_phrases(self, message: discord.Message,  password, port):
         # Get text
-        text = message.clean_content[:100].lower().strip()
+        text = message.clean_content[:500].lower().strip()
 
         # Show list of players
         if (
-            ("anyone on" in text) or
-            ('player list' in text) or
-            text.startswith('/list') or
-            ('who' in text and ' on' in text) or
-            ('anyone here' in text) or 
-            ('anyone around' in text) or
-            ('anyone' in text and ' active' in text)
+            len(text) < 30 and (
+                ("anyone on" in text) or
+                ('player list' in text) or
+                text.startswith('/list') or
+                ('who' in text and ' on' in text) or
+                ('anyone here' in text) or 
+                ('anyone around' in text) or
+                ('anyone' in text and ' active' in text)
+            )
         ):
             with MCRcon(RCON_IP, password, port, timeout=1) as rcon:
                 players = rcon.command('list')
 
-            await message.channel.send(f'{message.author.mention}: {players}')
+            await message.channel.send(f'{message.author.mention}: {parse(players)}')
 
     async def send_attachment(self, message: discord.Message, password, port):
         # Get attachment (image) and save it

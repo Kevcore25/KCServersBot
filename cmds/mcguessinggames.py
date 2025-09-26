@@ -85,13 +85,10 @@ class MCGuessingGames(commands.Cog):
         # Credit formula.
         cred = lambda: round(calcCredit(
             (
-                20
+                25
                 / (22 - attempts)
             ),
         u), 2)
-        
-        # Subtract 2 credits from user
-        u.addBalance(credits=-2)
 
         # Send MSG
         msg = await message.send(embed=discord.Embed(
@@ -161,9 +158,8 @@ Guessed: `{', '.join(guessed)}`
                     if "_" not in scrambled:
                         c = cred()
                         
-
                         u.addBalance(c)
-                        await edit(f"*You won! You gained `{c} Credits` (Net total of `{numStr(c - 2)} Credits`)!*") # Makes it BOLD, not italtic
+                        await edit(f"*You won! You gained `{numStr(c)} Credits`!*") # Makes it BOLD, not italtic
                         return
                         
                 else:
@@ -179,7 +175,7 @@ Guessed: `{', '.join(guessed)}`
 
                 u.addBalance(c)
             
-                await edit(f"*You won! You gained `{c} Credits` (Net total of `{numStr(c - 2)} Credits`)!*") # Makes it BOLD, not italtic
+                await edit(f"*You won! You gained `{numStr(c)} Credits`!*") # Makes it BOLD, not italtic
                 self.mchangman.reset_cooldown(message)
                 return
             # Guess wrong

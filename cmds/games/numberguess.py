@@ -92,7 +92,11 @@ class RNGNumberGuessCog(commands.Cog):
         game = RNGNumberGame(difficulty)
 
         def getRwd():
-            return round(dim.returnAmount(u) * game.rewardMultiplier * (1 + game.attempts / 10), 3)
+            # Special modifier for RNG impossible: fixed at 1,000
+            if difficulty == "impossible":
+                return 1000
+            else:
+                return round(dim.returnAmount(u) * game.rewardMultiplier * (1 + game.attempts / 10), 3)
 
         # Send init message
         desc = lambda text: f"Type a number! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nThe number I am thinking of is between `{game.min}` and `{game.max}`\nAttempts remaining: `{game.attempts}`\n\n{text}"
@@ -136,7 +140,7 @@ class RNGNumberGuessCog(commands.Cog):
                     u.addBalance(credits=credits)
                     break
 
-                else:
+                elif difficulty == "impossible":
                     await edit(f"Your guess of `{userInput}` was `{game.hint(userInput)}`")
 
             except (TimeoutError, asyncio.exceptions.TimeoutError):

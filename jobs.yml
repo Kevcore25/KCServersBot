@@ -1,0 +1,75 @@
+Player:
+    Description: A KCMC player. Standard work job with no downsides. **Recommended for new players.**
+    Credits: 10
+    Unity: 1
+    Credit Efficiency: 5
+    Unity Threshold: 0
+
+Developer:
+    Description: A developer working in KCServers. Developers earn a lot but not so much Unity.
+    Credits: 37.5
+    Unity: 0.4
+    Credit Efficiency: 0
+    Unity Threshold: 50
+
+Pacifist:
+    Description: A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.
+    Credits: 15
+    Unity: 0.8
+    Credit Efficiency: -5
+    Unity Threshold: 0
+
+Beggar:
+    Description: Beggars make themselves look poor, which allow them to earn more from begs! While begging, Wealth Power is halved, and you sometimes get 50% more from begs (20%)
+    Credits: 15
+    Unity: 0.5
+    Credit Efficiency: 0
+    Unity Threshold: 0
+
+Unifier:
+    Description: Unifiers help unite everyone.
+    Credits: 1.5
+    Unity: 3
+    Credit Efficiency: 0
+    Unity Threshold: 30
+
+Banker:
+    Description: Bankers help regulate the bank economy. When working, the bot loses 1k Credits then gains 1k Credits scaling with Credit Efficiency.
+    Credits: 20
+    Unity: 1
+    Credit Efficiency: 0
+    Unity Threshold: 50
+
+Police:
+    Description: A policeman catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`).
+    Credits: 15
+    Unity: 2
+    Credit Efficiency: 0
+    Unity Threshold: 60
+
+Robber:
+    Description: A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`).
+    Credits: 30
+    Unity: 0
+    Credit Efficiency: -5
+    Unity Threshold: -100
+
+Student:
+    Description: A student. Gain access to the `questions` command.
+    Credits: 0
+    Unity: 0
+    Credit Efficiency: 5
+    Unity Threshold: 10
+
+Gambler:
+    Description: |-
+        Gamblers gamble all their money to lose... but it seems like they are cheating sometimes!
+        Gamblers get the following perks:
+        * In CG, gain 5% more for >2x multiplier and 10% more for >3x
+        * Lotteries give 5% more
+        * Last CG multiplier influences next work gained (up to 10x multiplier). Minimum 10 Credit bet.
+    Credits: 15
+    Unity: 0.5
+    Credit Efficiency: 0
+    Unity Threshold: 0
+

@@ -105,7 +105,6 @@ class ServerMonitorCog(commands.Cog):
 
                         except Exception as e: 
                             errorServers.append(server)
-                            print(e)
                 
                 # Only send if it is not empty,
                 # AND if the players changed
@@ -162,7 +161,7 @@ class ServerMonitorCog(commands.Cog):
                         await user.send(embed=embed)
 
             except Exception as e: 
-                pass
+                print(e)
 
     @commands.command(
         help = f"Status",

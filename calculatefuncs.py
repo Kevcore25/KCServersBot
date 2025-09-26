@@ -1,8 +1,10 @@
 """Calculation functions"""
 
 from users import User
-import discord, os, json, time, random
+import discord, os, json, time, random, yaml
 import discord.ext.commands
+
+Context = discord.ext.commands.Context
 
 with open("botsettings.json", 'r') as f:
     botsettings = json.load(f)
@@ -256,7 +258,10 @@ def calcWPAmount(u: User, amount: float, generation: int = 2, acc: int = 3) -> f
             return round(amount, acc)
 
 def calcAvgCredits() -> int:
-    """Calculates average credits"""
+    """
+    Calculates average credits.
+    Negative and zero balances are ignored.
+    """
     # Relative Power of Credits = (Credits ) / (Average Credits of Members)  
 
     usersDir = os.listdir('users')
@@ -267,7 +272,7 @@ def calcAvgCredits() -> int:
             if file == "main.json": continue
             try:
                 credits = float(json.load(f).get('credits'))
-                if credits != 0: 
+                if credits > 0: 
                     totalCredits += credits
                     amtOfUsers += 1
             except: pass
@@ -286,14 +291,14 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     - Ranking on leaderboard ((11 - current), cannot be under 0)
     - Average Credits earned (For up to 1k Cred, up to 50 can be obtained. Cannot be over 50)
     - Amount of transactions (Sqrt(x/2), cannot be over 50)
-    - Average Unity earned (For up to 200 Unity, up to 20 can be obtained)
+    - Average Unity earned (For up to 100 Unity, up to 20 can be obtained)
     - KCash Exchanged (For up to 10k exchanged, up to 20 can be obtained)
 
     As of 2025-05-20 (V.5.8), score slightly changes:
     - Score value is now scaled by 100x (50 >> 5000)
     - Score is an integer value
     - Adds Current Unity value
-        - Each 1 Unity gives 5 Score (200 = 1000)
+        - Each 1 Unity gives 10 Score (100 = 1000)
     """
 
     scores = {}
@@ -346,7 +351,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     credScore = 2 * (totalCred / len(ballogs))
     if credScore > 5000: credScore = 5000
     scores['Average Credits'] = round(credScore)
-    scores['Average Unity'] = round(10 * (totalUnity / len(ballogs)))
+    scores['Average Unity'] = round(20 * (totalUnity / len(ballogs)))
 
     # Amount of transactions
     transScore = ((u.getData('log')) / 2) ** 0.5 * 100
@@ -359,7 +364,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
         scores['KCash Exchanged'] = 2000
     
     # Current Unity
-    scores['Current Unity'] = round(5 * u.getData("unity"))
+    scores['Current Unity'] = round(10 * u.getData("unity"))
 
     
     # MSG or just send
@@ -562,12 +567,14 @@ def calcCredit(amount: int, user: User = None) -> float:
         # Too Rich (-0.001% Credit gain for every Wealth)
         if wealth > 50000:
             amount *= 1 + round((50000 - wealth) * 0.00001, 2)
-
+        # Was jailed
+        if user.get_item('Jail Penalty', True):
+            amount *= 0.85
         """ JOB """
         if data['job'] is not None:
-            with open('jobs.json', 'r') as f:
-                jobs = json.load(f)
-            amount *= round(1 + jobs[data['job']]['credit perk'] / 100, 2)
+            with open('jobs.yml', 'r') as f:
+                jobs = yaml.safe_load(f)
+            amount *= round(1 + jobs[data['job']]['Credit Efficiency'] / 100, 2)
 
     """ EVENTS """
 
@@ -580,6 +587,7 @@ def calcCreditTxt(user: User) -> int:
     unity = user.getData('unity')
     credits = user.getData('credits')
     data = user.getData()
+    wealth = calcWealth(user)
 
     amountTxt = {}
 
@@ -623,27 +631,31 @@ def calcCreditTxt(user: User) -> int:
         amountTxt["Negative Unity fee"] = -round(1 - unityFee, 3) * 100
 
     # Rich I (-10% Credit gain)
-    if credits > 1000:
+    if wealth > 1000:
         amountTxt["Rich I (>1K)"] = -5
 
     
     # Rich II (-15% Credit gain)
-    if credits > 3000:
+    if wealth > 3000:
         amountTxt["Rich II (>3K)"] = -15
 
     # Rich III (-20% Credit gain)
-    if credits > 5000:
+    if wealth > 5000:
         amountTxt["Rich III (>5K)"] = -20
 
+    # Was jailed
+    if user.get_item('Jail Penalty', True):
+        amountTxt["Jailed Penality"] = -15
+
     # Too rich!
-    if credits > 50000:
+    if wealth > 50000:
         amountTxt["Too Rich"] = round((50000 - credits) * 0.001, 2)
 
     """ JOB """
     if data['job'] is not None:
-        with open('jobs.json', 'r') as f:
-            jobs = json.load(f)
-        amountTxt["[Job] " + data['job']] = jobs[data['job']]['credit perk']
+        with open('jobs.yml', 'r') as f:
+            jobs = yaml.safe_load(f)
+        amountTxt["[Job] " + data['job']] = jobs[data['job']]['Credit Efficiency']
 
     """ EVENTS """
 
@@ -758,7 +770,7 @@ def formatParamsOneLine(params: dict[str, discord.ext.commands.Parameter]) -> st
 
     return " ".join(text)
 
-def formatParamsMulti(command: discord.ext.commands.Command, prefix="!") -> str:
+def formatParamsMulti(command: discord.ext.commands.Command) -> str:
     # Param
     params = command.clean_params
     # e.g. <number> [text] 
@@ -945,3 +957,9 @@ class DiminishRewards:
         
         self.users[user.ID][0] += 1
         print(self.users)
+
+def escape_markdown(text):
+    chars = ['*', '_', '`', '~', '[', ']', '(', ')', '#', '+', '-', '.', '!']
+    for char in chars:
+        text = text.replace(char, f'\\{char}')
+    return text

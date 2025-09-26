@@ -72,7 +72,7 @@ A successful rob increases Unity by 0.25
         targetUser = User(target.id)
 
         if targetUser.getData()['credits'] < 0:
-            embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when the target's balance is under 0!", color=0xFF0000)
+            embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when the target's balance is under 0!\nAt least, not yet (coming soon!)", color=0xFF0000)
             await message.send(embed=embed)
             self.rob.reset_cooldown(message)
             return
@@ -81,9 +81,17 @@ A successful rob increases Unity by 0.25
             await message.send(embed=embed)
             self.rob.reset_cooldown(message)
             return
+        
+        data = user.getData()
 
+        if data['credits'] < 0 and data['unity'] < 0:
+            embed = discord.Embed(title="An error occurred!",description=f"Cannot rob when you are at negative Unity and Credits!", color=0xFF0000)
+            await message.send(embed=embed)
+            self.rob.reset_cooldown(message)
+            return
+        
         # Get variables
-        userBal = user.getData()['credits']
+        userBal = data['credits']
         targetBal = targetUser.getData()['credits']
 
         # Get amounts
@@ -163,14 +171,24 @@ Rolling...""",
                     await msg.edit(embed=em)
                     await asyncio.sleep(3)
                 else: 
-                    em = discord.Embed(
-                        title = "Rob Results",
-                        description = f"""Robbing {target.mention}...
+                    if user.getData('credits') > 0:
+                        em = discord.Embed(
+                            title = "Rob Results",
+                            description = f"""Robbing {target.mention}...
+
+    Unfortunately, {target.mention} has a lock, and the police caught you when you attempted to pick it!
+    You were fined `{loseAmount} Credits` to {target.mention}""",
+                            color = 0xFF0000,
+                        )
+                    else:
+                        em = discord.Embed(
+                            title = "Rob Results",
+                            description = f"""Robbing {target.mention}...
 
 Unfortunately, {target.mention} has a lock, and the police caught you when you attempted to pick it!
-You were fined `{loseAmount} Credits` to {target.mention}""",
-                        color = 0xFF0000,
-                    )
+You were lost `10 Unity` to {target.mention}""",
+                            color = 0xFF0000,
+                        )
                     lose()
 
                     user.delete_item("Lock Pick")
@@ -183,10 +201,9 @@ You were fined `{loseAmount} Credits` to {target.mention}""",
                     description = f"""Robbing {target.mention}...
 
 Unfortunately, {target.mention} has a lock, and you did not bring a lock pick to break it.
-You were fined `{loseAmount} Credits` to {target.mention} after the police caught you.""",
+You quickly got out of there before the police caught you!""",
                     color = 0xFF0000,
                 )
-                lose()
 
                 await msg.edit(embed=em)
                 return
