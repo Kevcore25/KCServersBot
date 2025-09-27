@@ -43,7 +43,7 @@ class AccountViewers(commands.Cog):
                 return
 
 
-        ign = userData['settings'].get("IGN", "None")
+        ign = userData['settings'].get("ign", "guest")
 
         try:
             walletID = userData['LFN']
@@ -140,10 +140,16 @@ class AccountViewers(commands.Cog):
             name="KCMC Info", 
             value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`"
         )    
+
+        if userData.get('loan', {'amount': 0}).get('amount') > 0:
+            loanMsg = f"`{userData['loan']['amount']} Credits` loaned, expiring <t:{userData['loan']['expires']}:R>"
+        else:
+            loanMsg = "`Not active`"
+
         embed.set_field_at(
             index = 5,
             name="Other Info", 
-            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{get_prefix(calcScore(user))}`",
+            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{get_prefix(calcScore(user))}`",
             inline=False
         )
 

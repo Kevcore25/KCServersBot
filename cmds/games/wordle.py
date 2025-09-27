@@ -3,6 +3,8 @@ from discord.ext import commands
 from calculatefuncs import *
 import asyncio
 
+ESCAPE = ''
+
 class WordleChar:
     letter: str
     position: int
@@ -28,7 +30,7 @@ class WordleChar:
 class WordleGame:
     answer: str
     attempts: int
-    data: list[list[WordleChar]]
+    word_data: list[list[WordleChar]]
 
     def __init__(self):
         # Choose a word
@@ -39,7 +41,7 @@ class WordleGame:
 
         self.attempts = 6
 
-        self.data = []
+        self.word_data = []
 
     def guess(self, word: str) -> bool:
         feedback = [WordleChar(t, 0) for t in word]
@@ -60,7 +62,7 @@ class WordleGame:
                         answer_used[j] = True 
                         break
 
-        self.data.append(feedback)
+        self.word_data.append(feedback)
 
         if word == self.answer:
             return True
@@ -73,7 +75,7 @@ class WordleGame:
 
     def getAnswers(self) -> str:
         temp = []
-        for word in self.data:
+        for word in self.word_data:
             temp.append(" ".join(str(i) for i in word))
 
         # Don't display ANSI if none
@@ -82,6 +84,45 @@ class WordleGame:
         else:
             return "```ansi\n" + "\n".join(temp) + "```"
     
+    def returnKeyboard(self):
+        keyboard = (
+            'Q W E R T Y U I O P',
+            ' A S D F G H J K L',
+            '  Z X C V B N M'
+        )
+
+        newKeyboard = []
+
+        for kbRow in keyboard:
+            newRow = []
+
+            for key in kbRow:
+                if key == ' ': 
+                    newRow.append(' ')
+                    continue
+                
+                highest = -1
+
+                # Iterate through all the wordle data 
+                for row in self.word_data:
+                    for wchar in row:
+                        if wchar.letter.upper() == key:
+                            highest = max(highest, wchar.position)
+
+                match highest:
+                    case -1:
+                        newRow.append('[2;0m' + key)
+                    case 0:
+                        newRow.append('[2;30m' + key)
+                    case 1:
+                        newRow.append('[2;33m' + key)
+                    case 2:
+                        newRow.append('[2;32m' + key)
+
+            newKeyboard.append(''.join(newRow))
+
+        return '\n'.join(newKeyboard)
+
 dim = DiminishRewards(10, 1, 3600)
 firstWordles = []
 
@@ -90,6 +131,7 @@ class WordleGameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
+
 
     @commands.command(
         help = "Wordle Game",
@@ -116,9 +158,9 @@ class WordleGameCog(commands.Cog):
         
         def desc(text: str):
             if hint != '':
-                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}{text}"
+                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}```ansi\n{game.returnKeyboard()}```{text}"
             else:
-                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}` {game.getAnswers()}{text}"
+                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}` {game.getAnswers()}\n```ansi\n{game.returnKeyboard()}```{text}"
             
         # Send init message
         embed = discord.Embed(
@@ -149,6 +191,10 @@ class WordleGameCog(commands.Cog):
             try:
                 ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
                 userInput = ui.content.lower()
+
+                # Check if it is 5 length
+                if len(userInput) != 5:
+                    continue
 
                 if userInput == "exit":
                     await edit(f"Game exited. Your CD is not reset.\nThe word was `{game.answer}`") 

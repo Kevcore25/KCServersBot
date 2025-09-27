@@ -242,7 +242,7 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
         description = "You can redeem a gift code to get rewards! A redeem code can only be used once per account"
     )
     @commands.cooldown(2, 10, commands.BucketType.user) 
-    async def redeem(self, message, *, code: str):
+    async def redeem(self, message: Context, *, code: str):
         u = User(message.author.id)
 
         # Get gift codes
@@ -253,9 +253,6 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
             with open('giftcodes.json', 'w') as f:
                 f.write("{}")
             codes = {}
-
-        # Delete user message
-        await message.delete()
 
         try: # You can also use if code in list
             # Reset CD. CD is for failure attempts

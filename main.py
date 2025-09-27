@@ -1,4 +1,4 @@
-VERSION = 8.0
+VERSION = 8.1
 
 """
 PIP REQUIREMENTS:
@@ -317,7 +317,7 @@ async def on_message(message: discord.Message):
 
             await message.channel.send(embed = discord.Embed(
                 title = "Uh oh!",
-                description = f"{message.author.mention}, it looks like your loan has expired!\nYou lost `{1000 if loan['amount'] >= 1000 else 500} Unity` and likely won't be able to loan for a while again!",
+                description = f"{message.author.mention}, it looks like your loan has expired!\nYou lost `{100 if loan['amount'] >= 1000 else 50} Unity` and likely won't be able to loan for a while again!",
                 color = 0xFF0000
             ))
 
@@ -347,11 +347,15 @@ async def on_command_error(ctx: Context, error: discord.DiscordException):
     else:
         embed = discord.Embed(title='A FATAL error occurred:', colour=0xEE0000) #Red
 
-        fullreason = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+        fullreason = ''.join(traceback.format_exception(type(error), error, error.__traceback__)).replace('```', '` ` `')
 
+        if len(fullreason) > 1800:
+            discordreason = fullreason[:900] + '...' + fullreason[-900:]
+        else:
+            discordreason = fullreason
 
         if debug:
-            await ctx.send(f"```ansi\n[0;2m[0;31m{fullreason}```")
+            await ctx.send(f"```ansi\n[0;2m[0;31m{discordreason}```")
 
         else:
             embed.add_field(name='Reason:', value=str(error).replace("Command raised an exception: ", ''))
