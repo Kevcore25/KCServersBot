@@ -142,7 +142,7 @@ class AccountViewers(commands.Cog):
         )    
 
         if userData.get('loan', {'amount': 0}).get('amount') > 0:
-            loanMsg = f"`{userData['loan']['amount']} Credits` loaned, expiring <t:{userData['loan']['expires']}:R>"
+            loanMsg = f"`{userData['loan']['amount']} Credits` (`{round(userData['loan']['interest'] * 100)}%` interest), expiring <t:{userData['loan']['expires']}:R>"
         else:
             loanMsg = "`Not active`"
 

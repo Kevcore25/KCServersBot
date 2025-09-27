@@ -185,7 +185,7 @@ Average Score: {avgscore}""")
                 except FileNotFoundError:
                     pass
 
-                data['credits'] = 50
+                data['credits'] = 100
                 data['unity'] = 20
 
                 data['items'] = {"Prosperous Reset": {"expires": [int(time.time() + 60*60*24*3)], "data": {}, "count": 1}}

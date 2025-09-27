@@ -9,7 +9,7 @@ As score generally starts linear and slows during late-game, this usually is a g
 Score depends on many factors, so negative Unity for example would cause lower scores as well.
 
 After loaning an amount of Credits, you must pay an interest within 1 week, or you will suffer Unity losses.
-The interest is randomized from 10% to 20%, and the Unity loss depends on how much you had loaned:
+The interest is randomized from 5% to 15%, and the Unity loss depends on how much you had loaned:
 * For less than 1k loaned: -50 Unity
 * For 1k loaned and over: -100 Unity
 
@@ -41,7 +41,7 @@ class LoanCog(commands.Cog):
         if value is None:
             await message.send(embed = basicMsg(
                 "Loaning Information",
-                f"You can loan up to `{maxLoan:>,} Credits`.\nYou must pay 15% ±5% interest within 1 week of your loan or before a reset.\nOtherwise, you will suffer Unity losses.\n\nHow to use:\n{prefix}loan <amount> - Loan an amoutn of credits\n{prefix}loan repay - Repay your loan\n\nRun the help command on this command for more loaning information."
+                f"You can loan up to `{maxLoan:>,} Credits`.\nYou must pay 10% ±5% interest within 1 week of your loan or before a reset.\nOtherwise, you will suffer Unity losses.\n\nHow to use:\n{prefix}loan <amount> - Loan an amount of credits\n{prefix}loan repay - Repay your loan\n\nRun the help command on this command for more loaning information."
             ))
         elif value.lower() == "repay":
             loan = u.getData('loan')
@@ -88,7 +88,7 @@ class LoanCog(commands.Cog):
 
             loan = {
                 "amount": value,
-                "interest": round(random.randint(10, 20) / 100, 2),
+                "interest": round(random.randint(5, 15) / 100, 2),
                 "expires": int(time.time() + 60*60*24*7)
             }
 

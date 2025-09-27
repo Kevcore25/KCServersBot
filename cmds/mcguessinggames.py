@@ -31,20 +31,24 @@ def pull_mch_data():
 # Put in a thread to prevent code stalling
 threading.Thread(target=pull_mch_data).start()
 
+dim = DiminishRewards(initialReward=5, minimumReward=0.5, reset=3600)
+
 class MCGuessingGames(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Client):
         self.bot = bot
             
 
 
     @commands.command(
         help = f"Play a simliar version of Hangman",
-        description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word. It costs `2 Credits` to play the game though negative balances are still allowed..\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*""",
+        description = """A random word will be chosen from a bank. You will have letter attempts and guess attempts. Say a letter to guess a letter, and anything else to guess the word.\n-# *Data sourced from the [MC Property Encyclopedia](https://joakimthorsen.github.io/MCPropertyEncyclopedia/)*\n\nReward: `5 * attempts` Credits (diminishes over 1h, `minimum 0.5 * attempts`)""",
         aliases = ['mch', 'minecrafthangman']
     )
-    @commands.cooldown(1, 30, commands.BucketType.user)
-    async def mchangman(self, message: discord.Message):
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    async def mchangman(self, message: Context):
         u = User(message.author.id)
+
+        dim.add_use(u)
 
         # Get data
         with open("mcdata.txt", 'r') as f:
@@ -70,8 +74,8 @@ class MCGuessingGames(commands.Cog):
         guessed = []
 
         # Attempts and guesses
-        attempts = 20 # round(5 + len(item.replace(" ",'')) ** 0.5)
-        guesses = 10
+        attempts = 6 # round(5 + len(item.replace(" ",'')) ** 0.5)
+        guesses = 5
 
 
         # if 2 + len(set(tuple(item))) < attempts:
@@ -83,19 +87,14 @@ class MCGuessingGames(commands.Cog):
             else: scrambled.append("_")
 
         # Credit formula.
-        cred = lambda: round(calcCredit(
-            (
-                25
-                / (22 - attempts)
-            ),
-        u), 2)
+        cred = lambda: round(dim.returnAmount(u) * attempts, 3)
 
         # Send MSG
         msg = await message.send(embed=discord.Embed(
             title = "Minecraft Guessing Game",
             description = f"""A random word was chosen from a [bank](https://joakimthorsen.github.io/MCPropertyEncyclopedia/). Say a letter to guess a letter. Type the full word to win.
 At anytime in the game, type `exit` to exit out of the game.
-Winning will give you `{cred()} Credits`.
+Winning will give you `{numStr(cred())} Credits`.
 
 **`{' '.join(i for i in scrambled)}`**
 
@@ -122,7 +121,7 @@ Letter Attempts left: `{attempts}`
 Word Guesses left: `{guesses}`
 
 Guessed: `{', '.join(guessed)}`
-*{text}*""",
+{text}""",
                 color=0xFF00FF
             ))
         while True:
@@ -130,18 +129,18 @@ Guessed: `{', '.join(guessed)}`
                 ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=300)
                 userInput = ui.content
             except (TimeoutError, asyncio.exceptions.TimeoutError):
-                message.send(f"{message.author.mention}, your mc hangman expired after 5 minutes of inactivity!")
+                await message.send(f"{message.author.mention}, your MC hangman expired after 5 minutes of inactivity!")
                 return # Fix potential bug
             userInput = str(userInput).lower()
 
             # Exit
             if userInput == "exit":
-                await edit(f"Exited MCHangman game.") # Makes it BOLD, not italtic
+                await edit(f"*Exited MCHangman game.*") # Makes it BOLD, not italtic
                 return
             
             # Already did before
             if userInput in guessed:
-                await edit(f"You already guessed that letter!") # Makes it BOLD, not italtic
+                await edit(f"*You already guessed that letter!*") # Makes it BOLD, not italtic
 
             # Letter guess
             elif len(userInput) == 1:             
@@ -153,20 +152,20 @@ Guessed: `{', '.join(guessed)}`
                         if item[i] == userInput:
                             scrambled[i] = userInput
     
-                    await edit(f"`{userInput}` is in the word!")
+                    await edit(f"*`{userInput}` is in the word!*")
 
                     if "_" not in scrambled:
                         c = cred()
                         
                         u.addBalance(c)
-                        await edit(f"*You won! You gained `{numStr(c)} Credits`!*") # Makes it BOLD, not italtic
+                        await edit(f"**You won! You gained `{numStr(c)} Credits`!**") # Makes it BOLD, not italtic
                         return
                         
                 else:
-                    await edit(f"`{userInput}` is not in the word!")
+                    await edit(f"*`{userInput}` is not in the word!*")
 
                 if attempts <= 0:
-                    await edit(f"*You lost! You ran out of attempts! The word was `{item.title()}`*")
+                    await edit(f"**You lost! You ran out of attempts! The word was `{item.title()}`**")
                     return
             elif userInput == item:            
 
@@ -183,15 +182,18 @@ Guessed: `{', '.join(guessed)}`
                 guesses -= 1
 
                 if guesses == 0:
-                    await edit(f"*You lost! You ran out of word guesses! The word was `{item.title()}`*")
+                    await edit(f"**You lost! You ran out of word guesses! The word was `{item.title()}`**")
                     return
                 else:
-                    await edit(f"`{userInput.title()}` is not the word!")
+                    await edit(f"*`{userInput.title()}` is not the word!*")
             else:
                 continue # Continue the loop
-            # One of the if statements ran, so delete author msg
-            await ui.delete()
-
+            
+            try:
+                # One of the if statements ran, so delete author msg
+                await ui.delete()
+            except discord.errors.Forbidden:
+                pass
 
     @commands.command(
         help = f"MCPG dictionary",

@@ -137,6 +137,7 @@ class WordleGameCog(commands.Cog):
         help = "Wordle Game",
         description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\nThe first wordle each day will grant 2x more Credit rewards.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
     )
+    @commands.cooldown(1, 10, commands.BucketType.user)
     async def wordle(self, message: discord.Message):
         global firstWordles
 

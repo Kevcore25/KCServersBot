@@ -17,14 +17,14 @@ Pacifist:
     Credits: 15
     Unity: 0.8
     Credit Efficiency: -5
-    Unity Threshold: 0
+    Unity Threshold: 25
 
 Beggar:
     Description: Beggars make themselves look poor, which allow them to earn more from begs! While begging, Wealth Power is halved, and you sometimes get 50% more from begs (20%)
     Credits: 15
     Unity: 0.5
     Credit Efficiency: 0
-    Unity Threshold: 0
+    Unity Threshold: 50
 
 Unifier:
     Description: Unifiers help unite everyone.
@@ -71,5 +71,5 @@ Gambler:
     Credits: 15
     Unity: 0.5
     Credit Efficiency: 0
-    Unity Threshold: 0
+    Unity Threshold: 15
 
