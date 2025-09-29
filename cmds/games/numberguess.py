@@ -141,7 +141,7 @@ class RNGNumberGuessCog(commands.Cog):
                     u.addBalance(credits=credits)
                     break
 
-                elif difficulty == "impossible":
+                elif difficulty != "impossible":
                     await edit(f"Your guess of `{userInput}` was `{game.hint(userInput)}`")
 
             except (TimeoutError, asyncio.exceptions.TimeoutError):
