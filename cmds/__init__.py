@@ -15,6 +15,7 @@ from cmds.shop import ShopCog
 from cmds.gofish import GoFishCog
 from cmds.lottery import LotteryCog
 from cmds.loan import LoanCog
+from cmds.memorygame import NumberMemoryGame
 
 from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog
