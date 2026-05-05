@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
 from calculatefuncs import *
-import asyncio, games
+import asyncio, games, itertools
 from games import Players, PLAYER_TIER_COSTS
 
 class InteractionGames(commands.Cog):
     """Games that involve other users"""
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: discord.Client = bot
     
     
 
@@ -15,7 +15,6 @@ class InteractionGames(commands.Cog):
         help = f"Rob someone the modern way.\nFormat: {prefix}rob <target>",
         description = """
 A new modern robbing system that rolls values instead of a fixed 33% to win.
-**As of V.5.0, the robbing system slightly changed. See the Unity section of this description for more details**
 
 **Dice Roll System**
 This robbing system rolls a dice from 1 to a set amount. If your dice roll is higher than the opponent's roll, you win the rob. Otherwise, you lose the rob.
@@ -30,14 +29,20 @@ Insights can stack up to 3 times and reset when succeeding a rob or being succes
 * Target is offline or idle: Target Defense Rob -1
 * Already robbed that target within 5 minutes: Target Defense Rob +2
 * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
+* Target has a Lock: Target Rob Defense +1 for each lock and an additional +2 Rob Defense
 target
-Essentially, it is way easier for the target to gain Rob Defenses than it is for you to gain Rob Attacks, making it harder for you to successfully rob someone.
 
-**Locks and Lock Picks**
-If the target has a `Lock`, you cannot rob that target unless you have a `Lock Pick`.
-Lock picks have a 75% of bypassing a lock, and a 25% of getting caught.
-If you bypass the lock, it is not over, and you still have to win the rob.
-If you do not bypass, your lock pick will be confiscated.
+**Locks Information**
+Previously, locks are items that require the attacker to buy a lock pick to bypass it. However, as of V.8.4, this has changed.
+Now, you play a minigame with the lock pick:
+- Robbing someone now has a combination. The number depends on the # of locks - 3 for 1 lock, and +1 for each additional lock (thus up to 5).
+- You are asked to input a binary combination of length C (e.g. 00100)
+- After you are done inputting, it will show HOW MANY combinations are correct.
+- You are allowed 3 attempts, but with a 30 second time limit.
+- Every rob generates the combination on the spot.
+- Locks are broken based on this formula: `Matching Combinations - 2`. Cannot be under 0.
+- Picking the lock removes the Lock and you gain `+1 Rob Attack Level` but losing removes your Rob Attack Level equal to number of unfound combinations.
+- Robbing the Bot plays a modified version of the minigame...
 
 **Amounts**
 Win Amount: 
@@ -54,13 +59,13 @@ Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
 When robbing someone, you lose unity as a result. 
 Negative unity increases the Target's RDL in addition to balance difference.
 The formula for this is ||*`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your Unity) < 0`*||
-A failed rob decreases Unity by 2.
+A failed rob decreases Unity by 1.
 A successful rob increases Unity by 0.25
     """,
         aliases = ["newrob"]
     )
     @commands.cooldown(1, 30, commands.BucketType.user) 
-    async def rob(self, message, target: discord.Member, ignorewarn = None):
+    async def rob(self, message: discord.ext.commands.Context, target: discord.Member, ignorewarn = None):
         # This code should be cleaned up later
         # It is much more effective to use a class instead of functions within functions
         # Prevent execution if this is in a DM channel
@@ -94,25 +99,32 @@ A successful rob increases Unity by 0.25
         userBal = data['credits']
         targetBal = targetUser.getData()['credits']
 
-        # Get amounts
-        winAmount = round(targetBal / 10, 2)
-        loseAmount = round((userBal / 20) + (targetBal / 15), 2)
+        # Determine if the user is robbing the bot
+        # Change rewards/gameplay if it is
+        robbingBot = target.id == self.bot.user.id
+        
+       # Get amounts
+        if robbingBot:
+            winAmount = 200
+            loseAmount = 50
+        else:
+            winAmount = round(targetBal / 10, 2)
+            loseAmount = round((userBal / 20) + (targetBal / 15), 2)
 
         userRAL = calculateRobAttack(message.author)
         targetRDL = calculateRobDefense(target)
 
-        targetRDL = round(targetRDL)
-
         # Warn
-        if ignorewarn is None and (targetRDL / userRAL) > 3:
+        if ignorewarn is None and (targetRDL / userRAL) > 3 and not robbingBot:
             await message.send(embed=discord.Embed(
                 title = "Warning",
-                description = f"""The target's Rob Defense Level ({targetRDL}) is more than 3x compared to your Rob Attack Level ({userRAL})\nYou are very likely to lose this robbery.\nYou may ignore this warning by running the command with any arguments (e.g. `{prefix}rob {target.global_name} ignore`)""",
+                description = f"""The target's base Rob Defense Level ({targetRDL}) is more than 3x compared to your base Rob Attack Level ({userRAL})\nYou are very likely to lose this robbery.\nYou may ignore this warning by running the command with any arguments (e.g. `{prefix}rob {target.global_name} ignore`)""",
                 color=0xFFAA00
             ))
             self.rob.reset_cooldown(message)
             return
         
+   
         msg = await message.send(embed=discord.Embed(
                 title = "Rob Results",
                 description = f"""Robbing {target.mention}...""",
@@ -135,7 +147,7 @@ A successful rob increases Unity by 0.25
             if user.getData('credits') >= 0:
                 user.addBalance(credits = -loseAmount)
                 targetUser.addBalance(credits = loseAmount)
-                user.addBalance(unity = -2)
+                user.addBalance(unity = -1)
             else:
                 user.addBalance(unity = -10)
                 targetUser.addBalance(unity = 10)
@@ -151,70 +163,201 @@ A successful rob increases Unity by 0.25
         robSet(user, "attackTime", int(time.time()))
         robSet(targetUser, "attackedTime", int(time.time()))
 
+
+
         # Lock
+        bonusAtk = 0
         if targetUser.get_item("Lock", onlydetermine=True): 
             # 75% to break lock if user has lock pick
             if user.get_item("Lock Pick", onlydetermine=True):
-                if not random.randint(0,3) == 0:
+                """
+                NEW LOCK PICK SYSTEM:
+                WITH MINIGAME, SUCCESSFUL COMPLETION GIVES +3 ATK BUT FAILURE GIVES - ATK
+                
+                BASIC DESCRIPTION:
+                Lock picks are changed so that it simulates a real lock pick
+                Depending on number of locks the target has, it gains # of combinations equal to 2 + # of Locks (e.g. 1 lock = 3 and 3 locks = 5)
+                This combination is set as a sequence of binary numbers, such as 101 for a 1 lock user
+                User is prompted to ask for a binary level, like 001 for 3 combinations
+                Then the user is informed about how many combinations they got right (e.g. in this case, 2, as the 2 and 3 slots are correct)
+                The user gets to retry, equal to the combination amount
+                """
+                
+                
+                C = 10 if robbingBot else 2 + targetUser.get_item("Lock", onlydetermine=False).get("count", 1)
+
+                ANS = ''.join([str(random.randint(0,1)) for i in range(C)])
+                highestFound = 0
+                found = 0
+                END_TIME = time.time() + (60 if robbingBot else 30) + 5
+                answers = []
+                broken = False
+                auto = False
+                autoFirst = False
+                autoCombos = []
+                autoIndex = 0
+
+                ATTEMPTS = 7 if robbingBot else 3
+
+                for i in range(ATTEMPTS):
+                    if broken: break
                     em = discord.Embed(
                         title = "Rob Results",
-                    description = f"""Robbing {target.mention}...
+                    description = f"""{target.mention} has {C-2} lock(s) and you need to pick it!
+A **{C}-length** BINARY sequence of numbers is generated (e.g. {''.join([str(random.randint(0,1)) for i in range(C)])})
+Please send a **{C}-length** binary sequence of numbers to try and guess it!
+You will be informed on how many combinations were matching.
 
-{target.mention} has a lock, but you **successfully picked it!**
-
-Rolling...""",
+Attempts left: `{ATTEMPTS-i}`. Time remaining: <t:{int(END_TIME)}:R>
+__Guesses__
+{'**AUTOMATICALLY GENERATING GUESSES**' if auto else ''}
+{'\n'.join(f'`{a}`: {c} matching' for a, c in answers)}
+""",
                         color = 0xFF00FF,
                     )
 
-                    targetUser.delete_item("Lock")
-
                     await msg.edit(embed=em)
-                    await asyncio.sleep(3)
-                else: 
-                    if user.getData('credits') > 0:
-                        em = discord.Embed(
-                            title = "Rob Results",
-                            description = f"""Robbing {target.mention}...
 
-    Unfortunately, {target.mention} has a lock, and the police caught you when you attempted to pick it!
-    You were fined `{loseAmount} Credits` to {target.mention}""",
-                            color = 0xFF0000,
-                        )
-                    else:
-                        em = discord.Embed(
-                            title = "Rob Results",
-                            description = f"""Robbing {target.mention}...
+                    # Get Valid XXX 
+                    userInput = ""
+                    while not (len(userInput) == C and userInput.isdigit() and len(userInput.replace("0", "").replace("1","")) == 0) and not auto:
+                        if userInput.lower() in {"exit", "quit"}:
+                            return await message.send(embed=errorMsg("Exited the lock pick minigame.", title="Robbing failed"))
+                        try:
+                            if not auto:
+                                ui = await self.bot.wait_for("message", check=lambda msg: msg.author == message.author, timeout=int(END_TIME - time.time() + 1))
+                                userInput = ui.content.lower()
 
-Unfortunately, {target.mention} has a lock, and the police caught you when you attempted to pick it!
-You were lost `10 Unity` to {target.mention}""",
-                            color = 0xFF0000,
-                        )
-                    lose()
+                            if userInput == "auto":
+                                auto = True
+                                try:
+                                    await ui.delete()
+                                except discord.errors.Forbidden:
+                                    pass
+                                break
 
-                    user.delete_item("Lock Pick")
+                            if (len(userInput) == C and userInput.isdigit() and len(userInput.replace("0", "").replace("1","")) == 0):
+                                # Calc # of found
+                                found = 0
+                                for j in range(C):
+                                    if userInput[j] == ANS[j]:
+                                        found += 1
+                                highestFound = max(highestFound, found)
+                                answers.append((userInput, found))
 
-                    await msg.edit(embed=em)
-                    return
+                                try:
+                                    await ui.delete()
+                                except discord.errors.Forbidden:
+                                    pass
+
+                        except (TimeoutError, asyncio.exceptions.TimeoutError):
+                            broken = True
+                            break
+                    
+                    if auto:
+                        if not autoFirst:
+                            # Get number of 1s to put
+                            userInput = "1" * C
+                            found = 0
+                            for j in range(C):
+                                if userInput[j] == ANS[j]:
+                                    found += 1
+                            autoFound = found
+                            autoCombos = list(itertools.combinations(range(C), autoFound))[::-1]
+                            autoFirst = True
+                        else:
+                            ones = autoCombos[autoIndex % len(autoCombos)]
+                            userInput = ''.join('1' if j in ones else '0' for j in range(C))
+                            autoIndex += 1
+
+                        # Calc # of found
+                        found = 0
+                        for j in range(C):
+                            if userInput[j] == ANS[j]:
+                                found += 1
+                        highestFound = max(highestFound, found)
+                        answers.append((userInput, found))
+                        
+
+                    if found == C:
+                        break
+
+                    
+                # Final
+                if found == C:
+                    bonusAtk += 145 if robbingBot else 1
+                    em = discord.Embed(
+                        title = "Rob Results",
+                        description = f"""Robbing {target.mention}...
+
+You managed to find all possible combinations and removed their locks!
+The correct combination was `{ANS}`.
+You also gained `+{bonusAtk} Rob Attack Level(s)`!""",
+                        color = 0xFF00FF,
+                    )
+
+  
+
+                else:
+                    bonusAtk = highestFound - C
+                    em = discord.Embed(
+                        title = "Rob Results",
+                        description = f"""Robbing {target.mention}...
+
+Unfortunately, you did not manage to find all matching combinations.
+The combination was `{ANS}` and your highest was `{highestFound} matching combinations`.
+Thus you broke `{max(0, highestFound-2)}` locks.
+
+You were penalized `{bonusAtk} Rob Attack Levels` as a result.""",
+                        color = 0xFF00FF,
+                    )
+
+                # Delete based on found-2, cannot be lower than 0
+                # Don't delete for bot
+                if not robbingBot:
+                    for i in range(max(0, highestFound-2)):
+                        targetUser.delete_item("Lock")
+
+                # Remove 1 lock pick
+                user.delete_item("Lock Pick")
+
+                await msg.edit(embed=em)
+
             else:
                 em = discord.Embed(
                     title = "Rob Results",
                     description = f"""Robbing {target.mention}...
 
 Unfortunately, {target.mention} has a lock, and you did not bring a lock pick to break it.
-You quickly got out of there before the police caught you!""",
+You will now try to steal his/her money anyway with the lock, though it might be challenging!""",
                     color = 0xFF0000,
                 )
 
                 await msg.edit(embed=em)
-                return
-                
+
+            await asyncio.sleep(5)
+        
+        bonusDef = 2 + targetUser.get_item("Lock", onlydetermine=False).get("count", -2)
+
+        # Calculate chance
+        total = won = 0
+        for A in range(max(1,userRAL+bonusAtk)):
+            for D in range(max(1, targetRDL+bonusDef)):
+                if A != D:
+                    total += 1
+                    if A > D:
+                        won += 1
 
         # Logic
         # For loop is for rerolls
         for i in range(10): # Limit 10
-            userRoll = random.randint(1, userRAL)
-            targetRoll = random.randint(1, targetRDL)
             
+            userRoll = random.randint(1, max(1,userRAL+bonusAtk))
+            targetRoll = random.randint(1, max(1, targetRDL + bonusDef))
+
+            if i == 9:
+                userRoll = 100 + targetRoll
+
             if userRoll == targetRoll: 
                 winTxt = f"Close! Rerolling... (Rerolled {i+1} time(s))"
             elif userRoll > targetRoll:
@@ -253,7 +396,10 @@ You quickly got out of there before the police caught you!""",
 **Your Roll**: `{userRoll}`
 **{target.mention}'s Roll**: `{targetRoll}`
 
-**{winTxt}**""",
+**{winTxt}**
+-# Your Rob Attack Level: `{max(1,userRAL+bonusAtk)}` (`{userRAL}{'+' if bonusAtk >= 0 else ''}{bonusAtk}`)
+-# Target Rob Defense Level: `{max(1,targetRDL+bonusDef)}` (`{targetRDL}{'+' if bonusDef >= 0 else ''}{bonusDef}`)
+-# Win chance: {round(won/total*100,1)}%""",
                 color = 0xFF00FF,
             )
 
@@ -264,7 +410,7 @@ You quickly got out of there before the police caught you!""",
                 break
             else:
                 await asyncio.sleep(3)
-                
+
     async def msginput(self, ctx: discord.Message, text: str | None, timeout: int = 60) -> str:
         if text is not None: await ctx.send(text)
         ui = await self.bot.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=timeout)

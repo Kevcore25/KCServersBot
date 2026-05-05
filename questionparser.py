@@ -10,11 +10,10 @@ def parseDFV(value):
         return str(value)
 
 def updateTimer():
-    threading.Timer(300, updateTimer).start()
+    threading.Timer(3600, updateTimer).start()
     update()
 
 def update():
-    print("Refreshing Question Bank data")
     data = requests.get(sheetsURL, timeout=3).content
 
     with open("questionBank.csv", "wb") as f:

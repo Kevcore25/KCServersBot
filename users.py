@@ -119,8 +119,8 @@ class User:
             return self.setValue("items", items)
         else:
             return False
-        
-    def get_item(self, item: str, onlydetermine: bool = True) -> None | dict | bool:
+                
+    def get_item(self, item: str, onlydetermine: bool = True) -> dict | bool:
         """
         Gets an item. If the item does not exist, then None will be returned
         """
@@ -132,7 +132,7 @@ class User:
             # Get item data
             return items[item] if not onlydetermine else True
         else:
-            return None if not onlydetermine else False
+            return {} if not onlydetermine else False
 
     def item_exists(self, item: str):
         """Alias to get_item with onlydetermine = True"""
@@ -264,11 +264,19 @@ class User:
 
         return log
     
-    def addBalance(self, credits=0, unity=0, gems=0) -> bool:
-        
+    def addBalance(self, credits=0, unity=0, gems=0, refresh=True) -> bool:
+        """
+        Adds balance to the user.
+        If refresh is True, then data is updated before adding.
+        Returns true.
+        """
         # negUnityFee = 1
         # if self.data["unity"] < 0:
         #     negUnityFee + self.data["unity"]
+
+        if refresh:
+            self.data = self.getData()
+
 
         self.data["credits"] = round(self.data["credits"] + credits, 5)
 

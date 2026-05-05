@@ -27,3 +27,5 @@ commandLogs.txt
 lottery/
 .venv/
 chatcommunicator.yml
+.*
+!.gitignore

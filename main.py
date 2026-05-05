@@ -1,4 +1,4 @@
-VERSION = 8.3
+VERSION = 8.4
 
 """
 PIP REQUIREMENTS:
@@ -81,7 +81,7 @@ async def botAI():
 
     # Determine the chance based on botactive
     if botactive > 0:
-        r = random.randint(0, (105 - botactive * 5))
+        r = random.randint(0, max(1, 105 - botactive * 5))
     else:
         r = random.randint(0, 499)
 
@@ -235,6 +235,53 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
     # Step 4. Send embed to chat
     await message.send(embed=get_help_commands(int(commandOrPage)))
 
+
+
+@bot.command()
+async def get_dms(ctx, user_id: int):
+    """
+    Fetches the last 10 messages from a direct message channel with a specific user.
+    """
+    # 1. Fetch the User object using their ID
+    # Use fetch_user instead of get_user, as get_user only checks the cache
+    user = await bot.fetch_user(user_id)
+
+    if user:
+        # 2. Get the DMChannel object
+        # The dm_channel attribute will return the channel if one exists, otherwise None
+        dm_channel = user.dm_channel
+        if dm_channel is None:
+            # If a DM channel hasn't been created yet, create one
+            await user.create_dm()
+            dm_channel = user.dm_channel
+        
+        # 3. Use the history() method to get the last 10 messages
+        messages = []
+        try:
+            # history() returns an async iterator, so you must iterate over it
+            # limit=10 fetches the last 10 messages
+            async for message in dm_channel.history(limit=10):
+                messages.append(f"[{message.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {message.author.name}: {message.content}")
+            
+            # Messages are returned in newest-to-oldest order by default; reverse the list to show them chronologically
+            messages.reverse() 
+
+            if messages:
+                response = f"Last 10 messages with {user.name}:\n" + "\n".join(messages)
+                # DMs can be long, consider sending as a file or handling large text
+                await ctx.send(response[:2000]) # Send a truncated version if >2000 chars
+            else:
+                await ctx.send(f"No messages found in DM history with {user.name}.")
+
+        except discord.Forbidden:
+            await ctx.send("I do not have permission to read the DM history.")
+        except Exception as e:
+            await ctx.send(f"An error occurred: {e}")
+
+    else:
+        await ctx.send(f"User with ID {user_id} not found.")
+
+
 @bot.event
 async def on_ready():    
     usersFile.botID = str(bot.user.id)
@@ -249,6 +296,7 @@ async def on_ready():
         await bot.add_cog(cmds.AccountViewers(bot))
         await bot.add_cog(cmds.AccountUtils(bot))
         await bot.add_cog(cmds.AdminCmds(bot))
+        await bot.add_cog(cmds.AdminUtils(bot))
         await bot.add_cog(cmds.BalanceGraphs(bot))
         await bot.add_cog(cmds.Exchanges(bot))
         await bot.add_cog(cmds.GambleGames(bot))

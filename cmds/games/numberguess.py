@@ -177,23 +177,23 @@ In other definitions, it is (1 to (10 * randint(1, 4)))
         u = User(message.author.id)
 
         for i in range(100):
-                # Get range
-                rmax = 10 * random.randint(1, 4)
+            # Get range
+            rmax = 10 * random.randint(1, 4)
 
-                # Guess number
-                guessNumber = random.randint(1, rmax)
+            # Guess number
+            guessNumber = random.randint(1, rmax)
 
-                # Answer
-                answer = random.randint(1, rmax)
-                
-                # Regenerate if it is too close
-                if abs(answer - guessNumber) > 1:
-                    break
+            # Answer
+            answer = random.randint(1, rmax)
+            
+            # Regenerate if it is too close
+            if abs(answer - guessNumber) > 1:
+                break
 
         # Ask user
         await message.send(embed = basicMsg(
             "RNG Survey",
-            "Please determine your choice of a hint for the following RNG Game.\nReply with either `hot`, `warm`, or `cold`.\nPlease be sincere with your answer; your survey is collected to improve the RNG Guessing Game hints\nFor participating in this survey, you will gain `+0.5 Unity` and you can do this survey up to 20 times every hour.\n\n" + \
+            "Please determine your choice of a hint for the following RNG Game.\nReply with either `hot`, `warm`, or `cold`.\nPlease be sincere with your answer; your survey is collected to improve the RNG Guessing Game hints\nFor participating in this survey, you will gain `+0.05 Unity` and you can do this survey up to 20 times every hour.\n\n" + \
                 f"In a game with a range of `1 to {rmax}`, choose what hint to give if:\n" + \
                 f"The answer is `{answer}`,\nand the guess is `{guessNumber}`" 
         ))
@@ -220,7 +220,7 @@ In other definitions, it is (1 to (10 * randint(1, 4)))
                 with open('rngsurvey.json', 'w') as f:
                     json.dump(data, f)
 
-                u.addBalance(unity = 0.5)
+                u.addBalance(unity = 0.05)
 
                 await message.send(embed= successMsg(
                     description = "Thank you for participating in this survey!\nYou gained `+0.5 Unity`!\nDo more if interested!"

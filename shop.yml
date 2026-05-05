@@ -1,0 +1,115 @@
+Lock:
+    credits: 10
+    unity: 0
+    gems: 0
+    description: Decreases your risk of being successfully robbed. The risk significantly decreases with more locks.
+    limit: 3
+    expiry: 604800
+    stock: 1000000
+Lock Pick:
+    credits: 5
+    unity: 0.5
+    gems: 0
+    description: |-
+        Can pick a lock given the correct combination, but a failure may decrease your odds of a successful rob. 
+        One-time use and resets the target's combination upon use. 
+        Can also be used to rob the Bot (Gamemaster) to play a difficult minigame.
+    limit: 10
+    expiry: 604800
+    stock: 1000000
+Precognition:
+    credits: 0
+    unity: 0
+    gems: 100
+    description: Allows you to see the future! For the next crash game, you will automatically cash out just before the game crashes.
+    limit: 1
+    expiry: 604800
+    stock: 1
+Donation:
+    credits: 5
+    unity: -1
+    gems: 0
+    description: Donate money to help the poor.
+    limit: 100
+    expiry: 1
+    stock: 1000000
+Account Viewer:
+    credits: 0
+    unity: 0.2
+    gems: 0
+    description: Allows you to use the account and graphbalance commands on other players!
+    limit: 100
+    expiry: -1
+    stock: 1000000
+Popularity:
+    credits: 0
+    unity: 0.5
+    gems: 0
+    description: The chance of the next beg succeeding increases from 67% to 80%.
+    limit: 30
+    expiry: -1
+    stock: 1000000
+Unity Increase:
+    credits: 0
+    unity: 0
+    gems: 10
+    description: |-
+        The maximum unity obtainable increases from 100 to 200.
+        This item expires every reset.
+    limit: 1
+    expiry: -1
+    stock: 50
+Starter Crate:
+    credits: -50
+    unity: -15
+    gems: 3
+    description: |-
+      Directly purchase a certain amount of Credits and Unity.
+      Limited to 1 time per season (reset)
+    limit: 1
+    expiry: -1
+    stock: 5
+New Identity:
+    credits: -200
+    unity: -300
+    gems: 20
+    description: |-
+        Instantly gain `300 Unity` and some Credits, allowing you to recover from negative Unity.
+        Can only be bought once per season.
+    limit: 1
+    expiry: -1
+    stock: 5
+Credit Doubler:
+    credits: 0
+    unity: 0
+    gems: 5
+    description: Gain a bonus `+100% Credit Earnings Perk`.
+    limit: 1
+    expiry: 86400
+    stock: 1000000
+Credit Booster:
+    credits: 0
+    unity: 0
+    gems: 1
+    description: Gain a bonus `+15% Credit Earnings Perk`.
+    limit: 1
+    expiry: 86400
+    stock: 1000000
+Mini Credit Booster:
+    credits: 0
+    unity: 3
+    gems: 0
+    description: Gain a bonus `+5% Credit Earnings Perk`.
+    limit: 1
+    expiry: 10800
+    stock: 1000000
+Gem Minerals:
+    credits: 30
+    unity: 10
+    gems: -1
+    description: |-
+      Every season (reset), you can buy `Gems` up to a certain amount of times.
+      Gain bonus Gems by being top 5 in the score leaderboard.
+    limit: 10
+    expiry: -1
+    stock: 50

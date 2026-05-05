@@ -18,7 +18,7 @@ class NumberMemoryGame(commands.Cog):
 
         embed = discord.Embed(
             title = "Verification Code Test",
-            description="""This is a game, where you have to **correctly remember the 6-digit code**.\nThere are **5 rounds**.\nEach successful guess grants `5 Credits`, and you will get a bonus `1 Unity` if all rounds are correct.\n\n**This game will start in approximately 5 seconds.**\n\nTry not to type/copy the answer - the point of the game is to train for remembering verification codes!""",
+            description="""This is a game, where you have to **correctly remember the 6-digit code**.\nThere are **5 rounds**.\nEach successful guess grants `3 Credits`, and you will get a bonus `1 Unity` if all rounds are correct.\n\n**This game will start in approximately 5 seconds.**\n\nTry not to type/copy the answer - the point of the game is to train for remembering verification codes!""",
             color=0xFF00FF
         )
         msg = await message.send(embed=embed)
@@ -76,7 +76,8 @@ class NumberMemoryGame(commands.Cog):
             await asyncio.sleep(s)
 
 
-        credits = correct * 5
+        credits = calcCredit(correct * 3, user)
+
         unity = int(correct == 5) # True is also 1 soo
 
         # Give

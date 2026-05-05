@@ -91,8 +91,8 @@ class AccountViewers(commands.Cog):
 
         itemsTxt = []
 
-        with open('shop.json', 'r') as f:
-            shopitems = json.load(f)
+        with open('shop.yml', 'r') as f:
+            shopitems = yaml.safe_load(f)
 
         # Items
         for id, item in userData['items'].items():

@@ -29,8 +29,8 @@ class ShopCog(commands.Cog):
             await message.send(embed=errorMsg("Item ID is not specified"))
             return
 
-        with open("shop.json", 'r') as f:
-            shopitems = json.load(f)
+        with open("shop.yml", 'r') as f:
+            shopitems = yaml.safe_load(f)
 
         # Title
         itemID = str(' '.join(itemID)).title()
@@ -124,8 +124,8 @@ class ShopCog(commands.Cog):
     async def shop(self, message): # command is an argument
         embed = discord.Embed(title="Shop Items", color=0xFF00FF)
 
-        with open("shop.json", 'r') as f:
-            shopitems = json.load(f)
+        with open("shop.yml", 'r') as f:
+            shopitems = yaml.safe_load(f)
 
         for id in shopitems:
             costs = []
@@ -151,7 +151,6 @@ class ShopCog(commands.Cog):
             else:
                 stock = item['stock']
 
-            embed.add_field(name=f"{id} ({costsTxt})", value=item['description'] + f"\n*{('Expires after `' + time_format(item['expiry']) + '`') if item['expiry'] != -1 else 'Never expires'} | Limit: `{item['limit']}` | Stock: `{get_prefix(stock, 0)}`*", inline=False)
+            embed.add_field(name=f"{id} ({costsTxt})", value=item['description'] + f"\n-# *{('Expires after `' + time_format(item['expiry']) + '`') if item['expiry'] != -1 else 'Expires after a reset'} | Limit: `{item['limit']}` | Stock: `{get_prefix(stock, 0)}`*", inline=False)
 
-        embed.set_footer(text="All items expire after a reset, despite if it states \"Never expires\"")
         await message.send(embed=embed)

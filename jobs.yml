@@ -15,9 +15,9 @@ Developer:
 Pacifist:
     Description: A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.
     Credits: 15
-    Unity: 0.8
+    Unity: 1
     Credit Efficiency: -5
-    Unity Threshold: 25
+    Unity Threshold: 30
 
 Beggar:
     Description: Beggars make themselves look poor, which allow them to earn more from begs! While begging, Wealth Power is halved, and you sometimes get 50% more from begs (20%)
@@ -36,16 +36,16 @@ Unifier:
 Banker:
     Description: Bankers help regulate the bank economy. When working, the bot loses 1k Credits then gains 1k Credits scaling with Credit Efficiency.
     Credits: 20
-    Unity: 1
+    Unity: 1.5
     Credit Efficiency: 0
     Unity Threshold: 50
 
 Police:
     Description: A policeman catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`).
     Credits: 15
-    Unity: 2
+    Unity: 1.5
     Credit Efficiency: 0
-    Unity Threshold: 60
+    Unity Threshold: 65
 
 Robber:
     Description: A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`).
