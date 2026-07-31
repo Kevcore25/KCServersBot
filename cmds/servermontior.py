@@ -1,6 +1,7 @@
 from discord.ext import commands, tasks
 from calculatefuncs import *
-from mcstatus import JavaServer, status_response
+from mcstatus import JavaServer, server
+
 MONTIOR_CMDS_DESC = """
 
 -# This command is part of the monitoring commands (monitor, statusof, and addplayer)"""
@@ -12,7 +13,7 @@ GET_STATUS_DESC = f"""Obtain the status of a server. If no arguments are specifi
 def returnStatusObj(address: str, timeout: int = 1) -> JavaServer:
     return JavaServer.lookup(address, timeout)
 
-def SmartServName(status: status_response.JavaStatusResponse) -> str:
+def SmartServName(status: server.JavaStatusResponse) -> str:
     """
     Attempts to get the server's name based on the MOTD using a simple algorithm.
 
@@ -53,7 +54,7 @@ class ServerMonitorCog(commands.Cog):
         """Fetches servers from users. Uses a more optimized algorithm than the previous"""
         # ASSUMES: Only one player can be in 1 server.
 
-        storedServers: dict[str, status_response.JavaStatusResponse] = {}
+        storedServers: dict[str, server.JavaStatusResponse] = {}
         errorServers: list[str] = [] # Servers that errored (e.g. connection error)
 
         for userfile in os.listdir('users'):

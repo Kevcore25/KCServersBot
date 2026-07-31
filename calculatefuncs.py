@@ -3,6 +3,10 @@
 from users import User
 import discord, os, json, time, random, yaml
 import discord.ext.commands
+from traceback import print_exc
+from requests import get as r_get
+from dns.resolver import resolve as dns_resolve
+from threading import Timer as threading_Timer
 
 Context = discord.ext.commands.Context
 
@@ -119,6 +123,25 @@ def get_prefix(value: float, accuracy: int = 0, symbol: str = "") -> str:
         val = str(int(float(val[:-1]))) + val[-1]
 
     return ("-" + val + symbol) if value < 0 else (val + symbol)
+
+
+KMCE_SERVER_IP = None
+
+def server_refresh_loop():
+    threading_Timer(600, server_refresh_loop).start()
+
+    global KMCE_SERVER_IP
+    try:
+        KMCE_SERVER_IP = dns_resolve("kcmcserver.kcservers.ca", "TXT")[0].to_text()[1:-1]
+        if r_get(f'http://{KMCE_SERVER_IP}/test').json().get('output', False):
+            raise Exception("Test output is False")
+    except:
+        print_exc()
+        KMCE_SERVER_IP = None
+
+
+def kmce_server_request(cmd: str):
+    return r_get(f'http://{KMCE_SERVER_IP}/cmd/{cmd}').json()
 
 def time_format(seconds: int) -> str:
     if str(seconds).isdigit():
@@ -335,7 +358,7 @@ def calcScore(u: User, msg: bool = False) -> float | tuple[float, str]:
     # Average earned
     try:
         with open(os.path.join("balanceLogs", str(u.ID)), 'r') as f:
-            ballogs = f.readlines()
+            ballogs = f.readlines()[:5000]
     except FileNotFoundError:
         return (0, "**Haven't played**: `0`") if msg else 0
     

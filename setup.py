@@ -18,18 +18,16 @@ prefix = input("Prefix: ")
 print("2. What is the channel ID for the bot channel?\nThe channel ID can be obtained by enabling Developer mode in discord and right clicking a channel and selecting Copy ID.\nThis is used for things such as the lottery annoucements and other such bot annoucements.")
 botchannel = int(input("Bot Channel ID: "))
 
-print("3. What is the file location for the KMCExtract folder?\nThis should be the folder and not the location of the users.json file.\nIf you don't have KMCExtract or are not planning to use the KCash exchange service, just leave it blank.")
-kmceLocation = input("KMCExtract Folder Location: ")
-
 settings = {
-    "admins": [], # More advanced optoin which is optional
+    "admins": [], # More advanced option which is optional
     "prefix": prefix, # Prefix of the bot for it to work. In V.7.5, you can use an array instead
-    "inflation amount": 500, # At what avg. credits will inflation start increasing
-    "KMCExtract": kmceLocation, # KMCExtract location which only affects KCash exchange service
+    "inflation amount": 5000, # At what avg. credits will inflation start increasing
+    "KMCExtract": None, # Legacy KMCExtract folder location - no longer used due to KMCEv3 server-sided accounts
     "AI Channel": botchannel, # Bot AI channel which the bot sends messages to. Note that the bot needs permission in this channel!
     "Server ID": 0, # This seems to not be in use, so it won't be asked in the script
-    "KCash Rate": 0.01,
-    "Exchange fee": [500, 5],
+    "KCash rate": 1, # Rate of 1 Credit > X KCash. By default (without inflation) due to only integer values, it is 1
+    "Exchange fee": [100, 5],
+    "Backups": False, # Enable backups to google drive - must be set up beforehand or it won't work
     "Debug": False
 }
 

@@ -221,8 +221,10 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
     - Average Credits earned (2 * (Avg. Credits). Cannot be over 5K)
     - Amount of transactions (sqrt(transactions/2) * 100. Cannot be over 5K)
     - Average Unity earned (10 * (Avg. Unity))
-    - KCash Exchanged (1/5 * (KCash Exchanged). Cannot be over 2K)
-    - Current Unity (5 * Unity)"""
+    - KCash Exchanged (1/5 * (Credits used in KCash Exchange). Cannot be over 2K)
+    - Current Unity (5 * Unity)
+    
+-# Starting in V.9, only the last 5K transactions will be used when calculating average Credits, Unity, etc."""
     )
     async def score(self, message, user: discord.Member = None):
         if user is None:

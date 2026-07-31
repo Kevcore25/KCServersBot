@@ -1,8 +1,8 @@
-VERSION = 8.4
+VERSION = 8.5
 
 """
 PIP REQUIREMENTS:
-pip install requests mcstatus discord.py names matplotlib scipy python-dotenv
+pip install requests mcstatus discord.py names matplotlib scipy python-dotenv pyyaml mcrcon dnspython cryptography google-auth google-auth-httplib2 google-auth-oauthlib google-api-python-client
 """
 print("Importing libraries...")
 
@@ -30,6 +30,7 @@ for folder in folders:
 
 print("Finished importing!")
 
+server_refresh_loop()
 
 load_dotenv()
 
@@ -328,6 +329,8 @@ async def on_ready():
         botAI.start()
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
         print("Done! The bot should be fully operational!")
+        print(f"Detected KMCE Server IP: {KMCE_SERVER_IP}")
+
     except Exception as e:
         traceback.print_exc()
         await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Bot Error: {e}"))
@@ -413,6 +416,11 @@ async def on_command_error(ctx: Context, error: discord.DiscordException):
         print(f"\nError occurred by {ctx.author.display_name} ({ctx.author.id}) on {ctx.command}:\n{fullreason}\n")
 
         ctx.command.reset_cooldown(ctx)
+
+if botsettings.get('Backups', False):
+    print("Enabling drive backups!")
+    import events.backups
+    events.backups.start()
 
 # Run the bot based on the token in the .env file
 print("Starting the bot...")

@@ -21,6 +21,7 @@ questionData.json
 questionBank.csv
 userschedules.json
 cmds/__pycache__/*
+*/__pycache__/
 shopstock.json
 commandLogs.txt
 *.pyc
@@ -29,3 +30,4 @@ lottery/
 chatcommunicator.yml
 .*
 !.gitignore
+backup_ids.json

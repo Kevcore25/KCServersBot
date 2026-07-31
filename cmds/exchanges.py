@@ -19,19 +19,19 @@ class Exchanges(commands.Cog):
         exchangeRates = {
             ("gems", "unity"): 1,
             ("gems", "credits"): round(5 * calcInflation()),
-            ("gems", "kcash"): 250,
+            ("gems", "kcash"): 1000,
         }
 
         if currency is None:
             exchangeRateTxt = "\n".join(f"1 gem > {exchangeRates[(f,t)]} {t}" for f, t in exchangeRates)
             embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}gemexchange [to currency] <amount of gems to exchange>`\n\n**Exchange rates**:\n{exchangeRateTxt}""", color=0xFF00FF)
 
-        elif currency not in ['credits','unity']:
-            embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange from currency is not valid! Valid options are credits and unity.", color=0xFF0000)
+        elif currency.lower() not in ['credits','unity', 'kcash']:
+            embed = discord.Embed(title="Not a valid exchange currency!",description=f"Your exchange from currency is not valid! Valid options are credits, unity, and kcash", color=0xFF0000)
         elif not str(amount).isnumeric() or int(amount) <= 0:
             embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!", color=0xFF0000)
         else:
-        
+            currency = currency.lower()
             for f, t in exchangeRates:
                 if f == "gems" and t == currency:
                     exchangeRate = exchangeRates[(f,t)]
@@ -44,19 +44,19 @@ class Exchanges(commands.Cog):
 
                         if t == "credits":
                             user.addBalance(credits = getAmount, gems = -amount)
+
                         elif t == "kcash":
-                            with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as file:
-                                kmceusers = json.load(file)
-
                             ign = user.getData('settings').get("ign", None)
+                            r = kmce_server_request(f"ADD {getAmount} FOR {ign}")
 
-                            # Round Value
-                            kmceusers[ign]['KCash'] = round(kmceusers[ign]['KCash'] + getAmount)
+                            if r.get("success", False):
+                                user.addBalance(gems = -amount)
+                                embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} Gems` into `{getAmount} KCash`", color=0x00FF00)
+                                
+                            else:
+                                embed = discord.Embed(title="Exchange failed!",description=f"There was an error processing your KCash account.\nYou are not charged for this exchange.\n-# Reason: {r.get("reason", "Malformed return output")}", color=0xFF0000)
+                            break
 
-                            with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
-                                kmceusers = json.dump(kmceusers, file)
-                            
-                            user.addBalance(gems = -amount)
                         else:
                             user.addBalance(unity = getAmount, gems = -amount)
 
@@ -125,31 +125,27 @@ class Exchanges(commands.Cog):
                 )
 
             else:
-                try:
-                    with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as file:
-                        kmceusers = json.load(file)
+                ign = user.getData('settings').get("ign", None)
 
-                    ign = user.getData('settings').get("ign", None)
+                getAmount = round(amount * kcashrate)
 
-                    getAmount = round(amount * kcashrate)
+                # Round Value
+                r = kmce_server_request(f"ADD {getAmount} FOR {ign}")
 
-                    # Round Value
-                    kmceusers[ign]['KCash'] = round( kmceusers[ign]['KCash'] + getAmount )
-
-                    with open(os.path.join(KMCExtractLocation, "users.json"), 'w') as file:
-                        kmceusers = json.dump(kmceusers, file)       
-
+                if r.get("success", False):
                     user.addBalance(credits = -amount)
-
+                    embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} Credits` to `{getAmount} KCash`.\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
                     # Exchange fee
                     user.addBalance(credits = -exchangeFee[0], unity = -exchangeFee[1])
 
-                    # Add
+                    # Add for score calcs
                     user.addValue("kcashExchanged", amount)
 
-                    embed = discord.Embed(title="Exchange successful!",description=f"Exchanged `{amount} Credits` to `{getAmount} KCash`.\nExchange fee: `{exchangeFee[0]} Credits`, `{exchangeFee[1]} Unity`", color=0x00FF00)
+                else:
+                    embed = discord.Embed(title="Exchange failed!",description=f"There was an error processing your KCash account.\nYou are not charged for this exchange.\n-# Reason: {r.get("reason", "Malformed return output")}", color=0xFF0000)
 
-                except KeyError:
-                    embed = discord.Embed(title="Not registered!",description=f"Your MC Username (`{ign}`) is not registered on KMCExtract!", color=0xFF0000)
+
+     
+
 
         await message.send(embed=embed)

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from calculatefuncs import *
 import requests
+
 class AccountViewers(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -120,20 +121,15 @@ class AccountViewers(commands.Cog):
 
         msg = await message.send(embed=embed)
 
-
         # Get KCash 
-
-        try:    
-            with open(os.path.join(KMCExtractLocation, "users.json"), 'r') as f:
-                kmceusers = json.load(f)
-        
-            kcash = kmceusers[ign]['KCash']
-        except KeyError:
-            kcash = "Not registered"
-        except FileNotFoundError:
+        if KMCE_SERVER_IP is None:
             kcash = "Not set up"
-        except:
-            kcash = "Error"
+        else:
+            try:
+                kcash = kmce_server_request(f"READ bal FOR {ign}").get("output", 'Account Error')
+            except:
+                print_exc()
+                kcash = "Server Error"
 
         embed.set_field_at(
             index = 1,
