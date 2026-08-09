@@ -852,7 +852,7 @@ def compact_num_ceil(n: int) -> str:
         val = ceil(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
     
-    return str(n)
+    return str(ceil(n * 100) / 100)
 
 def compact_num(n: int) -> str:
     an = abs(n)
@@ -867,7 +867,7 @@ def compact_num(n: int) -> str:
         val = int(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
     
-    return str(n)
+    return str(int(n * 100) / 100)
 
 
 class JSONIO:
