@@ -300,16 +300,16 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
         
     @commands.command(
         help = f"Send someone Credits. Format: {prefix}send <user> <amount>",
-        description = """There is a fee and your target will only receive 90% of the amount"""
+        description = """There is a minor fee of `1 Credit` for each send transaction.\n\n-# **Currency User Interaction Terms:**\n-# Using this command for the purposes of transaction logging is prohibited (that is, to constantly use this command to document transactions in the intent to gain a higher Score value); however, a small amount of this method (under 10 per day) is allowed to give leeway for mistakes. You must only use this for the purpose of sending another user Credits. Additionally, you may not involve real-life currency in exchange for Credits (for example, giving someone Credits in exchange for real-life money). Failure to comply with these terms can result in your balance being subtracted, a balance reset (unless the balance is non-positive), or removal from the game/service."""
     )
-    @commands.cooldown(1, 30, commands.BucketType.user) 
+    @commands.cooldown(3, 60, commands.BucketType.user) 
     async def send(self, message, target: discord.Member, amount: float):
         user = User(message.author.id)
         data = user.getData()
 
         amount = round(float(amount), 2)
 
-        if amount > data['credits']:
+        if (amount+1) > data['credits']:
             await message.send(embed=errorMsg("Amount is less than your balance!")); return
         
         if amount <= 0:
@@ -321,26 +321,24 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
         
         targetUser = User(target.id)
         
-        getAmount = round(amount * .9, 2)
-
         user.addBalance(
-            credits=-amount,
+            credits=-(amount+1),
         )
         targetUser.addBalance(
-            credits=getAmount,
+            credits=amount,
         )
 
-        embed = successMsg("Successfully sent", f"Sent {target.mention} `{getAmount} Credits`")
+        embed = successMsg("Successfully sent", f"Sent {target.mention} `{amount} Credits`\n-# A minor fee of `1 Credit` is deducted from this transaction")
         await message.send(embed=embed)
 
         
     @commands.command(
         help = f"Send someone Gems",
-        description = """There is absoultely no fee for sending someone gems!\nBack and forth exchanges are prohibited at all costs.""",
+        description = """Send another user the most precious currency in this game, Gems!\nUnlike sending Credits, there is absolutely no fee for sending another use gems.\n\n-# **Currency User Interaction Terms:**\n-# Using this command for the purposes of transaction logging is prohibited (that is, to constantly send Gems to another user and have that other user return the Gems you sent); however, for the purpose of accounting for mistakes in transactions, this rule can be waived once a day. You must only use this for the purpose of sending another user Gems. Additionally, you may not involve real-life currency in exchange for Gems (for example, giving someone Gems in exchange for real-life money). Failure to comply with these terms can result in your balance being subtracted, a balance reset (unless the balance is non-positive), or removal from the game/service.""",
         aliases = ["sg"]
     )
     @commands.cooldown(1, 30, commands.BucketType.user) 
-    async def sendgems(self, message, target: discord.Member, amount: float):
+    async def sendgems(self, message, target: discord.Member, amount: int):
         user = User(message.author.id)
         data = user.getData()
 

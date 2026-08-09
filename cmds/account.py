@@ -127,6 +127,8 @@ class AccountViewers(commands.Cog):
         else:
             try:
                 kcash = kmce_server_request(f"READ bal FOR {ign}").get("output", 'Account Error')
+                if not isinstance(kcash, str):
+                    kcash = f"{kcash:>,}/1M"
             except:
                 print_exc()
                 kcash = "Server Error"
@@ -145,7 +147,7 @@ class AccountViewers(commands.Cog):
         embed.set_field_at(
             index = 5,
             name="Other Info", 
-            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{get_prefix(calcScore(user))}`",
+            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{compact_num(calcScore(user))}`",
             inline=False
         )
 

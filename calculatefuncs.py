@@ -94,17 +94,6 @@ def errorMsg(description = "Unknown error", cause = None, title = "An error occu
 
 def get_prefix(value: float, accuracy: int = 0, symbol: str = "") -> str:
     """Returns a number with a shortened prefix, like 125356 into 125.3K"""
-    # value = val
-    # if round(value / 1000000000, accuracy) > 0:
-    #     newValue = str(round(value / 1000000000, accuracy)) + "T"
-    # elif round(value / 1000000, accuracy) > 0:
-    #     newValue = str(round(value / 1000000, accuracy)) + "M"
-    # elif round(value / 1000, accuracy) > 0:
-    #     newValue = str(round(value / 1000, accuracy)) + "K"
-    # else: 
-    #     newValue = str(round(value, accuracy))
-    
-    # return newValue.replace('.0','') if accuracy == 0 else newValue
 
     val = abs(value)
 
@@ -846,6 +835,40 @@ def standardIncome(credits: int, user: User):
     """
 
     return calcCredit(calcWPAmount(user, credits, generation=3) * calcInflation(), user) 
+
+def ceil(num: float):
+    return int(num) + int(not num.is_integer())
+
+def compact_num_ceil(n: int) -> str:
+    an = abs(n)
+
+    if an >= 1_000_000_000:
+        val = ceil(n / 100000000.0) / 10.0
+        return f"{int(val)}B" if val.is_integer() else f"{val}B"
+    if an >= 1_000_000:
+        val = ceil(n / 100000.0) / 10.0
+        return f"{int(val)}M" if val.is_integer() else f"{val}M"
+    if an >= 1_000:
+        val = ceil(n / 100.0) / 10.0
+        return f"{int(val)}k" if val.is_integer() else f"{val}k"
+    
+    return str(n)
+
+def compact_num(n: int) -> str:
+    an = abs(n)
+
+    if an >= 1_000_000_000:
+        val = int(n / 100000000.0) / 10.0
+        return f"{int(val)}B" if val.is_integer() else f"{val}B"
+    if an >= 1_000_000:
+        val = int(n / 100000.0) / 10.0
+        return f"{int(val)}M" if val.is_integer() else f"{val}M"
+    if an >= 1_000:
+        val = int(n / 100.0) / 10.0
+        return f"{int(val)}k" if val.is_integer() else f"{val}k"
+    
+    return str(n)
+
 
 class JSONIO:
     """Custom class for JSON IO-related things"""

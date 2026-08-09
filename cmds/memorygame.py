@@ -10,7 +10,8 @@ class NumberMemoryGame(commands.Cog):
 
     @commands.command(
         help = f"See if you can remember numbers!",
-        description = """For 5 rounds, 6-digit numbers will be displayed for a few seconds. Your goal is to remember the number correctly, 5 times.\nI made this to train on remembering those fricking verification codes.\n\nReward: `5 Credits` per correct round + bonus `1 Unity` for all 5 correct."""
+        description = """For 5 rounds, 6-digit numbers will be displayed for a few seconds. Your goal is to remember the number correctly, 5 times.\nI made this to train on remembering those fricking verification codes.\n\nReward: `5 Credits` per correct round + bonus `1 Unity` for all 5 correct.""",
+        aliases=["codegame", '2fagame', '2fatest']
     )
     @commands.cooldown(1, 300, commands.BucketType.user) 
     async def codetest(self, message: discord.ext.commands.Context):

@@ -1,4 +1,4 @@
-VERSION = 8.5
+VERSION = 8.6
 
 """
 PIP REQUIREMENTS:
@@ -282,59 +282,66 @@ async def get_dms(ctx, user_id: int):
     else:
         await ctx.send(f"User with ID {user_id} not found.")
 
-
+alreadyOnline = False
 @bot.event
-async def on_ready():    
+async def on_ready():
+    global alreadyOnline
+
     usersFile.botID = str(bot.user.id)
-    print("Bot online! Registering commands...")
-    # Import here instead of the start
-    # This is an experimental feature that should speed up the status process
-    # If it fails, it should also allow the bot to be in a debug-state where some cmds can still be used
-    try:
-        import cmds
+    if not alreadyOnline:
+        print("Bot online! Registering commands...")
+        # Import here instead of the start
+        # This is an experimental feature that should speed up the status process
+        # If it fails, it should also allow the bot to be in a debug-state where some cmds can still be used
+        try:
+            import cmds
 
-        # ADD CMDS
-        await bot.add_cog(cmds.AccountViewers(bot))
-        await bot.add_cog(cmds.AccountUtils(bot))
-        await bot.add_cog(cmds.AdminCmds(bot))
-        await bot.add_cog(cmds.AdminUtils(bot))
-        await bot.add_cog(cmds.BalanceGraphs(bot))
-        await bot.add_cog(cmds.Exchanges(bot))
-        await bot.add_cog(cmds.GambleGames(bot))
-        await bot.add_cog(cmds.Informations(bot))
-        await bot.add_cog(cmds.LeaderboardCog(bot))
-        await bot.add_cog(cmds.TimeIncomes(bot))
-        await bot.add_cog(cmds.InteractionGames(bot))
-        await bot.add_cog(cmds.CrashGameCog(bot))
-        await bot.add_cog(cmds.GoFishCog(bot))
-        await bot.add_cog(cmds.ShopCog(bot))
-        await bot.add_cog(cmds.QuestionsQuiz(bot))
-        await bot.add_cog(cmds.MCGuessingGames(bot))
-        await bot.add_cog(cmds.RNGNumberGuessCog(bot))
-        await bot.add_cog(cmds.WordleGameCog(bot))
-        await bot.add_cog(cmds.ServerMonitorCog(bot))
-        await bot.add_cog(cmds.EventsCog(bot))
-        await bot.add_cog(cmds.LoanCog(bot))
-        await bot.add_cog(cmds.NumberMemoryGame(bot))
-        lotcog = cmds.LotteryCog(bot)
-        await bot.add_cog(lotcog)
+            # ADD CMDS
+            await bot.add_cog(cmds.AccountViewers(bot))
+            await bot.add_cog(cmds.AccountUtils(bot))
+            await bot.add_cog(cmds.AdminCmds(bot))
+            await bot.add_cog(cmds.AdminUtils(bot))
+            await bot.add_cog(cmds.BalanceGraphs(bot))
+            await bot.add_cog(cmds.Exchanges(bot))
+            await bot.add_cog(cmds.GambleGames(bot))
+            await bot.add_cog(cmds.Informations(bot))
+            await bot.add_cog(cmds.LeaderboardCog(bot))
+            await bot.add_cog(cmds.TimeIncomes(bot))
+            await bot.add_cog(cmds.InteractionGames(bot))
+            await bot.add_cog(cmds.CrashGameCog(bot))
+            await bot.add_cog(cmds.GoFishCog(bot))
+            await bot.add_cog(cmds.ShopCog(bot))
+            await bot.add_cog(cmds.QuestionsQuiz(bot))
+            await bot.add_cog(cmds.MCGuessingGames(bot))
+            await bot.add_cog(cmds.RNGNumberGuessCog(bot))
+            await bot.add_cog(cmds.WordleGameCog(bot))
+            await bot.add_cog(cmds.ServerMonitorCog(bot))
+            await bot.add_cog(cmds.EventsCog(bot))
+            await bot.add_cog(cmds.LoanCog(bot))
+            await bot.add_cog(cmds.NumberMemoryGame(bot))
+            lotcog = cmds.LotteryCog(bot)
+            await bot.add_cog(lotcog)
 
-        import kcmc
-        await bot.add_cog(kcmc.ChatCommunicator(bot))
+            import kcmc
+            await bot.add_cog(kcmc.ChatCommunicator(bot))
 
-        print("Commands registered! Starting post-ready commands...")
-        await lotcog.announceWinningNumbers()
+            print("Commands registered! Starting post-ready commands...")
+            await lotcog.announceWinningNumbers()
 
-        # Start Loops
-        botAI.start()
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
-        print("Done! The bot should be fully operational!")
-        print(f"Detected KMCE Server IP: {KMCE_SERVER_IP}")
 
-    except Exception as e:
-        traceback.print_exc()
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Bot Error: {e}"))
 
+        except Exception as e:
+            traceback.print_exc()
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Bot Error: {e}"))
+    else:
+        print("Commands already loaded")
+
+    # Start Loops
+    botAI.start()
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.custom, name="custom", state=f"Version {VERSION}"))
+    print("Done! The bot should be fully operational!")
+    print(f"Detected KMCE Server IP: {KMCE_SERVER_IP}")    
+    
 @bot.event
 async def on_message(message: discord.Message):
     global botactive

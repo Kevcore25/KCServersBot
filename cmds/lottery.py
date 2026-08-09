@@ -19,6 +19,7 @@ The numbers are stored on the disk (may change in the future to be generated on 
 There are **7** numbers in the lottery. Each number is unique (there cannot be 2 of the same numbers) and is randomly assigned within the range of **1 to 40**.
 
 Buying a ticket costs `{lotteryCost} Credits` (may change), but you can buy an unlimited amount of tickets.
+To encourage (virtual) lottery play, the first ticket you buy (after a draw) is 50% cheaper.
 The ticket ID is only valid for the draw number it is registered to, so you cannot use an expired ticket ID to redeem a new one.
 
 **Please redeem the ticket the next day or you will lose all potential rewards!**

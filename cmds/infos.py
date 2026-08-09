@@ -23,22 +23,23 @@ The intended use of the KCServers bot is made **to provide easy access to KCMC i
 The KCServers Bot also comes with a **unique economy system** that provides gambling and Minecraft-related games.
 
 __Currencies:__
-There are 5 currencies used by this bot. 2 of which are exclusive to the bot.
+There are 5 currencies used by this bot. 3 of which are exclusive to the bot:
+
 **Credits**: The main currency of the bot. It is used with bot games, as well as exchanging Credits to KCash.
 
-**Unity**: A unit of status measurement (think of it as Reputation). A maximum of 200 Unity can be stored, and a minimum of -100 Unity can be obtained. 
+**Unity**: A unit of status measurement (think of it as Reputation). By default, a maximum of 100 Unity can be stored, and a minimum of -100 Unity can be obtained. 
 For every 1 Unity in debt, the amount of Credits earned decreases by 1%. Also, every 1 Unity above 100 will give +0.1% Credit Earnings.
 Overflowing Unity will be converted into Credits (Rate: 1 Unity > 1 Credit)
 
 **Gems**: A premium currency, usually only obtained in events and seasonal resets.
-It can be used for exchanging Gems into Credits and Unity, or purchasing special items in the shop.
+It can be used for exchanging Gems into Credits, Unity or KCash, or purchasing special items in the shop.
 
 **Gold**: A currency that is obtained through player mining (Using the `{prefix}players mine` command).
 As of V.5.0, the players system has been **deprecated.** The players system may be rebuilt in the future.
 
 **KCash**: The global currency of KCMC. It is used in every server that supports the *KMCExtract* technology.
-If you are a new KCMC player, you may ask to claim a **free 10,000 KCash reward.**
--# Offer only available to new players after 2025.
+If you are a new KCMC player, you may ask to claim a **free 100,000 KCash reward.**
+-# Offer only available to new players after 2026, and has not claimed any previous welcome bonuses.
 
 """,
             color = 0xFF00FF
