@@ -46,21 +46,19 @@ Now, you play a minigame with the lock pick:
 
 **Amounts**
 Win Amount: 
-The amount you earn by successfully robbing someone is based on a percentage of the target's balance.
+The amount you earn by successfully robbing someone is 10% of the target's balance.
 The amount will be subtracted from the target's balance and will be given to you.
-Amount you earn: ||*`(Target's Balance) / 10`*||
 
 Lose Amount:
-The amount you lose by failing to rob someone is based on a percentage of your balance and the target's balance.
-You may go into debt if there is a large balance difference between you and the target.
-Amount you lose: ||*`(Your Balance) / 20 + (Target's Balance) / 15`*||
+The amount you lose by failing to rob someone is based on the amount of Unity you have.
+You also lose `5 Unity` when getting caught.
+However, when failing a rob, there is a chance you do not get caught, and you won't lose anything.
+The formula for lose amount is ||*`max(50, 100 - Unity)`*||
+The formula for the catch chance is ||_`100% - (Chance of succeeding)^2`_||
 
 **Unity in robbing**
-When robbing someone, you lose unity as a result. 
 Negative unity increases the Target's RDL in addition to balance difference.
-The formula for this is ||*`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your Unity) < 0`*||
-A failed rob decreases Unity by 1.
-A successful rob increases Unity by 0.25
+The formula for this is ||_`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your Unity) < 0`_||
     """,
         aliases = ["newrob"]
     )
@@ -109,7 +107,7 @@ A successful rob increases Unity by 0.25
             loseAmount = 50
         else:
             winAmount = round(targetBal / 10, 2)
-            loseAmount = round((userBal / 20) + (targetBal / 15), 2)
+            loseAmount = max(50, 100-data['unity'])
 
         userRAL = calculateRobAttack(message.author)
         targetRDL = calculateRobDefense(target)
@@ -142,15 +140,16 @@ A successful rob increases Unity by 0.25
             data[key] += value
             u.setValue("rob", data)
 
-        def lose():
+        def lose(caught: bool = True):
             # Lose money
-            if user.getData('credits') >= 0:
-                user.addBalance(credits = -loseAmount)
-                targetUser.addBalance(credits = loseAmount)
-                user.addBalance(unity = -1)
-            else:
-                user.addBalance(unity = -10)
-                targetUser.addBalance(unity = 10)
+            if caught:
+                if user.getData('credits') >= 0:
+                    user.addBalance(credits = -loseAmount)
+                    targetUser.addBalance(credits = loseAmount)
+                    user.addBalance(unity = -5)
+                else:
+                    user.addBalance(unity = -15)
+                    targetUser.addBalance(unity = 15)
                 
             # Rob stats
             if robGet(user, 'insights') < 3:
@@ -377,17 +376,24 @@ You will now try to steal his/her money anyway with the lock, though it might be
 
             elif targetRoll > userRoll:
                 # Lose Unity if negative
-                if user.getData('credits') >= 0:
-                    match random.randint(1,3):
-                        case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
-                        case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
-                        case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
+                caught = (10000 - ((won/total)**2 * 10000)) < random.randint(1, 10000)
+                if caught:
+                    if user.getData('credits') >= 0:
+                        match random.randint(1,3):
+                            case 1: winTxt = f"Unfortunately, {target.mention} caught you and you were forced to pay `{loseAmount} Credits`"
+                            case 2: winTxt = f"Unfortunately, the Police caught you and you were fined `{loseAmount} Credits` to {target.mention}"
+                            case 3: winTxt = f"You slipped and fell, causing `{loseAmount} Credits` to be lost after being embarrassed by {target.mention}"
+                    else:
+                        match random.randint(1,3):
+                            case 1: winTxt = f"Unfortunately, {target.mention} caught you and you lost `10 Unity` out of embarrassment"
+                            case 2: winTxt = f"Unfortunately, the Police caught you and you were shamed and lost `10 Unity`"
+                            case 3: winTxt = f"You slipped and fell, causing `10 Unity` to be lost after being embarrassed by {target.mention}"
                 else:
                     match random.randint(1,3):
-                        case 1: winTxt = f"Unfortunately, {target.mention} caught you and you lost `10 Unity` out of embarrassment"
-                        case 2: winTxt = f"Unfortunately, the Police caught you and you were shamed and lost `10 Unity`"
-                        case 3: winTxt = f"You slipped and fell, causing `10 Unity` to be lost after being embarrassed by {target.mention}"
-                lose()
+                        case 1: winTxt = f"Unfortunately, you did not manage to steal from {target.mention}\nHowever, you were also not caught in the process!"
+                        case 2: winTxt = f"Unfortunately, you never had a good opportunity to steal from {target.mention}\nHowever, you were also not noticed!"
+                        case 3: winTxt = f"You lost track of where {target.mention} went, losing the opportunity to steal some Credits\nLuckily, you were not caught attempting to do so."
+                lose(caught)
 
             em = discord.Embed(
                 title = "Rob Results",

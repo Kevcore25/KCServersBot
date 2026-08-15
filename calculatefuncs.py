@@ -11,7 +11,7 @@ from threading import Timer as threading_Timer
 Context = discord.ext.commands.Context
 
 with open("botsettings.json", 'r') as f:
-    botsettings = json.load(f)
+    botsettings: dict[str, str|int|bool] = json.load(f)
 
     KMCExtractLocation = botsettings['KMCExtract']
     prefix = botsettings['prefix']
@@ -852,7 +852,8 @@ def compact_num_ceil(n: int) -> str:
         val = ceil(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
     
-    return str(ceil(n * 100) / 100)
+    val = str(ceil(n * 100) / 100)
+    return str(int(val)) if val.is_integer() else str(val)
 
 def compact_num(n: int) -> str:
     an = abs(n)
@@ -867,7 +868,10 @@ def compact_num(n: int) -> str:
         val = int(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
     
-    return str(int(n * 100) / 100)
+    # val = str(int(n * 100) / 100)
+    # return str(int(val)) if val.is_integer() else str(val)
+    
+    return str(int(n))
 
 
 class JSONIO:

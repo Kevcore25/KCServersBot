@@ -3,13 +3,13 @@ from discord.ext import commands
 from calculatefuncs import *
 
 LOAN_DESC = f'''You can loan up to a certain amount of Credits in order to help you become richer!
-By default, you may only loan up to a value of 50% of your Score. 
-Having at least 75 Unity will bump it to 75% of your Score.
+You may only loan up to *X*% of your Score. 
+*X* is equal to your unity, but has a minimum of 10 and maximum of 50.
 As score generally starts linear and slows during late-game, this usually is a good number of how much you can loan up to.
 Score depends on many factors, so negative Unity for example would cause lower scores as well.
 
 After loaning an amount of Credits, you must pay an interest within 1 week, or you will suffer Unity losses.
-The interest is randomized from 5% to 15%, and the Unity loss depends on how much you had loaned:
+The interest is randomized from 0% to 5%, and the Unity loss depends on how much you had loaned:
 * For less than 1k loaned: -50 Unity
 * For 1k loaned and over: -100 Unity
 
@@ -33,10 +33,8 @@ class LoanCog(commands.Cog):
         u = User(message.author.id)
         
         # Get max loan amount
-        if u.getData('unity') >= 75:
-            maxLoan = round(calcScore(u) * 0.75)
-        else:
-            maxLoan = round(calcScore(u) / 2)
+        maxLoan = round(calcScore(u) * max(0.1, min(0.5, u.getData('unity') / 100)))
+
 
         if value is None:
             await message.send(embed = basicMsg(
@@ -88,7 +86,7 @@ class LoanCog(commands.Cog):
 
             loan = {
                 "amount": value,
-                "interest": round(random.randint(5, 15) / 100, 2),
+                "interest": round(random.randint(0, 5) / 100, 2),
                 "expires": int(time.time() + 60*60*24*7)
             }
 

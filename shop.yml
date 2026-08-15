@@ -45,7 +45,7 @@ Popularity:
     credits: 0
     unity: 0.5
     gems: 0
-    description: The chance of the next beg succeeding increases from 67% to 80%.
+    description: The chance of the next beg succeeding increases from 80% to 90%.
     limit: 30
     expiry: -1
     stock: 1000000

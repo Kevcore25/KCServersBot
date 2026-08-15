@@ -1,9 +1,9 @@
 Player:
     Description: A KCMC player. Standard work job with no downsides. **Recommended for new players.**
-    Credits: 10
-    Unity: 1
+    Credits: 15
+    Unity: 1.5
     Credit Efficiency: 5
-    Unity Threshold: 0
+    Unity Threshold: -100
 
 Developer:
     Description: A developer working in KCServers. Developers earn a lot but not so much Unity.
@@ -14,42 +14,45 @@ Developer:
 
 Pacifist:
     Description: A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.
-    Credits: 15
+    Credits: 20
     Unity: 1
     Credit Efficiency: -5
     Unity Threshold: 30
 
 Beggar:
-    Description: Beggars make themselves look poor, which allow them to earn more from begs! While begging, Wealth Power is halved, and you sometimes get 50% more from begs (20%)
+    Description: |-
+        Beggars make themselves look poor, which allow them to earn more from begs! 
+        While begging, Wealth Power is halved, and you sometimes get 10% more from begs (20%).
+        Additionally, the chance of succeeding a beg increases from 80% to 85.7% (1/7).
     Credits: 15
     Unity: 0.5
     Credit Efficiency: 0
-    Unity Threshold: 50
+    Unity Threshold: 30
 
 Unifier:
     Description: Unifiers help unite everyone.
     Credits: 1.5
     Unity: 3
     Credit Efficiency: 0
-    Unity Threshold: 30
+    Unity Threshold: 20
 
 Banker:
     Description: Bankers help regulate the bank economy. When working, the bot loses 1k Credits then gains 1k Credits scaling with Credit Efficiency.
-    Credits: 20
-    Unity: 1.5
+    Credits: 15
+    Unity: 2
     Credit Efficiency: 0
-    Unity Threshold: 50
+    Unity Threshold: 60
 
 Police:
     Description: A policeman catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`).
     Credits: 15
-    Unity: 1.5
+    Unity: 1.75
     Credit Efficiency: 0
     Unity Threshold: 65
 
 Robber:
     Description: A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`).
-    Credits: 30
+    Credits: 25
     Unity: 0
     Credit Efficiency: -5
     Unity Threshold: -100

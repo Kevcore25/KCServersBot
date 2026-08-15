@@ -122,21 +122,48 @@ class AccountViewers(commands.Cog):
         msg = await message.send(embed=embed)
 
         # Get KCash 
+        estimatedKCash = 0
+
+        kcashInt = 0
+
         if KMCE_SERVER_IP is None:
             kcash = "Not set up"
         else:
             try:
                 kcash = kmce_server_request(f"READ bal FOR {ign}").get("output", 'Account Error')
-                if not isinstance(kcash, str):
+                if isinstance(kcash, (int, float)):
+                    kcashInt = int(kcash)
                     kcash = f"{kcash:>,}/1M"
             except:
                 print_exc()
                 kcash = "Server Error"
 
+        ## Get estimated total KCash
+        # From Credits: max((Wealth - Loan Repay Amt) * KCash Exchange Rate - KCash fee, 0)
+        wealth = calcWealth(user)
+        kcashrate = round(botsettings.get('KCash rate', 0.1) / calcInflation(), 5)
+        exchangeFee = botsettings.get('Exchange fee', [500, 5])
+
+        if userData['unity'] >= exchangeFee[1]:
+            exchangeFee = exchangeFee[0]
+            if userData.get('loan', {'amount': 0}).get('amount') > 0:
+                loanRepay = userData['loan']['amount'] * (1+userData['loan']['interest'])
+            else:
+                loanRepay = 0
+
+            estimatedKCash += max(0, (wealth - loanRepay) * kcashrate - round(min(exchangeFee,
+                (exchangeFee * 4) 
+                /
+                (calcWealthPower(user, decimal=True, noperks=True) ** 2),
+            2)))
+
+        # From Gems: Gems * 1000
+        estimatedKCash += max(0, userData['gems'] * 1000)
+
         embed.set_field_at(
             index = 1,
             name="KCMC Info", 
-            value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`"
+            value=f"**MC Username**: `{ign}`\n**KCash**: `{kcash}`\n(*`{compact_num(estimatedKCash)} KCash` exchangable*)"
         )    
 
         if userData.get('loan', {'amount': 0}).get('amount') > 0:
@@ -147,7 +174,7 @@ class AccountViewers(commands.Cog):
         embed.set_field_at(
             index = 5,
             name="Other Info", 
-            value=f"**Wealth**: `{get_prefix(calcWealth(user))}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{compact_num(calcScore(user))}`",
+            value=f"**Wealth**: `{compact_num(wealth)}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{compact_num(calcScore(user))}`",
             inline=False
         )
 

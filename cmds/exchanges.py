@@ -77,7 +77,7 @@ class Exchanges(commands.Cog):
         hidden = True
     )
     @commands.cooldown(1, 30, commands.BucketType.user) 
-    async def exchange(self, message, amount: float = None):
+    async def exchange(self, message, amount: float|str = None):
         user = User(message.author.id)
         data = user.getData()
         inflation = calcInflation()
@@ -89,17 +89,11 @@ class Exchanges(commands.Cog):
         exchangeFee = botsettings.get('Exchange fee', [500, 5])
 
         # Lower exchange rate based on Wealth Power
-        try:
-            exchangeFee[0] = round(
-                (exchangeFee[0] * 2) 
-                /
-                math.log10(calcWealthPower(user, noperks=True)),
-            2)
-        except ValueError: # Logarithm of 0
-            exchangeFee[0] = 500
-            
-        # exchange fee cannot be higher than initial
-        if exchangeFee[0] > 500: exchangeFee[0] = 500
+        exchangeFee[0] = round(min(exchangeFee[0],
+            (exchangeFee[0] * 4) 
+            /
+            (calcWealthPower(user, decimal=True, noperks=True) ** 2),
+        2))
 
 
         if amount is None:
@@ -107,10 +101,25 @@ class Exchanges(commands.Cog):
             embed.set_footer(text="Credit exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken into account.")
 
             self.exchange.reset_cooldown(message)
+            return await message.send(embed=embed)
+
+        # Disallow loans
+        if data.get('loan', {'amount': 0}).get('amount') > 0:
+            embed = discord.Embed(title="You have a loan!",description=f"You cannot exchange Credits into KCash while you are on a loan!\nYou must repay your loan before being able to use this exchange service.", color=0xFF0000)
+            self.exchange.reset_cooldown(message)
+            return await message.send(embed=embed)
 
 
-        elif amount <= 0:
-            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!", color=0xFF0000)
+        if isinstance(amount, str) and amount.lower() in {'all', 'everything'}:
+            # Set a minimum of 0.01 to notify the user that he/she has not enough Credits
+            amount = max(0.01, int((data['credits'] - exchangeFee[0])*100)/100)
+        else:
+            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to exchange everything.", color=0xFF0000)
+            self.exchange.reset_cooldown(message)
+            return await message.send(embed=embed)
+
+        if amount <= 0:
+            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to exchange everything.", color=0xFF0000)
             self.exchange.reset_cooldown(message)
         else:
             # Check if user is vaild to exchange
@@ -151,7 +160,7 @@ class Exchanges(commands.Cog):
                 else:
                     embed = discord.Embed(title="Exchange failed!",description=f"There was an error processing your KCash account.\nYou are not charged for this exchange.\n-# Reason: {r.get("reason", "Malformed return output")}", color=0xFF0000)
     
-        await message.send(embed=embed)
+            await message.send(embed=embed)
 
 
     @commands.command(
@@ -161,7 +170,7 @@ class Exchanges(commands.Cog):
         hidden = True
     )
     @commands.cooldown(1, 30, commands.BucketType.user) 
-    async def extract(self, message, amount: int = None):
+    async def extract(self, message, amount: int|str = None):
         user = User(message.author.id)
         data = user.getData()
         inflation = calcInflation()
@@ -174,25 +183,32 @@ class Exchanges(commands.Cog):
         ign = user.getData('settings').get("ign", None)
 
         # Lower exchange rate based on Wealth Power
-        try:
-            exchangeFee = round(
-                (exchangeFee * 2) 
-                /
-                math.log10(calcWealthPower(user, noperks=True)),
-            2)
-        except ValueError: # Logarithm of 0
-            exchangeFee = 100
-            
-        # exchange fee cannot be higher than initial
-        exchangeFee = round(min(100, exchangeFee))
+        exchangeFee = round(min(exchangeFee,
+            (exchangeFee * 4) 
+            /
+            (calcWealthPower(user, decimal=True, noperks=True) ** 2),
+        2))
 
+        bal = None
 
         if amount is None:
             embed = discord.Embed(title="Exchange information", description=f"""Format: `{prefix}extract <credits>`\n\nCurrently, it would be `1 KCash` → `{kcashrate} Credits`\n\n**Exchange fee**: `{exchangeFee} KCash` per exchange.""", color=0xFF00FF)
             embed.set_footer(text="KCash exchange fee can be lowered with higher Wealth Power.\nWealth Power perks (e.g. Pacifist) are not taken into account.")
             self.extract.reset_cooldown(message)
-        elif amount <= 0:
-            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!", color=0xFF0000)
+            return await message.send(embed=embed)
+        
+        if isinstance(amount, str) and amount.lower() in {'all', 'everything'}:
+            bal = kmce_server_request(f"READ bal FOR {ign}").get('output', 0)
+
+            # Set a minimum of 1 to notify the user that he/she has not enough Credits
+            amount = max(1, int(bal - exchangeFee))
+        else:
+            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to extract everything.", color=0xFF0000)
+            self.exchange.reset_cooldown(message)
+            return await message.send(embed=embed)
+        
+        if amount <= 0:
+            embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to extract everything.", color=0xFF0000)
             self.extract.reset_cooldown(message)
         elif ign is None:
             embed = errorMsg(title = "No IGN set", description=f"You need to set up a Minecraft username and __verify it*__ in order to use this extract service.\n\n-# Verify Qualification: You need to join an official KCMC server with a version 1.3+ KMCEv3 plugin, and then run `.kcslink {user.ID}`")
@@ -200,7 +216,9 @@ class Exchanges(commands.Cog):
         else:
             # Check if user is vaild to exchange
             r = kmce_server_request(f"READ discordid FOR {ign}")
-            bal = kmce_server_request(f"READ bal FOR {ign}").get('output', 0)
+            if bal is None:
+                bal = kmce_server_request(f"READ bal FOR {ign}").get('output', 0)
+
             amount = int(amount)
 
             if r.get('output') != str(user.ID):
@@ -227,9 +245,5 @@ class Exchanges(commands.Cog):
 
                 else:
                     embed = discord.Embed(title="Exchange failed!",description=f"There was an error processing your KCash account.\n-# Reason: {r.get("reason", "Malformed return output")}", color=0xFF0000)
-
-
-     
-
 
         await message.send(embed=embed)
