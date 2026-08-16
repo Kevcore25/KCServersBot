@@ -292,7 +292,7 @@ __Guesses__
 You managed to find all possible combinations and removed their locks!
 The correct combination was `{ANS}`.
 You also gained `+{bonusAtk} Rob Attack Level(s)`!""",
-                        color = 0xFF00FF,
+                        color = 0x00FF00,
                     )
 
   
@@ -308,7 +308,7 @@ The combination was `{ANS}` and your highest was `{highestFound} matching combin
 Thus you broke `{max(0, highestFound-2)}` locks.
 
 You were penalized `{bonusAtk} Rob Attack Levels` as a result.""",
-                        color = 0xFF00FF,
+                        color = 0xFF0000,
                     )
 
                 # Delete based on found-2, cannot be lower than 0
@@ -328,9 +328,11 @@ You were penalized `{bonusAtk} Rob Attack Levels` as a result.""",
                     description = f"""Robbing {target.mention}...
 
 Unfortunately, {target.mention} has a lock, and you did not bring a lock pick to break it.
-You will now try to steal his/her money anyway with the lock, though it might be challenging!""",
+You will now try to steal his/her money anyway with the lock, though it might be challenging!
+(`-2 Rob Attack Levels`)""",
                     color = 0xFF0000,
                 )
+                bonusAtk -= 2
 
                 await msg.edit(embed=em)
 
@@ -376,7 +378,7 @@ You will now try to steal his/her money anyway with the lock, though it might be
 
             elif targetRoll > userRoll:
                 # Lose Unity if negative
-                caught = (10000 - ((won/total)**2 * 10000)) < random.randint(1, 10000)
+                caught = ((won/total) * 10000) < random.randint(1, 10000)
                 if caught:
                     if user.getData('credits') >= 0:
                         match random.randint(1,3):

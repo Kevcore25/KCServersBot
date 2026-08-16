@@ -77,7 +77,7 @@ class AccountViewers(commands.Cog):
         if not isDM(message):
             embed.add_field(
                 name="Rob Stats", 
-                value=f"**Rob Attack**: `{calculateRobAttack(account)} Lvls`\n**Rob Defense**: `{calculateRobDefense(account)} Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
+                value=f"**Rob Attack**: `{calculateRobAttack(account)} Lvls`\n**Rob Defense**: `{calculateRobDefense(account) + 2 + user.get_item("Lock", onlydetermine=False).get("count", -2)} Lvls`\n**Success rate**: `{robrate}`\n**Insights**: `{userData['rob']['insights']}/3`"
             )
         else:
             embed.add_field(

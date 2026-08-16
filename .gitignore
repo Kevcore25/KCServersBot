@@ -31,3 +31,4 @@ chatcommunicator.yml
 .*
 !.gitignore
 backup_ids.json
+giftcodes.json

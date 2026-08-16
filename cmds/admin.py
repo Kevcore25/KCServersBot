@@ -2,6 +2,36 @@ import discord
 from discord.ext import commands
 from calculatefuncs import *
 import asyncio
+import time
+
+def time_second_converter(t: str):
+
+    # Seperate into tokense
+    t = t.replace(',', ' ')
+
+    total = 0 
+
+    for token in t.split(' '):
+        if token.isdigit():
+            total += int(token)
+
+        try:
+            n = int(token[:-1])
+
+            match token[-1]:
+                case 'd': total += n * 86400
+                case 'h': total += n * 3600
+                case 'm': total += n * 60
+                case 's': total += n
+                case 'y': total += n * 31536000
+                case 'M': total += n * 2592000
+                case 'w': total += n * 604800
+
+                      
+        except ValueError, TypeError, KeyError:
+            pass
+
+    return round(time.time() + total)
 class AdminCmds(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -11,7 +41,7 @@ class AdminCmds(commands.Cog):
         help = "[ADMIN] Creates a gift code",
         hidden = True
     )
-    async def creategift(self, message: discord.Message, amount: str, uses: int = 1, code: str | None = None):
+    async def creategift(self, message: discord.Message, amount: str, uses: int = 1, expiry: str = "-1", code: str | None = None):
         # Only admins can use this
 
         # Amount can be a string like 1C 2U or just 1 2U
@@ -60,13 +90,15 @@ class AdminCmds(commands.Cog):
                     f.write("{}")
                 codes = {}
 
-            codes[code] = [credits, unity, gems, uses]
+            expiryDate = -1 if expiry.lower() in {'inf', '-1', 'infinite', 'forever', '0'} else time_second_converter(expiry)
+
+            codes[code] = [credits, unity, gems, uses, expiryDate]
 
             with open('giftcodes.json', 'w') as f:
                 json.dump(codes, f, indent=4)
 
             # Send MSG
-            await message.send(f"Created a gift code of: `{code}` giving the following: `{credits} Credits`, `{unity} Unity`, and `{gems} Gems`")
+            await message.send(f"Created a gift code of: `{code}` giving the following: `{credits} Credits`, `{unity} Unity`, and `{gems} Gems`\nThis code {'never expires' if expiryDate == -1 else f'expires at <t:{expiryDate}:S> (`<t:{expiryDate}:S>`)'}")
         else:
             await message.send("You are not permitted to use this command!")
 

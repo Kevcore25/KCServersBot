@@ -259,14 +259,25 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
         try: # You can also use if code in list
             # Reset CD. CD is for failure attempts
             self.redeem.reset_cooldown(message)
-            
-            credits, unity, gems, uses = codes[code]
+
+            if len(codes[code]) == 4: # Old system without expiry date
+                credits, unity, gems, uses = codes[code]
+                expiry = -1
+            else:
+                credits, unity, gems, uses, expiry = codes[code]
+
 
             # Check if the code is already used
             if code in u.getData("redeemedCodes"):
                 await message.send(embed=errorMsg(f"You already redeemed the code `{code}`!"))
                 return
 
+            # Check for expiry
+            if expiry != -1 and time.time() > expiry:
+                del codes[code]
+                with open("giftcodes.json", 'w') as f:
+                    json.dump(codes, f, indent=4)
+                raise KeyError
 
             # Delete if uses is 0
             uses -= 1
@@ -286,16 +297,23 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
             # Add balances
             u.addBalance(credits=credits, unity=unity, gems=gems)
 
+            # Delete user message
+            try:
+                await message.message.delete()
+            except:
+                pass
+
             # Send MSG
             await message.send(embed=successMsg("Code redeemed!", 
-                f"You obtained:" +
+                f"{message.author.mention}, you obtained:" +
                 (f"\n  `{'+' if credits > 0 else ''}{credits} Credits`" if credits != 0 else "") + 
                 (f"\n  `{'+' if unity > 0 else ''}{unity} Unity`" if unity != 0 else "") + 
                 (f"\n  `{'+' if gems > 0 else ''}{gems} Gems`" if gems != 0 else "")
+                (f"\nNothing`" if credits == unity == gems == 0 else "")
             ))
 
         except KeyError:
-            await message.send(embed=errorMsg(f"The code `{code}` does not exist, or has ran out of uses!"))
+            await message.send(embed=errorMsg(f"The code `{code}` either does not exist, has ran out of uses, or has expired!"))
 
         
     @commands.command(

@@ -39,7 +39,7 @@ class LoanCog(commands.Cog):
         if value is None:
             await message.send(embed = basicMsg(
                 "Loaning Information",
-                f"You can loan up to `{maxLoan:>,} Credits`.\nYou must pay 10% ±5% interest within 1 week of your loan or before a reset.\nOtherwise, you will suffer Unity losses.\n\nHow to use:\n{prefix}loan <amount> - Loan an amount of credits\n{prefix}loan repay - Repay your loan\n\nRun the help command on this command for more loaning information."
+                f"You can loan up to `{maxLoan:>,} Credits`.\nYou must pay up to a 5% interest within 1 week of your loan or before a reset.\nOtherwise, you will suffer Unity losses.\n\nHow to use:\n{prefix}loan <amount> - Loan an amount of credits\n{prefix}loan repay - Repay your loan\n\nRun the help command on this command for more loaning information."
             ))
         elif value.lower() == "repay":
             loan = u.getData('loan')
