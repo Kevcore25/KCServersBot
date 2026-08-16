@@ -113,10 +113,12 @@ class Exchanges(commands.Cog):
         if isinstance(amount, str) and amount.lower() in {'all', 'everything'}:
             # Set a minimum of 0.01 to notify the user that he/she has not enough Credits
             amount = max(0.01, int((data['credits'] - exchangeFee[0])*100)/100)
-        else:
+        elif not amount.replace('.', '').isdigit():
             embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to exchange everything.", color=0xFF0000)
             self.exchange.reset_cooldown(message)
             return await message.send(embed=embed)
+
+        amount = float(amount)
 
         if amount <= 0:
             embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to exchange everything.", color=0xFF0000)
@@ -202,10 +204,12 @@ class Exchanges(commands.Cog):
 
             # Set a minimum of 1 to notify the user that he/she has not enough Credits
             amount = max(1, int(bal - exchangeFee))
-        else:
+        elif not amount.isdigit():
             embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to extract everything.", color=0xFF0000)
             self.exchange.reset_cooldown(message)
             return await message.send(embed=embed)
+
+        amount = int(amount)
         
         if amount <= 0:
             embed = discord.Embed(title="Amount invaild!",description=f"Your amount must be an integer greater than 0!\nYou can also specify 'all' to extract everything.", color=0xFF0000)

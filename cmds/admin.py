@@ -28,7 +28,7 @@ def time_second_converter(t: str):
                 case 'w': total += n * 604800
 
                       
-        except ValueError, TypeError, KeyError:
+        except (ValueError, TypeError, KeyError):
             pass
 
     return round(time.time() + total)
