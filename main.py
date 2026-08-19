@@ -1,4 +1,4 @@
-VERSION = 8.8
+VERSION = 9.0
 
 """
 PIP REQUIREMENTS:
@@ -380,11 +380,19 @@ async def on_message(message: discord.Message):
                 color = 0xFF0000
             ))
 
+cooldownCD = {}
+
 @bot.event 
 async def on_command_error(ctx: Context, error: discord.DiscordException):
     if isinstance(error, commands.CommandOnCooldown):
-        embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
-        await ctx.send(embed=embed)
+        cdid = str(ctx.author.id)+';'+str(ctx.command)
+
+        if cdid not in cooldownCD or (time.time() - cooldownCD[cdid]) > 3:
+            embed=discord.Embed(title="Command on cooldown!",description=f"{ctx.author.mention}, you can use the `{ctx.command}` command <t:{int(time.time() + round(error.retry_after))}:R>", color=0xff0000)
+            await ctx.send(embed=embed)
+
+            cooldownCD[cdid] = int(time.time())
+            
     elif isinstance(error, commands.errors.MemberNotFound): #or if the command isnt found then:
         embed=discord.Embed(description=f"The member you specified is not vaild!", color=0xff0000)
         ctx.command.reset_cooldown(ctx)

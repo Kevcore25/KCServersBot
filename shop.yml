@@ -8,7 +8,7 @@ Lock:
     stock: 1000000
 Lock Pick:
     credits: 5
-    unity: 0.5
+    unity: 0.2
     gems: 0
     description: |-
         Can pick a lock given the correct combination, but a failure may decrease your odds of a successful rob. 
@@ -69,13 +69,13 @@ Starter Crate:
     limit: 1
     expiry: -1
     stock: 5
-New Identity:
-    credits: -200
-    unity: -300
-    gems: 20
+Rob Alerts:
+    credits: 50
+    unity: 5
+    gems: 3
     description: |-
-        Instantly gain `300 Unity` and some Credits, allowing you to recover from negative Unity.
-        Can only be bought once per season.
+        Receive a DM when you are robbed.
+        This only works if DMs are enabled in your settings, and you allow the bot to DM you in Discord.
     limit: 1
     expiry: -1
     stock: 5

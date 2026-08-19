@@ -633,14 +633,14 @@ def calcCreditTxt(user: User) -> int:
 
     # Excessive Unity (Every 1 above 100 grants +0.1%, up to 200 (+10%))
     if unity > 100:
-        amountTxt["Excess Unity"] = round((unity - 100) * 0.1, 5) if unity <= 200 else 1.2
+        amountTxt["Excess Unity"] = round((unity - 100) * 0.1, 1) if unity <= 200 else 1.2
 
 
     """ NEGATIVES """
     # Negative unity subtraction
     if unity < 0:
         unityFee = round((100 - -unity) / 100, 2)
-        amountTxt["Negative Unity fee"] = -round(1 - unityFee, 3) * 100
+        amountTxt["Negative Unity fee"] = -round(100 * (1 - unityFee), 1)
 
     # Rich I (-10% Credit gain)
     if wealth > 1000:
@@ -671,6 +671,7 @@ def calcCreditTxt(user: User) -> int:
 
     """ EVENTS """
 
+
     for i in amountTxt:
         if amountTxt[i] >= 0:
             amountTxt[i] = "+" + str(round(amountTxt[i], 5)) 
@@ -684,9 +685,9 @@ def calculateRobDefense(member: discord.Member) -> int:
     Factors that affect RDL
     * Target is offline or idle: Target Defense Rob -1
     * Already robbed that target within 5 minutes: Target Defense Rob +1
-    * Target has `Lock`: Target Defense Rob +2
     * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
     * Police / Pacifist job: Rob Defense +3
+    (Locks count as bonus RDL, not RDL itself; however, account cmd shows the bonus RDL gained from lock anyway)
     """
     # Create user obj
     user = User(member.id)
@@ -711,8 +712,12 @@ def calculateRobDefense(member: discord.Member) -> int:
     
     # Job roles
     match user.getData('job'):
-        case "Police" | "Pacifist":
+        case "Police":
             rdl += 3
+        case "Pacifist":
+            rdl += 2
+        case "Robber":
+            rdl -= 1
 
     # Insights
     rdl -= rob['insights']
@@ -746,7 +751,7 @@ def calculateRobAttack(member: discord.Member) -> int:
     match user.getData('job'):
         case "Robber":
             ral += 2
-        case "Pacifist":
+        case "Pacifist" | "Police":
             ral -= 2
 
     # Insights
@@ -852,8 +857,7 @@ def compact_num_ceil(n: int) -> str:
         val = ceil(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
     
-    val = str(ceil(n * 100) / 100)
-    return str(int(val)) if val.is_integer() else str(val)
+    return str(ceil(n))
 
 def compact_num(n: int) -> str:
     an = abs(n)
@@ -867,11 +871,42 @@ def compact_num(n: int) -> str:
     if an >= 1_000:
         val = int(n / 100.0) / 10.0
         return f"{int(val)}k" if val.is_integer() else f"{val}k"
-    
-    # val = str(int(n * 100) / 100)
-    # return str(int(val)) if val.is_integer() else str(val)
-    
+
     return str(int(n))
+
+async def convert_user_to_obj(user: User | int, botUser: discord.Client) -> discord.User | None:
+    """Converts a user ID into a User object"""
+    if isinstance(user, User):
+        user = user.ID
+
+    return botUser.get_user(user)
+
+def check_mobile_mode(user: discord.Member) -> bool:
+    """Checks if a given user should be using a mobile/phone mode"""
+    try:
+        phoneMode = str(User(user.id, doNotCheck=True).get_setting("phone")).lower()
+        return phoneMode == 'true' or (phoneMode == 'auto' and user.is_on_mobile() and user.mobile_status != discord.Status.idle)
+    except:
+        return False
+
+async def direct_message(user: discord.Member | User, embed: discord.Embed = None, botUser: discord.Client = None):
+    """
+    Direct message a user. 
+    
+    If a User (custom) type object is specified, the bot client object must also be specified.
+    """
+    try:
+        if isinstance(user, User):
+            if botUser is None:
+                return None
+            else:
+                user = convert_user_to_obj(user, botUser)
+
+        if embed and User(user.id).get_setting('dms'):
+            await user.create_dm()
+            await user.send(embed = embed)
+    except:
+        pass
 
 
 class JSONIO:
@@ -987,7 +1022,11 @@ class DiminishRewards:
             self.users[user.ID][0] += 1 # Prevent /0
 
         # Reward
-        amount = self.rewardAmount / self.users[user.ID][0]
+        amount = self.rewardAmount / self.users[user.ID][0] 
+
+        # 50% more for Student job
+        if user.getData('job') == "Student" and self.users[user.ID][0] <= 3:
+            amount *= 1.5
 
         return round(max(calcCredit(self.minReward, user), calcCredit(amount, user)), 3)
     
@@ -1006,7 +1045,6 @@ class DiminishRewards:
             self.add_user(user)
         
         self.users[user.ID][0] += 1
-        print(self.users)
 
 def escape_markdown(text):
     chars = ['*', '_', '`', '~', '[', ']', '(', ')', '#', '+', '-', '.', '!']

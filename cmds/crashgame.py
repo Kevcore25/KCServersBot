@@ -158,6 +158,10 @@ class CrashGameCog(commands.Cog):
                             won *= 1.1
                         elif cg.multiplier >= 2:
                             won *= 1.05
+                            
+                    # Student decrease (-15%)
+                    if user.getData('job') == "Student":
+                        won *= 0.85
 
                     user.addBalance(credits=won, unity=1)
 
@@ -185,6 +189,10 @@ class CrashGameCog(commands.Cog):
                     elif cg.multiplier >= 2:
                         won *= 1.05
 
+                # Student decrease (-15%)
+                if user.getData('job') == "Student":
+                    won *= 0.85
+
                 user.addBalance(credits=won)
 
                 await message.send(f"Won {won}! (Autocashed)")             
@@ -204,6 +212,10 @@ class CrashGameCog(commands.Cog):
                             won *= 1.1
                         elif cg.multiplier >= 2:
                             won *= 1.05
+
+                    # Student decrease (-15%)
+                    if user.getData('job') == "Student":
+                        won *= 0.85
                             
                     user.addBalance(credits=won)
 

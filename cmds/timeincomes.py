@@ -158,12 +158,22 @@ class TimeIncomes(commands.Cog):
 
                         creditGain = round(creditGain * lastCG, 3)
                         user.setValue("lastCG", 1)
+
                     # Regulate bot with Banker
                     elif currentJob == "Banker":
                         u = User('main')
-                        u.addBalance(-1000)
-                        u.addBalance(calcCredit(1000, u))
+                        u.addBalance(-10000)
+                        u.addBalance(calcCredit(10000, u))
 
+                    # +3 Lock Picks, that expire after 1hr to encourage robbing 
+                    # now if the user already has 10... that means 13/10 lock picks lol 
+                    #   and the ones that were bought (the 10) are prioritzed because its earlier
+                    elif currentJob == "Robber":
+                        user.add_item("Lock Pick", 3600, 3)
+
+                    # +1 Unity for less than 50 Unity for unifiers
+                    elif currentJob == "Unifier" and data['unity'] < 50:
+                        unityGain += 1
 
                     user.addBalance(credits=creditGain, unity=unityGain)
 

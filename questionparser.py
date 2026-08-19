@@ -10,7 +10,7 @@ def parseDFV(value):
         return str(value)
 
 def updateTimer():
-    threading.Timer(3600, updateTimer).start()
+    threading.Timer(86400, updateTimer).start()
     update()
 
 def update():

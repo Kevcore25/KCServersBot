@@ -140,17 +140,30 @@ The formula for this is ||_`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your 
             data[key] += value
             u.setValue("rob", data)
 
-        def lose(caught: bool = True):
+        async def lose(caught: bool = True):
             # Lose money
             if caught:
                 if user.getData('credits') >= 0:
                     user.addBalance(credits = -loseAmount)
                     targetUser.addBalance(credits = loseAmount)
-                    user.addBalance(unity = -5)
+                    unityLoss = -5 if data['job'] == "Robber" else -3
+                    user.addBalance(unity = unityLoss)
+                    if targetUser.getData('job') == "Police":
+                        targetUser.addBalance(unity = -unityLoss)
+
                 else:
-                    user.addBalance(unity = -15)
-                    targetUser.addBalance(unity = 15)
-                
+                    unityLoss = -15
+
+                    user.addBalance(unity = unityLoss)
+                    if targetUser.getData('job') == "Police":
+                        targetUser.addBalance(unity = -unityLoss)
+
+                if targetUser.get_item("Rob Alerts"):
+                    await direct_message(target, embed = discord.Embed(title = "A user attempted to rob you", description=f"{message.author.mention} tried to rob you, but luckily failed.\nThe police also caught {message.author.mention} and you were paid `{loseAmount} Credits`.\nYou have `{targetUser.get_item("Lock", False).get("count", 0)}` locks left." + (f'\nSince you are a Police, you were also paid `{-unityLoss} Unity`.' if targetUser.getData('job') == "Police" else ''), color=0xffaa00))
+
+            elif targetUser.get_item("Rob Alerts"):
+                await direct_message(target, embed = discord.Embed(title = "A user attempted to rob you", description=f"{message.author.mention} tried to rob you, but luckily failed.\nHowever, the police never caught {message.author.mention} and you were not paid.\nYou have `{targetUser.get_item("Lock", False).get("count", 0)}` locks left.", color=0xffaa00))
+
             # Rob stats
             if robGet(user, 'insights') < 3:
                 robAdd(user, "insights", 1)
@@ -161,8 +174,6 @@ The formula for this is ||_`(Original RDL) * (1 + (Your Unity / 20) ^ 2), (Your 
         # Attacked times
         robSet(user, "attackTime", int(time.time()))
         robSet(targetUser, "attackedTime", int(time.time()))
-
-
 
         # Lock
         bonusAtk = 0
@@ -363,11 +374,16 @@ You will now try to steal his/her money anyway with the lock, though it might be
                 winTxt = f"Close! Rerolling... (Rerolled {i+1} time(s))"
             elif userRoll > targetRoll:
                 winTxt = f"You successfully robbed {target.mention} and stole `{winAmount} Credits`!"
-                
+
+                # Robbers gain +5 Credits
+                bonusCred = 0
+                if data['job'] == "Robber":
+                    bonusCred = standardIncome(5, user)
+                    winTxt += f"\nYou also gained a bonus `+{bonusCred} Credits` as a successful robber."
+
                 # Win Money
-                user.addBalance(credits = winAmount)
+                user.addBalance(credits = winAmount + bonusCred)
                 targetUser.addBalance(credits = -winAmount)
-                user.addBalance(unity = 0.25)
 
                 # Rob stats
                 robSet(user, "insights", 0)
@@ -375,6 +391,10 @@ You will now try to steal his/her money anyway with the lock, though it might be
 
                 wl = robGet(user, "won/lost")
                 robSet(user, "won/lost", [wl[0]+1, wl[1]])
+
+                if targetUser.get_item("Rob Alerts"):
+                    await direct_message(target, embed = discord.Embed(title = "A user attempted to rob you", description=f"You found that {message.author.mention} just robbed you and stole `{winAmount} Credits`.\nYou have `{targetUser.get_item("Lock", False).get("count", 0)}` locks left.", color=0xff0000))
+
 
             elif targetRoll > userRoll:
                 # Lose Unity if negative
@@ -395,7 +415,7 @@ You will now try to steal his/her money anyway with the lock, though it might be
                         case 1: winTxt = f"Unfortunately, you did not manage to steal from {target.mention}\nHowever, you were also not caught in the process!"
                         case 2: winTxt = f"Unfortunately, you never had a good opportunity to steal from {target.mention}\nHowever, you were also not noticed!"
                         case 3: winTxt = f"You lost track of where {target.mention} went, losing the opportunity to steal some Credits\nLuckily, you were not caught attempting to do so."
-                lose(caught)
+                await lose(caught)
 
             em = discord.Embed(
                 title = "Rob Results",

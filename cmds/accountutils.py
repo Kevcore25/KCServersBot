@@ -1,74 +1,112 @@
 import discord
 from discord.ext import commands
 from calculatefuncs import *
-
+import users as UsersFile
 import yaml
 class AccountUtils(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     @commands.command(
-        help = f"Change your account settings",
-        aliases = ['oldsetting', 'oldoptions']
+        help = f"Test if you are on your phone, for debug use.",
+        hidden = True,
+        aliases = ['isonphone', 'checkphone']
     )
-    async def oldsettings(self, message, option: str = None, *, value: str | int | bool = None):
-        user = User(message.author.id)
-
-        options: dict[str, bool | int | str] = user.getData("settings")
-
-        vaildOptions = ["publicity", "IGN", "AI", "password"]
-
-        if option is None:
-            embed = discord.Embed(
-                title = "Account settings",
-                description = f"These are your account settings. You can change them by: running `{prefix}oldsettings [(ID of option) <value>]`",
-                color = 0x00AAFF
-            )
-            
-            # Public account
-            embed.add_field(
-                name=f"Public Account (ID: `publicity`): {options.get('publicity', True)}", 
-                value=f"Whether your account can be viewed when another user passes an argument for the following commands: `account`, `graphbalance`, `baljson`.\nDefaults to True (On).",
-                inline=False
-            )
-                
-            # MC IGN
-            embed.add_field(
-                name=f"Minecraft Username (ID: `IGN`): {options.get('IGN', None)}", 
-                value=f"Your Minecraft username. This is required in order to exchange into KCash.\nThe username must be registered on KMCExtract!",
-                inline=False
-            )
-                
-            # Password
-            pw = options.get("password", "None")
-            embed.add_field(
-                name=f"Password (ID: `password`): {pw if pw == 'None' else ('*' * len(pw))}", 
-                value=f"The password used for the future *Web KCServers Game*, allowing you to play without Discord.\nIf the password is set to None, this feature is disabled.\nIf this feature is enabled, `baljson` will no longer work on your account.\nDefaults to None\n-# **Please use an insecure password! The security of this can be easily breached**",
-                inline=False
-            )
-
-        elif value is None:
-            embed = errorMsg("A value must be specified!")
-        
+    async def isphone(self, message: Context):
+        if message.author.is_on_mobile():
+            await message.send(f"Yes, you are detected to be using a mobile device.\nStatus: {message.author.mobile_status}")
         else:
-            value = "".join(value)
+            await message.send(f"No, you are detected to be not using a mobile device.\nStatus: {message.author.mobile_status}")
+            
+    @commands.command(
+        help = f"Attempt to fix account problems",
+        description = f"""This command attempts to fix some common account problems.\nYou should contact an admin if the error persists even after this command is ran.\nIf there is a valid error, you will gain `1 Gem` for each error as compensation.\n-# The 1 Gem per error must not be abused, such that you may not get a significant amount (over 3) of Gems using the same error message. Gem earnings from abuse are forfeited.""",
+        aliases = ['resolveaccount', 'fixaccount', 'restore']
+    )
+    async def fix(self, message, arg: str = None):
+        userTemplate = UsersFile.userTemplate
 
-            if option in vaildOptions:
-                if value.isdigit(): value = int(value)
-                elif value.lower() == "on": value = True
-                elif value.lower() == "off": value = False
+        fixedProblems = []
 
-                options[option] = value
+        def addInfo(desc: str):
+            if desc not in fixedProblems:
+                fixedProblems.append(desc)
 
-                user.setValue("settings", options)
-
-                embed = successMsg(description=f"Changed the value of `{option}` to `{value}`")
-
+        # Fix common file errors
+        try:
+            with open(f"users/{message.author.id}.json", "r") as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            with open(f"users/{message.author.id}.json", "w") as f:
+                json.dump(userTemplate, f)
+            addInfo("User account not found")
+            
+        except json.JSONDecodeError:
+            if arg == 'restore':
+                with open(f"users/{message.author.id}.json", "w") as f:
+                    json.dump(userTemplate, f)
+                
+                addInfo("RESET ACCOUNT TO DEFAULT VALUES")
             else:
-                embed = errorMsg("Must be a vaild option!\nDid you type the ID of the option instead of its name?")
+                return await message.send(embed=errorMsg(f"Your account data cannot be parsed.\nThis is a serious issue and must be resolved by an admin.\nYou may attempt to run `{prefix}fix restore` to reset your account values back to default values, but this will cause you to lose your progress."))
+            
+        user = User(message.author.id, doNotCheck=True)
+        data = user.getData()
 
-        await message.send(embed=embed)
+        # Perform a soft user update
+        if user.update():
+            addInfo("Missing account data keys")
 
+        # Look deeper for the "rob" key
+        for k in userTemplate["rob"]:
+            if k not in data["rob"]:
+                data["rob"][k] = userTemplate['rob'][k]
+                addInfo("Rob keys missing")
+            elif type(userTemplate['rob'][k]) != data['rob'][k]:
+                data["rob"][k] = userTemplate['rob'][k]
+                addInfo("Rob key value type incorrect")
+
+        # Ensure job exists
+        with open("jobs.yml") as f:
+            jobs = yaml.safe_load(f)
+
+        if data['job'] not in jobs:
+            data['job'] = jobs[list(jobs)[0]]
+            addInfo(f"Job not found; set job to {data['job']}")
+
+        # Check for incorrect item usage
+        for name, item in data['items'].items():
+            if 'count' not in item:
+                item['count'] = 1
+                addInfo(f"'count' key not found in item {name}")
+            if 'expires' not in item:
+                item['expires'] = [-1] * item['count']
+                addInfo(f"'expires' key not found in item {name}")
+            if 'data' not in item:
+                item['data'] = {}
+                addInfo(f"'data' key not found in item {name}")
+
+            if item['count'] != len(item['expires']):
+                # It is broken anyway, just set it to never expires as compensation 
+                item['expires'] = [-1] * item['count']
+                addInfo(f'Expiry dates in item {name} is incorrect')
+
+        # Reset some non-crucial keys
+        if arg == 'reset':
+            for k in {'kcashExchanged', 'tags', 'settings', 'servers', 'playerMonitor', 'lastCG'}:
+                data[k] = userTemplate[k]
+            addInfo("Reset non-critical keys (no gems awarded)")
+            user.addBalance(gems = -1)
+
+
+        # Save account
+        user.saveAccount(data)
+
+        # Final message
+        user.addBalance(gems = len(fixedProblems))
+        await message.send(embed = basicMsg(title="Account Fixer", description=f"The fixer has fixed {len(fixedProblems)} problems" + (':\n'+'\n- '.join(fixedProblems)) if len(fixedProblems) > 0 else '.') + f'\n\n-# If you still believe something is wrong, you should contact an admin, or try running `{prefix}fix reset` to reset the values of non-critical keys (your balances/items will be preserved).')
+
+     
     @commands.command(
         help = f"Change account settings",
         description = f"""This command allows you to change certain values of your account.
@@ -290,7 +328,7 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
                 json.dump(codes, f, indent=4)
 
             # Append code to account so they cannot use again
-            redeemed = u.getData('redeemedCodes')
+            redeemed: list[str] = u.getData('redeemedCodes')
             redeemed.append(code)
             u.setValue('redeemedCodes', redeemed)
 
@@ -308,8 +346,8 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
                 f"{message.author.mention}, you obtained:" +
                 (f"\n  `{'+' if credits > 0 else ''}{credits} Credits`" if credits != 0 else "") + 
                 (f"\n  `{'+' if unity > 0 else ''}{unity} Unity`" if unity != 0 else "") + 
-                (f"\n  `{'+' if gems > 0 else ''}{gems} Gems`" if gems != 0 else "")
-                (f"\nNothing`" if credits == unity == gems == 0 else "")
+                (f"\n  `{'+' if gems > 0 else ''}{gems} Gems`" if gems != 0 else "") +
+                (f"\n`Nothing`" if credits == unity == gems == 0 else "")
             ))
 
         except KeyError:

@@ -1,6 +1,6 @@
 Player:
     Description: A KCMC player. Standard work job with no downsides. **Recommended for new players.**
-    Credits: 15
+    Credits: 20
     Unity: 1.5
     Credit Efficiency: 5
     Unity Threshold: -100
@@ -10,10 +10,10 @@ Developer:
     Credits: 37.5
     Unity: 0.4
     Credit Efficiency: 0
-    Unity Threshold: 50
+    Unity Threshold: 60
 
 Pacifist:
-    Description: A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job.
+    Description: A pacifist role. They gain a bonus `-50% Wealth Power` perk and can never lose their job. They also receive a `+2 Rob Defense Levels` perk but a `-2 Rob Attack Level` debuff.
     Credits: 20
     Unity: 1
     Credit Efficiency: -5
@@ -22,47 +22,60 @@ Pacifist:
 Beggar:
     Description: |-
         Beggars make themselves look poor, which allow them to earn more from begs! 
-        While begging, Wealth Power is halved, and you sometimes get 10% more from begs (20%).
-        Additionally, the chance of succeeding a beg increases from 80% to 85.7% (1/7).
+        While begging, you sometimes get 100% more from begs (20%).
+        Additionally, the chance of succeeding a beg increases from 80% to 83.3% (1/6).
+        However, you have a very slight chance (4.8%) to lose `50 Credits` instead of 15.
     Credits: 15
     Unity: 0.5
-    Credit Efficiency: 0
+    Credit Efficiency: -10
     Unity Threshold: 30
 
 Unifier:
-    Description: Unifiers help unite everyone.
-    Credits: 1.5
+    Description: Unifiers help unite everyone. If your Unity is less than 50 when working, you gain 4 Unity instead of 3.
+    Credits: 0
     Unity: 3
     Credit Efficiency: 0
-    Unity Threshold: 20
+    Unity Threshold: -10
 
 Banker:
-    Description: Bankers help regulate the bank economy. When working, the bot loses 1k Credits then gains 1k Credits scaling with Credit Efficiency.
+    Description: |-
+        Bankers help regulate the bank economy. 
+        When working, the bot loses 1k Credits then gains 1k Credits scaling with Credit Efficiency.
+        Additionally, gain 5% more Credits from bot investments.
     Credits: 15
-    Unity: 2
+    Unity: 2.5
     Credit Efficiency: 0
     Unity Threshold: 60
 
 Police:
-    Description: A policeman catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`).
+    Description: |-
+        A policeman catching thiefs. They are less likely to be robbed (`+3 Rob Defense Levels`) but also are less likely to rob others (`-2 Rob Attack Levels`).
+        Additionally, if someone robs you and gets caught, you gain the Unity they lose.
     Credits: 15
     Unity: 1.75
     Credit Efficiency: 0
     Unity Threshold: 65
 
 Robber:
-    Description: A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`).
-    Credits: 25
+    Description: |-
+        A thief. They are more likely to succeed in their robberies (`+2 Rob Attack Levels`) but have lower defense (`-1 Rob Defense Level`).
+        Additionally, when working, gain `+3 Lock Picks` (expire in 1h), and upon a successful rob, gain a bonus `+5 Credits`.
+        However, getting caught decreases Unity by 5 instead of 3.
+    Credits: 10
     Unity: 0
     Credit Efficiency: -5
-    Unity Threshold: -100
+    Unity Threshold: -50
 
 Student:
-    Description: A student. Gain access to the `questions` command.
-    Credits: 0
-    Unity: 0
+    Description: |- 
+        A student who does not gamble. They earn more than the average.
+        The first 3 diminishing return games (e.g. MCHangman, Wordle, RNG Guessing Game) give 50% more Credits every hour.
+        Each game count is calculated separately from each other.
+        However, they earn 15% less from Crash Game, and 5% less from investments.
+    Credits: 15
+    Unity: 1
     Credit Efficiency: 5
-    Unity Threshold: 10
+    Unity Threshold: 40
 
 Gambler:
     Description: |-

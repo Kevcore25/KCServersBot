@@ -4,50 +4,69 @@
 
 # As an example usage, the publicity keys will be covered:
 
-# ID of the setting. This should ideally be in lowercase.
-publicity:
-    # Name of the setting
-    Name: Public Account
-    # Quick description of the setting
-    Description: |
-        Whether your account can be viewed when another user passes an argument for the following commands: `account`, `graphbalance`, `baljson`.
-    # The type of input it accepts. E.g. str, int, bool
+dms:
+    Name: Direct Messages
+    Description: |-
+        Whether to enable direct messages notifications for certain actions.
+        These include: robbery attempts, investment notices, and more.
+        Critical DMs will still be sent, and DM functionality is not affected.
     Type: bool
-    # Set values that the input accepts. If null, this will be set to no specific limits (but things such as bool still must be TRUE, FALSE, etc)
     Values: null
-    # Default value of the setting
-    Default: true
+    Default: false
 
 ign:
     Name: Minecraft Username
-    Description: | 
+    Description: |-
         Your Minecraft username. This is required in order to exchange into KCash.
         The username must be registered on KMCExtract!
     Type: str
     Values: null
     Default: None
 
+investnotice:
+    Name: Investment Notices
+    Description: |-
+        Notifies you when your investment would earn you a set percentage more than your initial investment.
+        For example, if this is set to 50, you will gain a notification when your investment has made you a 50% profit.
+        Set to 0 to disable, and this only works if DMs are enabled.
+    Type: int
+    Values: null
+    Default: 100
+
 phone:
     Name: Phone Mode
-    Description: |
-        In Phone mode, the bot attempts to optimize the usage for phones. This is only supported by some commands/features of the bot.
-        For example, wordle will use italicized and bolded letters to indicate hints, and graph-like features will use text-based displays instead.
+    Description: |-
+        In Phone mode, the bot attempts to optimize the usage for phones.
+        For example, certain commands would use different formatting to reduce data usage and improve functionality.
         This setting has an "auto" value which automatically detects if you are on your phone.
-        It is intended for those who are on phones or have trouble with text formatting.
+        It is intended for those who are on phones or have trouble with text formatting and is disabled by default to prevent troubleshooting issues.
     Type: str
     Values: 
         - 'false'
         - 'true'
-        - on
-        - off
         - auto
-    Default: auto
+    Default: 'false'
 
 datacollection:
     Name: Data Collection
-    Description: | 
-        Participate in data collection usages. Necessary data (e.g. command logs, account data) will still be collected.
-        This feature is currently not in use right now.
+    Description: |- 
+        Participate in data collection usages when available. 
+        Necessary data (e.g. command logs, account data) will still be collected.
+        If you turn this off, some features of the bot may not be available.
     Type: bool
     Values: null
     Default: true
+
+# # ID of the setting. This should ideally be in lowercase.
+# publicity:
+#     # Name of the setting
+#     Name: Public Account
+#     # Quick description of the setting
+#     Description: |-
+#         Whether your account can be viewed when another user passes an argument for the following commands: `account`, `graphbalance`, `baljson`.
+#     # The type of input it accepts. E.g. str, int, bool
+#     Type: bool
+#     # Set values that the input accepts. If null, this will be set to no specific limits (but things such as bool still must be TRUE, FALSE, etc)
+#     Values: null
+#     # Default value of the setting
+#     Default: true

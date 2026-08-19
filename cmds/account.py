@@ -97,15 +97,20 @@ class AccountViewers(commands.Cog):
 
         # Items
         for id, item in userData['items'].items():
+            # Get minimum expiry date
+            minexpiry = item['expires'][0] # If expiry list is empty then all commands break anyway, so no error check
+            for ex in item['expires']:
+                if ex != -1 and ex < minexpiry:
+                    minexpiry = ex
             try:
                 itemsTxt.append(
                     f"**{id}** ({item['count']}/{shopitems[id]['limit']})" + ": " + 
-                    (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
+                    (f"Expires <t:{round(minexpiry)}:R>" if minexpiry != -1 else "Never expires")
                 )
             except KeyError:
                 itemsTxt.append(
                     f"**{id}**" + ": " + 
-                    (f"Expires <t:{round(item['expires'][0])}:R>" if item['expires'][0] != -1 else "Never expires")
+                    (f"Expires <t:{round(minexpiry)}:R>" if minexpiry != -1 else "Never expires")
                 )
 
         embed.add_field(
@@ -174,7 +179,7 @@ class AccountViewers(commands.Cog):
         embed.set_field_at(
             index = 5,
             name="Other Info", 
-            value=f"**Wealth**: `{compact_num(wealth)}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']}`\n**Score**: `{compact_num(calcScore(user))}`",
+            value=f"**Wealth**: `{compact_num(wealth)}`\n**Wealth Power**: `{calcWealthPower(user)}%`\n**Loan**: {loanMsg}\n**Bot Stock%**: `{userData['bs%']} ({compact_num(userData['bs%'] / 100 * User('main').getData("credits"))})`\n**Score**: `{compact_num(calcScore(user))}`",
             inline=False
         )
 

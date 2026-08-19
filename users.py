@@ -1,4 +1,4 @@
-import json, time, threading, os
+import json, time, threading, os, yaml
 
 userTemplate = {
     "credits": 0,
@@ -141,19 +141,21 @@ class User:
 
     def add_item(self, item: str, expiry: int = -1, count: int = 1, data: dict = {}) -> bool:
         """Adds an item"""
-        items: dict = self.getData('items')
+        items: dict[str, dict[str, list|dict|int]] = self.getData('items')
 
-        exp = int(time.time() + expiry) if expiry != -1 else -1,
+        exp = int(time.time() + expiry) if expiry != -1 else -1
 
-        if item in items:
+        if item not in items:
             items[item] = {
-                "expires": [exp],
+                "expires": [exp] * count,
                 "data": data,
                 "count": count
             }
         else:
             items[item]['count'] += count
-            items[item]['expiry'].append(exp)
+            items[item]['data'] |= data
+            for i in range(count):
+                items[item]['expires'].append(exp)
 
         # Add item
         return self.setValue("items", items)
@@ -173,7 +175,7 @@ class User:
         self.data = userTemplate
         self.saveAccount()
 
-    def getData(self, key = None):
+    def getData(self, key = None) -> dict[str, str|int|float|bool|list[str,int,float]|dict[str, str|int|float|bool|dict]]:
         if key is None:
             return self.data
         else:
@@ -226,7 +228,7 @@ class User:
         if user is None:
             user = str(self.ID)
         
-        timeStr = int(time.time())
+        timeStr = int(time.time()*10)/10
 
         # The log list is shortened to: 
         # {time} {credits} {unity} {gems} {msg}
@@ -264,7 +266,7 @@ class User:
 
         return log
     
-    def addBalance(self, credits=0, unity=0, gems=0, refresh=True) -> bool:
+    def addBalance(self, credits=0, unity=0, gems=0, refresh=True, msg = "") -> bool:
         """
         Adds balance to the user.
         If refresh is True, then data is updated before adding.
@@ -302,6 +304,14 @@ class User:
         self.saveAccount()        
 
         # Log balances
-        self.log()
+        self.log(msg)
 
         return True
+
+    def get_setting(self, setting: str) -> str|bool|int|None:
+        if setting in self.data["settings"]:
+            return self.data["settings"][setting]
+        else:
+            with open("usersettings.yml") as f:
+                d: dict[str, str|bool|int] = yaml.safe_load(f)
+                return d.get(setting, {"Default": None}).get("Default")
