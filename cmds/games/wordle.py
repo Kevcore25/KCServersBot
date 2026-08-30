@@ -8,6 +8,7 @@ ESCAPE = ''
 class WordleChar:
     letter: str
     position: int
+    fallback: bool
 
     def __init__(self, letter: str, position: int):
         """
@@ -16,15 +17,26 @@ class WordleChar:
 
         self.position = position
         self.letter = letter.upper()
+        self.fallback = False
     
     def __str__(self):
-        match self.position:
-            case 1:
-                return f"[2;33m[1;33m{self.letter}"
-            case 2:
-                return f"[2;33m[1;32m{self.letter}"
+        if self.fallback:
+            match self.position:
+                case 1:
+                    return f"*`{self.letter}`*"
+                case 2:
+                    return f"**`{self.letter}`**"
 
-        return f"[0m{self.letter}"
+            return f"`{self.letter}`"
+    
+        else:
+            match self.position:
+                case 1:
+                    return f"[2;33m[1;33m{self.letter}"
+                case 2:
+                    return f"[2;33m[1;32m{self.letter}"
+
+            return f"[0m{self.letter}"
     
 
 class WordleGame:
@@ -129,16 +141,14 @@ firstWordles = []
 
 class WordleGameCog(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: discord.Client = bot
         
-
-
     @commands.command(
         help = "Wordle Game",
-        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `5 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\nThe first wordle each day will grant 2x more Credit rewards.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
+        description = """A random 5-letter word is chosen from a bank.\nYou have 6 attempts to guess that word.\nIf the letter is in the word, it will be *italicized* and if it is in the same position as the word, it will be **bolded**.\n\nWordle starts giving `10 Credits` but each game decreases the reward (resets 1h after first play).\nGain a bonus +10% earnings for every attempt remaining.\nThe first wordle each day will grant 2x more Credit rewards.\n\nYou are not allowed to use a wordle solver or AI or any unfair advantage, but you are able to use the dictionary.\nAnyone recognized using a solver will be subjected to a 75% earnings lost; however, they will still be able to play.""",
     )
     @commands.cooldown(1, 10, commands.BucketType.user)
-    async def wordle(self, message: discord.Message):
+    async def wordle(self, message: Context):
         global firstWordles
 
         u = User(message.author.id)
@@ -151,6 +161,9 @@ class WordleGameCog(commands.Cog):
         # New Hint mode
         hint = ''
 
+        # Phone mode
+        phoneMode = check_mobile_mode(u)
+
         def getRwd():
             credits = round(dim.returnAmount(u) * (1 + game.attempts / 10), 3)
             if message.author.id not in firstWordles:
@@ -158,10 +171,14 @@ class WordleGameCog(commands.Cog):
             return credits
         
         def desc(text: str):
-            if hint != '':
-                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}```ansi\n{game.returnKeyboard()}```{text}"
+            if phoneMode:
+                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}\n{text}"
+
             else:
-                return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}` {game.getAnswers()}\n```ansi\n{game.returnKeyboard()}```{text}"
+                if hint != '':
+                    return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}`\nHint: `{hint}` {game.getAnswers()}```ansi\n{game.returnKeyboard()}```{text}"
+                else:
+                    return f"Type a word! If it is correct, you will earn `{numStr(getRwd())} Credits`.\nAttempts remaining: `{game.attempts}` {game.getAnswers()}\n```ansi\n{game.returnKeyboard()}```{text}"
             
         # Send init message
         embed = discord.Embed(
@@ -169,7 +186,7 @@ class WordleGameCog(commands.Cog):
             description = desc(""),
             color = 0xFF00FF
         )
-        embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed")
+        embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed." + "\nType 'fallback' to disable fallback mode. Recommended for computers." if phoneMode else "\nType 'fallback' to enable a fallback/phone mode if you cannot see coloured text (mobile devices).")
 
         msg = await message.send(embed = embed)
 
@@ -179,7 +196,7 @@ class WordleGameCog(commands.Cog):
                 description = desc(text),
                 color = 0xFF00FF
             )
-            embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed")
+            embed.set_footer(text = "Dictionaries are allowed, but the use of a solver is not allowed." + "\nType 'fallback' to disable fallback mode. Recommended for computers." if phoneMode else "\nType 'fallback' to enable a fallback/phone mode if you cannot see coloured text (mobile devices).")
             await msg.edit(embed = embed)
 
         # Get words
@@ -200,6 +217,11 @@ class WordleGameCog(commands.Cog):
                 if userInput == "exit":
                     await edit(f"Game exited. Your CD is not reset.\nThe word was `{game.answer}`") 
                     break
+
+                if userInput in {"fallback", "failback", "phonemode"}:
+                    phoneMode = not phoneMode
+                    await edit("You are now using fallback mode" if phoneMode else "Fallback mode is disabled")
+
 
                 if userInput == "hint":
                     if hint != '':

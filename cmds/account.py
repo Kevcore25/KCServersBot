@@ -68,7 +68,7 @@ class AccountViewers(commands.Cog):
 
         embed.add_field(
             name="Balances", 
-            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/{200 if user.item_exists('Unity Increase') else 100}`\n**Gems**: `{int(userData['gems']):>,}`"
+            value=f"**Credits**: `{numStr(userData['credits'])}`\n**Unity**: `{numStr(userData['unity'])}/{200 if user.item_exists('Unity Increase') else 100}`\n**Gems**: `{int(userData['gems']):>,}`\n**Energy**: `{user.getData('energy')}/100`"
         )
         embed.add_field(
             name="KCMC Info", 

@@ -11,8 +11,8 @@ class Informations(commands.Cog):
         
     @commands.command(
         name = "about",
-        help = "About the bot",
-        aliases = ["info", "information", "botinfo"]
+        help = "About the bot and its currencies",
+        aliases = ["info", "information", "botinfo", "currencies"]
     )
     async def botinfo(self, message):
         embed = discord.Embed(
@@ -23,7 +23,7 @@ The intended use of the KCServers bot is made **to provide easy access to KCMC i
 The KCServers Bot also comes with a **unique economy system** that provides gambling and Minecraft-related games.
 
 __Currencies:__
-There are 5 currencies used by this bot. 3 of which are exclusive to the bot:
+There are 5 currencies used by this bot. 4 of which are exclusive to the bot:
 
 **Credits**: The main currency of the bot. It is used with bot games, as well as exchanging Credits to KCash.
 
@@ -41,21 +41,37 @@ As of V.5.0, the players system has been **deprecated.** The players system may 
 If you are a new KCMC player, you may ask to claim a **free 100,000 KCash reward.**
 -# Offer only available to new players after 2026, and has not claimed any previous welcome bonuses.
 
+For more term-related definitions, see the `{prefix}terms` command.
 """,
             color = 0xFF00FF
         )
+        embed.set_footer(text = f"Energy is technically a currency, but will be described in the {prefix}terms command")
     
         await message.send(embed=embed)
 
     @commands.command(
         name = "terms",
         help = "Useful definitions for dedicated users",
-        aliases = ["definitions", "defs"]
+        aliases = ["definitions", "defs", 'dictionary']
     )
     async def terms(self, message):
         embed = discord.Embed(
             title = "",
             description = f"""
+__Currencies__
+Currency information (such as Credits, Unity, Gems, and KCash) can be found by running `{prefix}info`.
+
+__Energy__
+Energy is used when running certain commands (such as work, volunteer, rob, etc).
+Note that most skill based games (e.g. MCHangman, RNG Guessing Game) do not cost Energy.
+You can always consume energy as long as it is at least 0, but negative energy results in negative Credit efficiency.
+You gain 1 energy every minute, and can store up to 100 energy (with a minimum energy value of -100).
+
+__Wealth__
+Wealth is your total Credit value after taking in account of investments.
+It is essentially: `Credits + Current Credits from Investments`
+It is used to calculate Wealth Power and some other formulas.
+
 __Wealth Power (WP)__
 Wealth power is an important feature of KCServers Bot that measures how rich you are.
 It is calculated using: `Wealth / ((Total Wealth of all Members - Wealth) / Number of Users)`
@@ -65,7 +81,40 @@ When used in calculations, there are 3 main generations which affect WP:
 * Gen 3: Every 20% WP after 100% causes earnings to reduce by 1%, up to -50% earnings
 * Gen 4: A 1/Gen 3, making higher WP giving more, up to 2x more
 
+__Credit Efficiency__
+Previously referred to as Credit Earnings perk, this value is how efficient you are at earning Credits.
+Many income commands are multiplied by your Credit Efficiency. Higher numbers give higher earnings.
+Typically, when losing Credits, Credit Efficiency is not taken into account.
+Thus, Credit Efficiency is most apparent in win/loss gambling commands, such as `beg`.
+Note that some games (e.g. `crashgame`) do not use Credit Efficiency.
+Some factors of Credit Efficiency include (but not limited to):
+- Your job
+- Certain items (e.g. Credit Booster)
+- Hourly boosts, and unclaimed dailies
+- High Wealth (-5% for >1k, -15% for >3k, -20% for 5k, and stacks)
+- Specific Unity values (under 0 and over 100), see `{prefix}info`
+- Being tired (-50% for <0 energy or -80% for <-50 energy)
 
+__Standard Income__
+This refers to a formula used when gaining income.
+It is: `Income * Credit Efficiency * Gen 3 Wealth Power scaling * Inflation%`
+
+__Inflation%__
+Most Credit incomes and losses are multiplied by inflation.
+The value of inflation% can be found by running the leaderboard command.
+
+__Rob Attack Level (RAL) and Rob Defense Level (RDL)__
+This is the attack/defense level used when robbing.
+Essentially, you win a rob if your dice roll is greater than your opponent's.
+Dice rolls are a value between 1 and your attack / your opponent's defense level.
+Higher levels result in higher rob success rates / higher fail rates for opponents when robbing.
+More information can be found by running `{prefix}help rob`
+
+__Insights__
+Insights increase your Rob Attack Level by your insight value, but also decrease your Rob Defense Level by your insight value.
+You gain an insight when failing a rob, and succeeding removes all insights.
+You can have a maximum of 3 insights.
+More information can be found by running `{prefix}help rob`
 """,
             color = 0xFF00FF
         )

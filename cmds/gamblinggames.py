@@ -89,6 +89,10 @@ The expected standard income is `4.45 Credits` per beg, and for estimated expect
                 winAmount *= 2
                 bold += '*'
 
+            # Unifier gets -20% 
+            if user.getData('job') == "Unifier":
+                winAmount *= 0.8
+
             winAmount = calcCredit(winAmount, user)
             user.addBalance(credits = winAmount, unity = 0.05)
 
@@ -113,11 +117,11 @@ You can invest a portion of your Credits to gain a *Bot Stock Percentage (Or BS%
 For example, if the bot has 10000 and you invest 1000, you will get a % equal to (1000 / 11000), which is about 9.09 BS%
 In a few days, if the bot balance is now 15000 and you cash out, you will earn 1363.5 Credits, making about $363 gain.
 
-Notice: You must wait at least 10 minutes until you can cash out after investing.
+Notice: You must wait at least 1 hour until you can cash out after investing.
     """,
         aliases = ['stock']
     )
-    @commands.cooldown(1, 600, commands.BucketType.user) 
+    @commands.cooldown(1, 3600, commands.BucketType.user) 
     async def invest(self, message, arg = "", arg2=''):
         user = User(message.author.id)
         bot = User('main')
@@ -162,19 +166,23 @@ Notice: You must wait at least 10 minutes until you can cash out after investing
                     await message.send(embed=errorMsg("You don't have an investment right now!"))
                 else:
                     amt = round(botbal * bs / 100, 2) 
+                    bonusTxt = ''
 
                     # Student decrease (-5%)
                     if user.getData('job') == "Student":
                         amt = round(amt * 0.95, 2)
+                        bonusTxt = "\n-# As you are a student, you have a `-5% investment earnings` debuff."
                     # Banker increase
                     elif user.getData('job') == "Banker":
-                        amt = round(amt * 1.05, 2)
+                        bonus = min(50, round(amt * 0.05))
+                        amt += bonus
+                        bonusTxt = f"\n-# As you are a banker, you have a `+5% investment earnings` buff, making you earn `{numStr(amt)} Credits` more."
 
                     user.addBalance(credits=amt) # bot should also lose that amount
 
                     user.setValue("bs%", 0)
 
-                    await message.send(embed=successMsg(f"Cashed out! You gained {numStr(amt)} Credits!"))
+                    await message.send(embed=successMsg(f"Cashed out! You gained {numStr(amt)} Credits!" + bonusTxt))
 
             else:
                 await message.send(embed=errorMsg("Invaild argument. Must be either a number, or exactly 'cash' to cash out your investment."))

@@ -5,6 +5,8 @@ userTemplate = {
     "unity": 20,
     "gems": 0,
     "kcashExchanged": 0,
+    "energy": 100,
+    "energyGainTime": 0,
     "tags": [],
     "items": {},
     "job": None,
@@ -39,24 +41,6 @@ botID = 0
 
 add_balance = lambda userID, credits: User(userID).addBalance(credits=credits)
 
-def check_items(user) -> bool:
-    """Checks for expired items and deletes them"""
-    items: dict = user.getData('items')
-
-    deletedAnItem = False
-
-    for id, item in items.copy().items():
-        for expiry in item['expires']:
-            if int(time.time()) - expiry > 0 and expiry != -1:                
-                deletedAnItem = True
-
-                items[id]['count'] -= 1
-                if items[id]['count'] <= 0:
-                    del items[id]
-                    break
-                items[id]['expires'].remove(expiry)
-
-    return user.setValue("items", items) if deletedAnItem else False
 
 class User:
     def __init__(self, ID, doNotCheck = False):
@@ -70,10 +54,43 @@ class User:
                 self.data = json.load(f)
 
             # Check for expired items in a thread. If an error occurs then the rest of the code should continue
-            if not doNotCheck: threading.Thread(target=check_items, args=[self], daemon=True).start()
+            if not doNotCheck: #threading.Thread(target=check_items, args=[self], daemon=True).start()
+                self.check_items()
 
         except FileNotFoundError:
             self.createAccount()
+
+    def check_items(self) -> bool:
+        """Checks for expired items and deletes them, as well as refreshing the energy stat"""
+        items: dict = self.getData('items')
+
+        deletedAnItem = False
+
+        for id, item in items.copy().items():
+            for expiry in item['expires']:
+                if int(time.time()) - expiry > 0 and expiry != -1:                
+                    deletedAnItem = True
+
+                    items[id]['count'] -= 1
+                    if items[id]['count'] <= 0:
+                        del items[id]
+                        break
+                    items[id]['expires'].remove(expiry)
+
+        self.setValue("items", items) if deletedAnItem else False
+
+        # Energy stat
+        gainTime = self.getData('energyGainTime')
+        if gainTime is not None:
+            energyGained = (time.time() - gainTime) // 30
+
+            if energyGained > 0:
+                self.addBalance(energy=energyGained)
+                if self.getData('energy') < 100:
+                    self.setValue('energyGainTime', int(time.time()))
+                else:
+                    self.setValue('energyGainTime', None)
+
 
     def update(self) -> bool:
         """
@@ -266,7 +283,7 @@ class User:
 
         return log
     
-    def addBalance(self, credits=0, unity=0, gems=0, refresh=True, msg = "") -> bool:
+    def addBalance(self, credits=0, unity=0, gems=0, energy=0, refresh=True, msg = "") -> bool:
         """
         Adds balance to the user.
         If refresh is True, then data is updated before adding.
@@ -287,6 +304,8 @@ class User:
         self.data["unity"] = round(self.data["unity"] + unity, 5)
 
         self.data["gems"] = round(self.data["gems"] + gems)
+
+        self.data["energy"] = round(min(100, max(-100, self.data["energy"] + energy)))
 
         if self.data["unity"] > 100:
             # Unity Increase item                

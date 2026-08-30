@@ -62,7 +62,7 @@ class AccountUtils(commands.Cog):
             if k not in data["rob"]:
                 data["rob"][k] = userTemplate['rob'][k]
                 addInfo("Rob keys missing")
-            elif type(userTemplate['rob'][k]) != data['rob'][k]:
+            elif type(userTemplate['rob'][k]) != type(data['rob'][k]):
                 data["rob"][k] = userTemplate['rob'][k]
                 addInfo("Rob key value type incorrect")
 
@@ -104,7 +104,7 @@ class AccountUtils(commands.Cog):
 
         # Final message
         user.addBalance(gems = len(fixedProblems))
-        await message.send(embed = basicMsg(title="Account Fixer", description=f"The fixer has fixed {len(fixedProblems)} problems" + (':\n'+'\n- '.join(fixedProblems)) if len(fixedProblems) > 0 else '.') + f'\n\n-# If you still believe something is wrong, you should contact an admin, or try running `{prefix}fix reset` to reset the values of non-critical keys (your balances/items will be preserved).')
+        await message.send(embed = basicMsg(title="Account Fixer", description=f"The fixer has fixed {len(fixedProblems)} problems" + (':\n'+'\n- '.join(fixedProblems) if len(fixedProblems) > 0 else '.') + f'\n\n-# If you still believe something is wrong, you should contact an admin, or try running `{prefix}fix reset` to reset the values of non-critical keys (your balances/items will be preserved).'))
 
      
     @commands.command(
@@ -226,20 +226,6 @@ Ensure that the value is valid! Incorrect values may sometimes pass the verifica
                 data[option] = value
                 u.setValue('settings', data)
                 await message.send(embed=successMsg(description = f"Changed the value of {setting['Name']} ({option}) to `{data[option]}`"))
-
-    @commands.command(
-        help = f"Force an account update",
-        description = """Sometimes your account may be missing some valves. This command will make sure to find missing values and fix them. Corruptted values may not be fixed.""",
-        aliases = ['fixaccount']
-    )
-    async def fix(self, message):
-        user = User(message.author.id)
-        result = user.update()
-        await message.send(
-            f"Your account data has been updated to the newest version!" if result else (
-            f"The account updater did not make any changes to your account data. If you believe your account has an error, please contact an administator."
-        ))
-
         
     @commands.command(
         name = 'ign',

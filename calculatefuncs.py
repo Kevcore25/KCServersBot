@@ -449,7 +449,7 @@ def calcScoreOld(u: User) -> int:
 def calcWealth(u: User, botCred = None) -> float:
     """
     Calculates the approximate wealth of a user.
-    Wealth is the measure of how rich someone is based on not only by his/her credits, but also his/her Bot Stock % and Unity
+    Wealth is the measure of how rich someone is based on his/her credits
 
     Mainly used for the calcWealthPower function. 
 
@@ -517,83 +517,8 @@ def numStr(number) -> str:
     except TypeError:
         return "N/A"
 
-def calcCredit(amount: int, user: User = None) -> float:
-    """Calculates credit earnings. This should ideally be only used when positive amounts are gained. A user object should be specified."""
-    
-    if user is not None:
-        unity = user.getData('unity')
-        credits = user.getData('credits')
-        wealth = calcWealth(user)
-        data = user.getData()
 
-        """ POSITIVES """
-        # In Debt raise (15% Credit gain)
-        if credits < 0:
-            amount *= 1.15
-        
-        # Did not claim Daily (+2.5%)
-        if time.time() - data["dailyTime"] > 60*60*12:
-            amount *= 1.025
-
-        # In Hourly (+10%)
-        if time.time() - data["hourlyTime"] < 60*10:
-            amount *= 1.10
-
-        # Bot
-        if str(user.ID) == "main":
-            amount *= (1 + 2)
-
-        # Prosperous Reset bonus
-        if user.get_item('Prosperous Reset', True):
-            amount *= (1 + 0.15)
-
-        # Both set IGN and LFN (+2%)
-        try:
-            if data["IGN"] is not None and data["LFN"] is not None:
-                amount *= 1.02
-        except KeyError: pass
-
-        # Excessive Unity (Every 1 above 100 grants +0.1%, up to 200)
-        if unity > 100:
-            amount *= (1 + (unity - 100) * 0.001) if unity <= 200 else 1.2
-
-
-        """ NEGATIVES """
-        # Negative unity subtraction
-        if unity < 0:
-            unityFee = round((100 - -unity) / 100, 2)
-            amount *= unityFee
-
-        # Rich I (-5% Credit gain)
-        if wealth > 1000:
-            amount *= 0.95
-        
-        # Rich II (-15% Credit gain)
-        if wealth > 3000:
-            amount *= 0.85
-
-        # Rich III (-20% Credit gain)
-        if wealth > 5000:
-            amount *= 0.80
-
-        # Too Rich (-0.001% Credit gain for every Wealth)
-        if wealth > 50000:
-            amount *= 1 + round((50000 - wealth) * 0.00001, 2)
-        # Was jailed
-        if user.get_item('Jail Penalty', True):
-            amount *= 0.85
-        """ JOB """
-        if data['job'] is not None:
-            with open('jobs.yml', 'r') as f:
-                jobs = yaml.safe_load(f)
-            amount *= round(1 + jobs[data['job']]['Credit Efficiency'] / 100, 2)
-
-    """ EVENTS """
-
-    return round(amount, 2)
-
-
-def calcCreditTxt(user: User) -> int:
+def calcCreditTxt(user: User, asStr: bool = True) -> str | dict[str, float]:
     """Calculates credit earnings. This should ideally be only used when positive amounts are gained. A user object should be specified."""
 
     unity = user.getData('unity')
@@ -663,6 +588,13 @@ def calcCreditTxt(user: User) -> int:
     if wealth > 50000:
         amountTxt["Too Rich"] = round((50000 - credits) * 0.001, 2)
 
+    # Tired
+    energy = user.getData('energy')
+    if energy < -50:
+        amountTxt["Too Tired"] = -80
+    elif energy < 0:
+        amountTxt["Tired"] = -50
+
     """ JOB """
     if data['job'] is not None:
         with open('jobs.yml', 'r') as f:
@@ -671,12 +603,26 @@ def calcCreditTxt(user: User) -> int:
 
     """ EVENTS """
 
+    if not asStr:
+        return amountTxt
 
     for i in amountTxt:
         if amountTxt[i] >= 0:
             amountTxt[i] = "+" + str(round(amountTxt[i], 5)) 
 
     return "\n".join(f"{perk}: `{percentAmt}% Credit earnings`" for perk, percentAmt in amountTxt.items())
+
+def calcCredit(amount: int, user: User = None) -> float:
+    """Calculates credit earnings. This should ideally be only used when positive amounts are gained. A user object should be specified."""
+    
+    if user is not None:
+        for i in calcCreditTxt(user, asStr=False).values():
+            amount *= 1 + i/100
+
+    """ EVENTS """
+
+    return round(amount, 2)
+
 
 def calculateRobDefense(member: discord.Member) -> int:
     """Calculate the Rob Defense level of a user"""
@@ -722,7 +668,7 @@ def calculateRobDefense(member: discord.Member) -> int:
     # Insights
     rdl -= rob['insights']
 
-    return rdl
+    return max(1, rdl)
 
 def calculateRobAttack(member: discord.Member) -> int:
     """Calculate the Rob Attack level of a user"""
@@ -757,10 +703,9 @@ def calculateRobAttack(member: discord.Member) -> int:
     # Insights
     ral += rob['insights']
 
-    return ral
+    return max(1, ral)
 
 def convPyclassToType(pytype):
-    print(pytype)
     if str(pytype)[:12] == "typing.Union":
         types = str(pytype)[13:-1]
         return types.replace(", ", " or ").replace("int", "Integer").replace("float", "Decimal").replace("str", "Text").replace("bool", "True/False")
@@ -770,7 +715,7 @@ def convPyclassToType(pytype):
         elif pytype is str: return "Text"
         elif pytype is bool: return "True/False"
         elif pytype is discord.member.Member: return "User"
-        else: return str(pytype)[8:-2]
+        else: return str(pytype)[7:-1].strip("'")
 
 def formatParamsOneLine(params: dict[str, discord.ext.commands.Parameter]) -> str:
     text = []

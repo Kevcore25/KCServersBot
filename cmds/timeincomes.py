@@ -80,7 +80,7 @@ class TimeIncomes(commands.Cog):
         
     @commands.command(
         help = f"Work\nFormat: {prefix}work [apply <job>]",
-        description = f"""Apply for a job, then run {prefix}work to earn money. The amount you earn is scaled with Credit Earnings and Wealth Power\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity`\n\nWork uses Gen 3 WP scaling (Every 20% Wealth Power after 100% results in -1% earnings, up to -50% earnings) for both earnings and unity losses.""",
+        description = f"""Apply for a job, then run {prefix}work to earn money. The amount you earn is scaled with the standard income formula.\nThere is a slight chance (5%) that you will be fired from your job, causing you to lose `10 Unity` (scales with Wealth Power).\nThis 5% of being fired increases as you become more negative in Unity.\nApplying for a job initially costs `5 Unity`\nTo work, you require at least 80 energy.""",
         aliases = ['job'],
     )
     async def work(self, message, cmd = None, value = None):
@@ -105,13 +105,19 @@ class TimeIncomes(commands.Cog):
                 ), 
                 color=0xFF00FF
             )
-        elif cmd == "work":
-            if time.time() - data["workTime"] < 60*60:
-                embed = discord.Embed(title="On Cooldown!",description=f"You can work again <t:{int(data['workTime'] + 60*60)}:R>", color=0xFF0000)
-                await message.send(embed=embed)
-                return
-            elif currentJob is None:
-                embed = errorMsg("You must apply for a job first!")
+        elif cmd in {"work", "overwork"}:
+            if currentJob is None:
+                embed = errorMsg("You must apply for a job first!")            
+                return await message.send(embed=embed)
+
+            energyCost = jobs[currentJob]['Energy Cost']
+
+            # if time.time() - data["workTime"] < 60*60:
+            if user.getData('energy') < energyCost and not (str(value).lower() in {'overwork', 'force', 'over', 'confirm'} or cmd == "overwork"):
+                embed = discord.Embed(title="Not enough energy!",description=f"You must have a minimum of `{energyCost} Energy` to work." + (f"\nAs you have still have a positive amount of energy, you can run `{prefix}work work overwork` to overwork and gain 75% of the usual work rewards.\nThis may cause you to be tired and suffer Credit Efficiency losses." if user.getData('energy') > 0 else ''), color=0xFF0000)
+                return await message.send(embed=embed)
+            elif (str(value).lower() in {'overwork', 'force', 'over', 'confirm'} or cmd == "overwork") and user.getData('energy') < 0:
+                return await message.send(embed=errorMsg(title="Not enough energy!", description="You need at least `0 Energy` to perform an overwork!"))
             else:
                 # Amount to fire
                 # Should be int(-Unity/10) times, time >= 1, time E I
@@ -173,9 +179,14 @@ class TimeIncomes(commands.Cog):
 
                     # +1 Unity for less than 50 Unity for unifiers
                     elif currentJob == "Unifier" and data['unity'] < 50:
-                        unityGain += 1
+                        unityGain += 1.5
 
-                    user.addBalance(credits=creditGain, unity=unityGain)
+                    # Overwork reduction
+                    if user.getData('energy') < energyCost:
+                        unityGain *= 0.75
+                        creditGain *= 0.75
+
+                    user.addBalance(credits=creditGain, unity=unityGain, energy=-energyCost)
 
                     embed = discord.Embed(
                         title="Work",

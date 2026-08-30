@@ -1,4 +1,4 @@
-VERSION = 9.0
+VERSION = 9.1
 
 """
 PIP REQUIREMENTS:
@@ -112,7 +112,7 @@ async def restart(ctx):
     description = \
 f"""**How to use the help command**:\nThe help command returns a list of all bot commands as well as a basic description under each command.\nThe help command can be specified with a command as an argument to obtain more details about the command.\n\n**How to read arguments**:\nEach argument that is enclosed with arrows (<>) means the argument is __mandatory__, meaning that you must specify it when running the command.\nAn argument enclosed with square brackets ([]) means that the argument is __optional__, and you do not need to specify it for the command to work properly.\nFor example, the current help command format is: `{prefix}help [command]`\nSince you specified the help command, it returned this message."""
 )
-async def help(message: discord.Message, commandOrPage: str = "1"): # command is an argument
+async def help(message: Context, *, commandOrPage: str = "1"): # command is an argument
     """
     Help command
 
@@ -185,7 +185,27 @@ async def help(message: discord.Message, commandOrPage: str = "1"): # command is
                 embed.set_footer(text="+1 Gem due to viewing the details about this command for the first time!")
 
         else:
-            embed.description = f"Command `{commandOrPage}` is not a vaild command!"
+            # Attempt to search in description. It should pick the highest value
+            highests: dict[int, list[str]] = {}
+            if 4 < len(commandOrPage) < 24:
+                for i in ('credit', 'unity', 'gem', 'kcash', 'gold'):
+                    if i == commandOrPage.lower().rstrip('s'):
+                        highests[10000] = ['info']
+
+                for name, cmd in bot.all_commands.items():
+                    desc = cmd.description.lower()
+                    if name in cmd.aliases: continue
+
+                    c = desc.count(commandOrPage)
+                    if c not in highests:
+                        highests[c] = []
+                    highests[c].append(name)
+
+            m = max(highests.keys() or (-1, ))
+
+            embed.description = f"Command `{commandOrPage}` is not a vaild command!" + ((f'\nHowever, `{commandOrPage}` is detected in the help description of command ' + ' and '.join(f'`{i}`' for i in highests[m]) + '.') if m > 0 else '')
+
+            embed.set_footer(text = f'Some term defintions can be found by running {prefix}terms')
 
         await message.send(embed=embed)
         return

@@ -30,7 +30,6 @@ Insights can stack up to 3 times and reset when succeeding a rob or being succes
 * Already robbed that target within 5 minutes: Target Defense Rob +2
 * Has an Insight: Rob Attack +1 but Rob Defense -1 (Stacks up to 3 times)
 * Target has a Lock: Target Rob Defense +1 for each lock and an additional +2 Rob Defense
-target
 
 **Locks Information**
 Previously, locks are items that require the attacker to buy a lock pick to bypass it. However, as of V.8.4, this has changed.

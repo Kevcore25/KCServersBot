@@ -30,7 +30,7 @@ __Notes__
 
 class CrashGameCog(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
+        self.bot: discord.Client = bot
         
     @commands.command(
         help = f"Play the crash game!",
@@ -38,7 +38,7 @@ class CrashGameCog(commands.Cog):
         aliases = ['cg', 'crash']
     )
     @commands.cooldown(1, 300, commands.BucketType.user) 
-    async def crashgame(self, message: discord.Message, betAmount: float = None, autoCash: float = "0"):
+    async def crashgame(self, message: Context, betAmount: float = None, autoCash: float = "0"):
         user = User(message.author.id)
 
         with open("previousCgs.json",'r') as f:
@@ -94,6 +94,8 @@ class CrashGameCog(commands.Cog):
 
         cg = CrashGame()
 
+        phoneMode = check_mobile_mode(user)
+
         cashedOut = False
 
         #plot = cg.create_plot()
@@ -106,12 +108,15 @@ class CrashGameCog(commands.Cog):
         def check(reaction, user):
             return user == message.author and (str(reaction.emoji) == '💰' or str(reaction.emoji) == '🛑')
         async def cgupdate():
-            file = discord.File(f"temp/cg{randomNum}.png", filename=f"cg{randomNum}.png")
-            embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description=f"""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.\n\nMultiplier: **{round(cg.multiplier, 3)}x**""")        
-            embed.set_image(url=f"attachment://cg{randomNum}.png")
+            embed = discord.Embed(title = f"Crash Game",color = 0xFF00FF, description=f"""Press the cash emoji (💰) to cash out.\nPress the stop emoji (🛑) to cash out and/or stop the game.\n\nMultiplier: **{round(cg.multiplier, 3)}x**""")
             embed.set_footer(text=f"The chance of getting to this round is {round(0.9 ** cg.round * 100, 1)}%")
+            if not phoneMode:
+                file = discord.File(f"temp/cg{randomNum}.png", filename=f"cg{randomNum}.png")
+                embed.set_image(url=f"attachment://cg{randomNum}.png")
 
-            await msg.edit(attachments=[file], embed=embed)
+                await msg.edit(attachments=[file], embed=embed)
+            else:
+                await msg.edit(embed=embed)
 
         def p(x = xpoints, y = ypoints, color="b"):
             # create integers from strings
