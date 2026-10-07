@@ -31,6 +31,8 @@ userTemplate = {
         "expires": 0
     },
 
+    "m1": None, "m2": None, "m3": None,
+
     "servers": [],
     "playerMonitor": [],
 
@@ -59,6 +61,9 @@ class User:
 
         except FileNotFoundError:
             self.createAccount()
+
+    def has_tag(self, tag: str) -> bool:
+        return tag in self.getData("tags")
 
     def check_items(self) -> bool:
         """Checks for expired items and deletes them, as well as refreshing the energy stat"""

@@ -8,7 +8,7 @@ from requests import get as r_get
 from dns.resolver import resolve as dns_resolve
 from threading import Timer as threading_Timer
 
-Context = discord.ext.commands.Context
+from discord.ext.commands import *
 
 with open("botsettings.json", 'r') as f:
     botsettings: dict[str, str|int|bool] = json.load(f)
@@ -19,6 +19,8 @@ with open("botsettings.json", 'r') as f:
     adminUsers = botsettings['admins']
     botAIChannel = botsettings['AI Channel']
     serverID = botsettings['Server ID']
+
+P = prefix
 
 WAYS_TO_EARN = {
     "credits": ("""
@@ -85,7 +87,7 @@ def tail(filename, lines=100) -> list[str]:
 def basicMsg(title = "Information", description = "No information provided"):
     return discord.Embed(title=title, description=description, color=0xFF00FF)
 
-def successMsg(title = "Success", description = "The command is successful"):
+def successMsg(title = "Success", description = "The command was successful"):
     return discord.Embed(title=title, description=description, color=0x00FF00)
 
 def errorMsg(description = "Unknown error", cause = None, title = "An error occurred"):

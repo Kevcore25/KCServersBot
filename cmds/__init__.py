@@ -17,6 +17,7 @@ from cmds.lottery import LotteryCog
 from cmds.loan import LoanCog
 from cmds.memorygame import NumberMemoryGame
 from cmds.adminutils import AdminUtils
+from cmds.usermacros import UserMacros
 
 from cmds.games.numberguess import RNGNumberGuessCog
 from cmds.games.wordle import WordleGameCog

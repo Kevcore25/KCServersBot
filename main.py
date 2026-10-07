@@ -1,4 +1,4 @@
-VERSION = 9.1
+VERSION = 9.2
 
 """
 PIP REQUIREMENTS:
@@ -339,6 +339,7 @@ async def on_ready():
             await bot.add_cog(cmds.EventsCog(bot))
             await bot.add_cog(cmds.LoanCog(bot))
             await bot.add_cog(cmds.NumberMemoryGame(bot))
+            await bot.add_cog(cmds.UserMacros(bot))
             lotcog = cmds.LotteryCog(bot)
             await bot.add_cog(lotcog)
 
